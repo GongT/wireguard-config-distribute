@@ -1,0 +1,29 @@
+syntax = "proto3";
+
+option go_package = ".;protocol";
+
+service ServerProtocol {
+  rpc Start(ClientInfoRequest) returns (stream PeerConfig);
+}
+
+message ConnectionTarget {
+  string hostname = 1;
+  string description = 2;
+  string publicKey = 3;
+  string presharedKey = 4;
+  bool isPublic = 5;
+  string address = 6;
+}
+
+message ClientInfoRequest {
+  string groupName = 1;
+  ConnectionTarget peer = 2;
+
+  string tryPrivateIp = 3;
+  repeated string hostnameAlias = 4;
+}
+
+message PeerConfig {
+  ConnectionTarget peer = 1;
+  string privateIp = 2;
+}
