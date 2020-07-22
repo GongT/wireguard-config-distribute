@@ -1,3 +1,4 @@
 pkg
 dist
 internal/protocol
+.vscode/history

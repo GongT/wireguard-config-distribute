@@ -31,7 +31,7 @@ func IsDevelopmennt() bool {
 	if os.Getenv("VSCODE_IPC_HOOK_CLI") != "" {
 		return true
 	}
-	if os.Getenv(config.CONFIG_FORCE_DEVELOPMENT) != "" {
+	if os.Getenv(CONFIG_FORCE_DEVELOPMENT) != "" {
 		return true
 	}
 	return false
