@@ -27,11 +27,17 @@ func GetConfigNumber(name string, defaultVal int64) int64 {
 	}
 }
 
+var debugMode bool = false
+
+func setDebugMode(v bool) {
+	debugMode = v
+}
 func IsDevelopmennt() bool {
+	return debugMode
+}
+
+func getEnvDevelopmennt() bool {
 	if os.Getenv("VSCODE_IPC_HOOK_CLI") != "" {
-		return true
-	}
-	if os.Getenv(CONFIG_FORCE_DEVELOPMENT) != "" {
 		return true
 	}
 	return false

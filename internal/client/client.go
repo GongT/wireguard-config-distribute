@@ -2,12 +2,9 @@ package client
 
 import (
 	"context"
-	"crypto/tls"
 	"fmt"
-	"strconv"
 	"time"
 
-	"github.com/gongt/wireguard-config-distribute/internal/config"
 	"github.com/gongt/wireguard-config-distribute/internal/protocol"
 	"github.com/gongt/wireguard-config-distribute/internal/tools"
 	"google.golang.org/grpc"
@@ -26,28 +23,23 @@ type clientStateHolder struct {
 	context   context.Context
 }
 
-func NewClient() (client clientStateHolder) {
-	client = clientStateHolder{}
+type whereToConnect interface {
+	GetServer() string
+}
 
-	address := config.GetConfig(config.CONFIG_SERVER_ADDRESS, config.CONFIG_SERVER_ADDRESS_DEFAULT)
-	address = address + ":" + strconv.FormatInt(config.GetConfigNumber(config.CONFIG_SERVER_PORT, config.CONFIG_SERVER_PORT_DEFAULT), 10)
-	client.address = address
+func NewClient(options whereToConnect, creds credentials.TransportCredentials) clientStateHolder {
+	c := clientStateHolder{}
 
-	// if config.IsDevelopmennt() {
-	// 	fmt.Println("TLS did not enabled.")
-	// 	client.tlsOption = grpc.WithInsecure()
-	// } else {
-	fmt.Println("TLS enabled.")
-	creds := credentials.NewTLS(&tls.Config{})
-	client.tlsOption = grpc.WithTransportCredentials(creds)
-	// }
+	c.address = options.GetServer()
 
-	client.quitChan = make(chan bool, 1)
-	client.isQuit = false
+	c.tlsOption = grpc.WithTransportCredentials(creds)
 
-	client.context = metadata.NewOutgoingContext(context.Background(), map[string][]string{})
+	c.quitChan = make(chan bool, 1)
+	c.isQuit = false
 
-	return client
+	c.context = metadata.NewOutgoingContext(context.Background(), map[string][]string{})
+
+	return c
 }
 func (s *clientStateHolder) Quit() {
 	if s.isQuit {

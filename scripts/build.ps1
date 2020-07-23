@@ -1,14 +1,27 @@
 #!/usr/bin/env pwsh
 
+param([string]$type) 
+
 cd $PSScriptRoot/..
 
-./scripts/create-protobuf.ps1
+function build() {
+	param ([Parameter(Mandatory)]$type)
+	
+	echo "Building $type..."
+	go generate ./cmd/$type
+	go build -o dist/$type ./cmd/$type
+}
 
-echo "building server..."
-go build -o dist/server ./cmd/server
 
-echo "building tool..."
-go build -o dist/tool ./cmd/tool
+if (!(Test-Path("internal/protocol"))){
+	echo "Creating protocol..."
+	./scripts/create-protobuf.ps1
+}
 
-echo "building client..."
-go build -o dist/client ./cmd/client
+if ($type) {
+	build $type
+} else{
+	build server
+	build client
+	build tool
+}

@@ -3,6 +3,7 @@ module github.com/gongt/wireguard-config-distribute
 go 1.14
 
 require (
+	github.com/davecgh/go-spew v1.1.1
 	github.com/go-delve/delve v1.4.1
 	github.com/golang/protobuf v1.4.2
 	github.com/huin/goupnp v1.0.0
