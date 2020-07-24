@@ -4,6 +4,7 @@ go 1.14
 
 require (
 	github.com/davecgh/go-spew v1.1.1
+	github.com/fsnotify/fsnotify v1.4.9
 	github.com/go-delve/delve v1.4.1
 	github.com/golang/protobuf v1.4.2
 	github.com/huin/goupnp v1.0.0

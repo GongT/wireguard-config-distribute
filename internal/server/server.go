@@ -4,20 +4,26 @@ import (
 	"net"
 
 	"github.com/gongt/wireguard-config-distribute/internal/protocol"
+	"github.com/gongt/wireguard-config-distribute/internal/tools"
 	"google.golang.org/grpc"
 )
 
-type server struct {
-	grpc *grpc.Server
+type serverGrpc struct {
+	listen net.Listener
+	grpc   *grpc.Server
+}
+
+type serverStateHolder struct {
+	server
 }
 
 type serverImplement struct {
 }
 
-func NewServer() (srv server) {
-	srv = server{}
+func NewServer(creds grpc.ServerOption) (srv serverStateHolder) {
 
-	grpcServer := grpc.NewServer()
+	grpc.EnableTracing = tools.IsDevelopmennt()
+	grpcServer := grpc.NewServer(creds)
 	protocol.RegisterWireguardApiServer(grpcServer, &serverImplement{})
 
 	srv.grpc = grpcServer
@@ -25,6 +31,21 @@ func NewServer() (srv server) {
 	return
 }
 
-func (s *server) ListenSocket(lis net.Listener) {
-	s.grpc.Serve(lis)
+type listenOptions interface {
+	GetListenPath() string
+	GetListenPort() uint16
+}
+
+func (s *serverStateHolder) Listen(options listenOptions) {
+	if len(options.GetListenPath()) > 0 {
+		go s.server.grpc.Serve(*listenUnix(options.GetListenPath()))
+	} else if options.GetListenPort() > 0 {
+		go s.server.grpc.Serve(*listenTCP(options.GetListenPort()))
+	} else {
+		tools.Die("invalid config: no path or port to listen")
+	}
+}
+
+func (s *serverStateHolder) Stop() {
+	s.grpc.Stop()
 }

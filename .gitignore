@@ -2,3 +2,4 @@ pkg
 dist
 internal/protocol
 .vscode/history
+cmd/*/arguments.getters.go

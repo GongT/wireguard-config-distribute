@@ -12,18 +12,20 @@ service WireguardApi {
 
   // for tool
   rpc NewGroup(NewGroupRequest) returns (google.protobuf.Empty);
-  rpc Register(RegisterRequest) returns (RegisterResponse);
-  rpc Unregister(UnregisterRequest) returns (google.protobuf.Empty);
+//   rpc Register(RegisterRequest) returns (RegisterResponse);
+//   rpc Unregister(UnregisterRequest) returns (google.protobuf.Empty);
 }
+
+message GetIpResponse { string address = 1; }
 
 message PhysicalNetwork {
   string networkId = 1;
 
   bool externalEnabled = 2;
-  string externalIp = 3;
+  repeated string externalIp = 3;
   uint32 externalPort = 4;
 
-  string internalIp = 5;
+  repeated string internalIp = 5;
   uint32 internalPort = 6;
 }
 
@@ -33,14 +35,16 @@ message ClientInfoRequest {
   string title = 2;
 
   string hostname = 3;
-  /* hostname => ip */
-  map<string, string> services = 4;
+  repeated string services = 4;
 
   string requestVpnIp = 5;
   PhysicalNetwork network = 6;
 }
 
-message ClientInfoResponse { string offerIp = 1; }
+message ClientInfoResponse {
+  string offerIp = 1;
+  string publicIp = 2;
+}
 
 /** 服务器下发配置 */
 message Peers {

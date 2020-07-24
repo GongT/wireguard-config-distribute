@@ -8,15 +8,22 @@
 			"name": "Launch Server",
 			"type": "go",
 			"request": "launch",
-			"mode": "auto",
-			"program": "${workspaceFolder}/cmd/server/main.go"
+			"mode": "debug",
+			"program": "${workspaceFolder}/cmd/server"
 		},
 		{
 			"name": "Launch Client",
 			"type": "go",
 			"request": "launch",
-			"mode": "auto",
-			"program": "${workspaceFolder}/cmd/client/main.go"
+			"mode": "debug",
+			"program": "${workspaceFolder}/cmd/client",
+			"args": [
+				"-s",
+				"127.0.0.1:12345",
+				"-n",
+				"work",
+				"--external-ip-nohttp"
+			]
 		},
 		{
 			"name": "Launch Test Generate",
@@ -24,10 +31,10 @@
 			"request": "launch",
 			"mode": "debug",
 			"program": "${workspaceFolder}/tools/generate.go",
-			"cwd": "${workspaceFolder}/internal/client",
+			"cwd": "${workspaceFolder}/cmd/client/client",
 			"env": {
-				"GOFILE":"arguments.go",
-				"GOPACKAGE":"client"
+				"GOFILE": "arguments.go",
+				"GOPACKAGE": "client"
 			}
 		}
 	]

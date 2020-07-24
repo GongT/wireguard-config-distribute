@@ -1,5 +1,6 @@
 package tools
 
-import  "google.golang.org/protobuf/types/known/emptypb"
+import "google.golang.org/protobuf/types/known/emptypb"
 
-var EmptyPb *emptypb.Empty = &emptypb.Empty{}
+var emptyPbVal emptypb.Empty = emptypb.Empty{}
+var EmptyPb *emptypb.Empty = &emptyPbVal

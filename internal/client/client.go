@@ -1,83 +1,63 @@
 package client
 
 import (
-	"context"
-	"fmt"
-	"time"
-
-	"github.com/gongt/wireguard-config-distribute/internal/protocol"
-	"github.com/gongt/wireguard-config-distribute/internal/tools"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials"
-	"google.golang.org/grpc/metadata"
+	server "github.com/gongt/wireguard-config-distribute/internal/client/client.server"
 )
+
+type wgVpnStatus struct {
+	requestedAddress string
+	givenAddress     string
+}
 
 type clientStateHolder struct {
 	id        string
-	rpc       protocol.WireguardApiClient
-	grpcConn  *grpc.ClientConn
-	address   string
-	tlsOption grpc.DialOption
 	quitChan  chan bool
 	isQuit    bool
-	context   context.Context
+	isRunning bool
+
+	server server.ServerStatus
+	vpn    wgVpnStatus
+
+	configData oneTimeConfig
+	statusData editableConfig
 }
 
-type whereToConnect interface {
+type connectionOptions interface {
 	GetServer() string
+
+	GetGrpcInsecure() bool
+	GetGrpcHostname() string
+	GetGrpcServerKey() string
 }
 
-func NewClient(options whereToConnect, creds credentials.TransportCredentials) clientStateHolder {
-	c := clientStateHolder{}
+func NewClient(options connectionOptions) *clientStateHolder {
+	self := clientStateHolder{}
 
-	c.address = options.GetServer()
+	self.server = server.NewGrpcClient(options.GetServer(), server.TLSOptions{
+		Insecure:  options.GetGrpcInsecure(),
+		Hostname:  options.GetGrpcHostname(),
+		ServerKey: options.GetGrpcServerKey(),
+	})
 
-	c.tlsOption = grpc.WithTransportCredentials(creds)
+	self.quitChan = make(chan bool, 1)
+	self.isQuit = false
 
-	c.quitChan = make(chan bool, 1)
-	c.isQuit = false
-
-	c.context = metadata.NewOutgoingContext(context.Background(), map[string][]string{})
-
-	return c
-}
-func (s *clientStateHolder) Quit() {
-	if s.isQuit {
-		tools.Error("Duplicate call to Client.quit()")
-		return
-	}
-	s.isQuit = true
-
-	err := s.grpcConn.Close()
-	if err != nil {
-		tools.Error("Failed disconnect grpc: %s", err.Error())
-	}
-	fmt.Println("grpc closed.")
-
-	s.quitChan <- true
+	return &self
 }
 
-func (s *clientStateHolder) StartNetwork() {
-	s.startNetwork()
-	s.startProtocol()
+type configureOptions interface {
+	GetJoinGroup() string
+	GetNetworkName() string
+	GetTitle() string
+	GetPerferIp() string
+	GetHostname() string
+	GetPublicIp() string
+	GetPublicIp6() string
+	GetInternalIp() []string
+	GetListenPort() uint16
+	GetIpv6Only() bool
 }
 
-func (s *clientStateHolder) StartCommunication() {
-	ticker := time.NewTicker(1 * time.Second)
-	go func() {
-		fmt.Println("start communication...")
-		for {
-			select {
-			case <-ticker.C:
-				_, err := s.rpc.KeepAlive(s.context, tools.EmptyPb)
-				if err != nil {
-					tools.Error("grpc keep alive failed, is server running? %s", err.Error())
-				}
-			case <-s.quitChan:
-				ticker.Stop()
-				fmt.Println("stop communication.")
-				return
-			}
-		}
-	}()
+func (stat *clientStateHolder) Configure(options configureOptions) {
+	stat.configData.configure(options)
 }

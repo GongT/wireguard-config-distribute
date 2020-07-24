@@ -6,9 +6,16 @@ import (
 	"os/signal"
 )
 
-func WaitForCtrlC() {
+func WaitForCtrlC() chan bool {
 	signal_channel := make(chan os.Signal, 1)
 	signal.Notify(signal_channel, os.Interrupt)
-	<-signal_channel
-	fmt.Println("")
+
+	done := make(chan bool, 1)
+	go func() {
+		<-signal_channel
+		fmt.Println("")
+		fmt.Println("Bye, bye.")
+		done <- true
+	}()
+	return done
 }

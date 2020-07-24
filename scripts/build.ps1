@@ -13,10 +13,8 @@ function build() {
 }
 
 
-if (!(Test-Path("internal/protocol"))){
-	echo "Creating protocol..."
-	./scripts/create-protobuf.ps1
-}
+echo "Creating protocol..."
+./scripts/create-protobuf.ps1
 
 if ($type) {
 	build $type

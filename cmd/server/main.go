@@ -1,42 +1,50 @@
 package main
 
 import (
-	"flag"
-	"fmt"
-	"strconv"
+	"os"
+	"path/filepath"
 
 	"github.com/gongt/wireguard-config-distribute/internal/config"
-	"github.com/gongt/wireguard-config-distribute/internal/server"
+	serverInternals "github.com/gongt/wireguard-config-distribute/internal/server"
+	"github.com/gongt/wireguard-config-distribute/internal/server/storage"
 	"github.com/gongt/wireguard-config-distribute/internal/tools"
+	"google.golang.org/grpc"
 )
 
-var listenPath *string = flag.String("unix", "", "listen unix socket")
-var listenPort *uint = flag.Uint("port", 0, "listen unix socket")
-
 func main() {
-	fmt.Println("Hello, Server!")
+	opts := serverProgramOptions{}
+	config.ParseProgramArguments(&opts)
 
-	flag.Parse()
-
-	s := server.NewServer()
-
-	if len(*listenPath) > 0 || *listenPort > 0 {
-		if len(*listenPath) > 0 {
-			s.ListenSocket(server.ListenUnix(*listenPath))
+	storagePath := opts.GetStorageLocation()
+	if len(storagePath) == 0 {
+		home, err := os.UserHomeDir()
+		if err != nil {
+			tools.Die("Failed get user HOME: %s", err.Error())
 		}
-		if *listenPort > 0 {
-			s.ListenSocket(server.ListenTCP(uint16(*listenPort)))
+		storagePath = filepath.Join(home, ".wireguard-config-server")
+	}
+	store := storage.CreateStorage(storagePath)
+
+	var transport grpc.ServerOption
+	if opts.GetGrpcInsecure() {
+		if len(opts.GetGrpcServerKey()) > 0 || len(opts.GetGrpcServerPub()) > 0 {
+			tools.Die("Can not use server-key/pub file with --insecure")
 		}
+
+		transport = grpc.EmptyServerOption{}
 	} else {
-		listen := config.GetConfig(config.CONFIG_SERVER_LISTEN, config.CONFIG_SERVER_LISTEN_DEFAULT)
-		v, err := strconv.ParseUint(listen, 10, 16)
-		if err == nil {
-			s.ListenSocket(server.ListenTCP(uint16(v)))
-		} else {
-			s.ListenSocket(server.ListenUnix(listen))
+		certs, err := store.CreateTLSFilesIfNot(opts.GetGrpcServerKey(), opts.GetGrpcServerPub(), opts.GetServerName())
+		if err != nil {
+			tools.Die("Failed load TLS keyfile: %s", err.Error())
 		}
+		transport = grpc.Creds(certs)
 	}
 
-	tools.WaitForCtrlC()
-	fmt.Println("Bye, bye!")
+	server := serverInternals.NewServer(transport)
+
+	server.Listen(opts)
+
+	<-tools.WaitForCtrlC()
+
+	server.Stop()
 }
