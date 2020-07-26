@@ -1,19 +1,26 @@
 package main
 
 import (
-	"github.com/gongt/wireguard-config-distribute/internal/tools"
-	"github.com/gongt/wireguard-config-distribute/internal/upnp"
+	"github.com/davecgh/go-spew/spew"
+	"github.com/gongt/wireguard-config-distribute/internal/client"
+	"github.com/gongt/wireguard-config-distribute/internal/config"
 )
 
+var opts = toolProgramOptions{}
+
 func main() {
-	err := upnp.Discover()
-	if err != nil {
-		tools.Error("no NAT-PMP: %s", err.Error())
+	parser := config.InitProgramArguments(&opts)
+	spew.Dump(opts)
+
+	c := client.NewClient(connectionOptions{
+		server: opts.GetServer(),
+	})
+
+	tool := c.StartTool()
+
+	if parser.Exists("download-ca") {
+		tool.GetCA(opts.GetPassword(), opts.DownloadCA.GetOutput())
+	} else {
+		parser.DieUsage()
 	}
-
-	// client := client.NewClient()
-
-	// client.ConnectGrpc()
-
-	// client.Quit()
 }

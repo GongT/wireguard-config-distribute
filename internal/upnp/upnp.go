@@ -25,20 +25,3 @@ func TryAddPortMapping(port int) (err error) {
 
 	return
 }
-
-func GetPublicIp() (ret string, err error) {
-	gatewayIP, err := gateway.DiscoverGateway()
-	if err != nil {
-		return
-	}
-
-	client := natpmp.NewClient(gatewayIP)
-	response, err := client.GetExternalAddress()
-	if err != nil {
-		return
-	}
-
-	ret = fmt.Sprintf("%x.%x.%x.%x", response.ExternalIPAddress[0], response.ExternalIPAddress[1], response.ExternalIPAddress[2], response.ExternalIPAddress[3])
-
-	return
-}

@@ -1,38 +1,40 @@
 package detect_ip
 
 import (
+	"errors"
 	"io/ioutil"
 	"net/http"
 	"os"
+	"strings"
 )
 
-var envModify = false
-
-func addEnv() {
-	if envModify {
-		return
-	}
-	envModify = true
-
+func init() {
 	newEnv := os.Getenv("no_proxy") + ",api.ipify.org,api6.ipify.org"
 	os.Setenv("no_proxy", newEnv)
 	os.Setenv("NO_PROXY", newEnv)
 }
 
-func GetPublicIp() (string, error) {
-	addEnv()
-	return get("http://api.ipify.org/")
+func httpGetPublicIp4() (ret string, err error) {
+	ret, err = get("https://api.ipify.org/")
+	if err != nil {
+		return
+	}
+
+	if !IsValidIPv4(ret) {
+		return "", errors.New("Not valid ipv4: " + ret)
+	}
+
+	return
 }
 
-func GetPublicIp6() (ret string, err error) {
-	addEnv()
-	ret, err = get("http://api6.ipify.org/")
+func httpGetPublicIp6() (ret string, err error) {
+	ret, err = get("https://api6.ipify.org/")
 	if err != nil {
 		return
 	}
 
 	if !IsValidIPv6(ret) {
-		return "", nil
+		return "", errors.New("Not valid ipv6: " + ret)
 	}
 
 	return
@@ -51,6 +53,7 @@ func get(url string) (ret string, err error) {
 	}
 
 	ret = string(retBytes)
+	ret = strings.TrimSpace(ret)
 
 	return
 }

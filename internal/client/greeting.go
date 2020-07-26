@@ -6,8 +6,14 @@ import (
 )
 
 func (s *clientStateHolder) UploadInformation() bool {
-	data := s.configData
 	s.statusData.lock()
+	defer s.statusData.unlock()
+
+	if s.isRunning {
+		return s.isRunning
+	}
+
+	data := s.configData
 
 	result, err := s.server.Greeting(&protocol.ClientInfoRequest{
 		GroupName:    data.GroupName,
@@ -26,20 +32,19 @@ func (s *clientStateHolder) UploadInformation() bool {
 	})
 
 	if err == nil {
-		tools.Error("  * handshake complete. server offer ip address: %s\n", result.OfferIp)
+		tools.Error("  * complete. server offer ip address: %s\n", result.OfferIp)
 
 		s.vpn.givenAddress = result.OfferIp
-
+		s.SessionId = result.SessionId
 		s.isRunning = true
 
-		s.statusData.unlock()
 		return true
 	} else {
-		tools.Error("  * failed handshake: %s", err.Error())
+		tools.Error("  * failed: %s", err.Error())
 
+		s.SessionId = 0
 		s.isRunning = false
 
-		s.statusData.unlock()
 		return false
 	}
 }

@@ -11,7 +11,7 @@ func (s *clientStateHolder) Quit() {
 	}
 	s.isQuit = true
 
-	s.server.Disconnect()
+	s.server.Disconnect(s.SessionId)
 
 	s.quitChan <- true
 }

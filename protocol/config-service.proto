@@ -7,16 +7,16 @@ import "google/protobuf/empty.proto";
 service WireguardApi {
   rpc Greeting(ClientInfoRequest) returns (ClientInfoResponse);
   rpc Start(google.protobuf.Empty) returns (stream Peers);
-  rpc Close(google.protobuf.Empty) returns (google.protobuf.Empty);
-  rpc KeepAlive(google.protobuf.Empty) returns (KeepAliveStatus);
+  rpc Close(IdReportingRequest) returns (google.protobuf.Empty);
+  rpc KeepAlive(IdReportingRequest) returns (KeepAliveStatus);
 
   // for tool
   rpc NewGroup(NewGroupRequest) returns (google.protobuf.Empty);
-//   rpc Register(RegisterRequest) returns (RegisterResponse);
-//   rpc Unregister(UnregisterRequest) returns (google.protobuf.Empty);
+  rpc GetSelfSignedCertFile(GetCertFileRequest) returns (GetCertFileResponse);
 }
 
 message GetIpResponse { string address = 1; }
+message IdReportingRequest { uint64 SessionId = 1; }
 
 message PhysicalNetwork {
   string networkId = 1;
@@ -42,8 +42,9 @@ message ClientInfoRequest {
 }
 
 message ClientInfoResponse {
-  string offerIp = 1;
-  string publicIp = 2;
+  uint64 SessionId =1;
+  string offerIp = 2;
+  string publicIp = 3;
 }
 
 /** 服务器下发配置 */
@@ -71,10 +72,8 @@ message Peers {
 
 message KeepAliveStatus { bool success = 1; }
 
-message RegisterRequest { string password = 1; }
-message RegisterResponse {}
-message UnregisterRequest {}
-message UnregisterResponse {}
+message GetCertFileRequest { bytes password = 1; }
+message GetCertFileResponse { bytes certFileText = 1;}
 message NewGroupRequest {
   string name = 1;
   string title = 2;

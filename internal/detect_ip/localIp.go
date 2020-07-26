@@ -1,4 +1,4 @@
-package network_detect
+package detect_ip
 
 import (
 	"fmt"

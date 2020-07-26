@@ -4,7 +4,8 @@ import (
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/x509"
-	"crypto/x509/pkix"
+	"errors"
+	"fmt"
 	"math/big"
 	"net"
 	"time"
@@ -13,41 +14,50 @@ import (
 const serverCertFileName = "ca.cert.pem"
 const serverKeyFileName = "ca.key.pem"
 
-func (storage *ServerStorage) createKey(serverName, ipList []net.IP) (err error) {
-	certFile := storage.Path(serverCertFileName)
-	keyFile := storage.Path(serverKeyFileName)
+func (storage *ServerStorage) createKey(ipList []net.IP, certFile, keyFile string) (err error) {
+	fmt.Println("Siging certificate key...")
+	if storage._cacheCaPri == nil || storage._cacheCa == nil {
+		return errors.New("Invalid program state")
+	}
+
+	certPrivKey, err := readPKCS1(keyFile)
+	if err != nil {
+		certPrivKey, err = rsa.GenerateKey(rand.Reader, 4096)
+		if err != nil {
+			return err
+		}
+		err = writePKCS1(keyFile, certPrivKey)
+		if err != nil {
+			fmt.Printf("  * Private key write failed: %s\n", err.Error())
+			return
+		}
+		fmt.Printf("  * Private key has written to %s\n", keyFile)
+	} else {
+		fmt.Printf("  * Private key is read from %s\n", keyFile)
+	}
 
 	serverCert := &x509.Certificate{
 		SerialNumber: big.NewInt(2),
-		Subject: pkix.Name{
-			Organization: []string{serverName},
-			Country:      []string{"US"},
-		},
+		Subject:      storage._cacheCa.Subject,
 		IPAddresses:  ipList,
 		NotBefore:    time.Now(),
 		NotAfter:     time.Now().AddDate(10, 0, 0),
-		SubjectKeyId: []byte{1, 2, 3, 4, 6},
-		ExtKeyUsage:  []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
+		SubjectKeyId: []byte{1, 1, 4, 5, 1, 4},
+		ExtKeyUsage:  []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth, x509.ExtKeyUsageClientAuth},
 		KeyUsage:     x509.KeyUsageDigitalSignature,
 	}
 
-	certPrivKey, err := rsa.GenerateKey(rand.Reader, 4096)
-	if err != nil {
-		return err
-	}
-
-	certBytes, err := x509.CreateCertificate(rand.Reader, serverCert, caData, &certPrivKey.PublicKey, caPrivKey)
+	certBytes, err := x509.CreateCertificate(rand.Reader, serverCert, storage._cacheCa, &certPrivKey.PublicKey, storage._cacheCaPri)
 	if err != nil {
 		return err
 	}
 
 	err = writeCert(certFile, certBytes)
 	if err != nil {
+		fmt.Printf("  * Public key write failed: %s\n", err.Error())
 		return
 	}
+	fmt.Printf("  * Public key has written to %s\n", certFile)
 
-	err = writePKCS1(keyFile, certPrivKey)
-	if err != nil {
-		return
-	}
+	return
 }

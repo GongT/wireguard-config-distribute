@@ -13,6 +13,8 @@ require (
 	github.com/jcuga/go-upnp v0.0.0-20160830125909-492b17f02cbb
 	github.com/jessevdk/go-flags v1.4.0
 	github.com/prestonTao/upnp v0.0.0-20150206124352-f4370df5e109
+	github.com/rantav/go-grpc-channelz v0.0.2
+	golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9
 	golang.org/x/lint v0.0.0-20200302205851-738671d3881b // indirect
 	golang.org/x/net v0.0.0-20200707034311-ab3426394381 // indirect
 	golang.org/x/sys v0.0.0-20200720211630-cb9d2d5c5666 // indirect

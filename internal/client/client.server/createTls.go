@@ -3,7 +3,7 @@ package server
 import (
 	"crypto/tls"
 	"crypto/x509"
-	"fmt"
+	"errors"
 	"io/ioutil"
 
 	"google.golang.org/grpc/credentials"
@@ -26,9 +26,12 @@ func createClientTls(opts TLSOptions) (credentials.TransportCredentials, error) 
 		if err != nil {
 			return nil, err
 		}
-		cp := x509.NewCertPool()
+		cp, err := x509.SystemCertPool()
+		if err != nil {
+			return nil, err
+		}
 		if !cp.AppendCertsFromPEM(b) {
-			return nil, fmt.Errorf("credentials: failed to append certificates")
+			return nil, errors.New("credentials: failed to append certificates")
 		}
 		cfg.RootCAs = cp
 	}

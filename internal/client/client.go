@@ -10,13 +10,13 @@ type wgVpnStatus struct {
 }
 
 type clientStateHolder struct {
-	id        string
 	quitChan  chan bool
 	isQuit    bool
 	isRunning bool
 
-	server server.ServerStatus
-	vpn    wgVpnStatus
+	SessionId uint64
+	server    server.ServerStatus
+	vpn       wgVpnStatus
 
 	configData oneTimeConfig
 	statusData editableConfig

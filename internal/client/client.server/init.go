@@ -41,34 +41,35 @@ func NewGrpcClient(address string, tls TLSOptions) (ret ServerStatus) {
 
 func (stat *ServerStatus) Connect() {
 	if stat.connection != nil {
-		tools.Die("State error: connection already started")
+		tools.Die("State error: rpc connection already started")
 	}
-	for i := 0; i < 5; i++ {
-		fmt.Printf("Connect to server: %s (try %d)\n", stat.address, i)
+	fmt.Printf("Connect to server: %s\n", stat.address)
 
-		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-		defer cancel()
-		conn, err := grpc.DialContext(ctx, stat.address, stat.tlsOption, grpc.WithBlock())
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	conn, err := grpc.DialContext(ctx, stat.address, stat.tlsOption, grpc.WithBlock(), grpc.WithReturnConnectionError())
 
-		if err == nil {
-			fmt.Println("  * grpc connect ok.")
-			stat.connection = conn
-			stat.rpc = protocol.NewWireguardApiClient(conn)
-
-			return
-		} else {
-			tools.Error("Failed connect server: %s", err.Error())
-		}
+	if err != nil {
+		tools.Die("Failed to connect server: %s.", err.Error())
 	}
-	tools.Die("Failed to connect server (after 5 retry).")
+
+	fmt.Println("  * grpc connect ok.")
+	stat.connection = conn
+	stat.rpc = protocol.NewWireguardApiClient(conn)
+
+	return
 }
 
-func (stat *ServerStatus) Disconnect() {
-	if err := stat.Close(); err != nil {
-		tools.Error("Failed send close command: %s", err.Error())
+func (stat *ServerStatus) Disconnect(sessionId uint64) {
+	if sessionId != 0 {
+		tools.Error("Sending close command.")
+		if err := stat.Close(sessionId); err != nil {
+			tools.Error("Failed send close command: %s", err.Error())
+		}
 	}
+	tools.Error("Disconnect network.")
 	if err := stat.connection.Close(); err != nil {
 		tools.Error("Failed disconnect network: %s", err.Error())
 	}
-	fmt.Println("grpc closed.")
+	fmt.Println("grpc gracefull closed.")
 }

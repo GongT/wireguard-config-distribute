@@ -1,4 +1,4 @@
-package server
+package grpcImplements
 
 import (
 	"github.com/gongt/wireguard-config-distribute/internal/protocol"

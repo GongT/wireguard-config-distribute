@@ -13,13 +13,13 @@ func (stat *ServerStatus) Start() (protocol.WireguardApi_StartClient, error) {
 	return stat.rpc.Start(stat.context, tools.EmptyPb)
 }
 
-func (stat *ServerStatus) Close() error {
-	_, err := stat.rpc.Close(stat.context, tools.EmptyPb)
+func (stat *ServerStatus) Close(id uint64) error {
+	_, err := stat.rpc.Close(stat.context, &protocol.IdReportingRequest{SessionId: id})
 	return err
 }
 
-func (stat *ServerStatus) KeepAlive() (*protocol.KeepAliveStatus, error) {
-	return stat.rpc.KeepAlive(stat.context, tools.EmptyPb)
+func (stat *ServerStatus) KeepAlive(id uint64) (*protocol.KeepAliveStatus, error) {
+	return stat.rpc.KeepAlive(stat.context, &protocol.IdReportingRequest{SessionId: id})
 }
 
 func (stat *ServerStatus) NewGroup(request *protocol.NewGroupRequest) error {
@@ -27,12 +27,6 @@ func (stat *ServerStatus) NewGroup(request *protocol.NewGroupRequest) error {
 	return err
 }
 
-/*
-func (stat *ServerStatus) Register(request *protocol.RegisterRequest) (*protocol.RegisterResponse, error) {
-	return stat.rpc.Register(stat.context, request)
+func (stat *ServerStatus) GetSelfSignedCertFile(request *protocol.GetCertFileRequest) (*protocol.GetCertFileResponse, error) {
+	return stat.rpc.GetSelfSignedCertFile(stat.context, request)
 }
-func (stat *ServerStatus) Unregister(request *protocol.UnregisterRequest) error {
-	_, err := stat.rpc.Unregister(stat.context, request)
-	return err
-}
-*/

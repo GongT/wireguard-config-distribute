@@ -24,9 +24,9 @@ type clientProgramOptions struct {
 
 	PublicIp        string `long:"external-ip" description:"manually set public ipv4 address of this device, disable auto detect" env:"WIREGUARD_PUBLIC_IP"`
 	PublicIp6       string `long:"external-ip6" description:"manually set public ipv6 address of this device, disable auto detect" env:"WIREGUARD_PUBLIC_IP6"`
-	IpServerDsiable bool   `long:"external-ip-noserver" description:"disable detect public ipv4 by talk to wireguard config server" env:"WIREGUARD_PUBLIC_IP_NO_SERVER"`
+	IpServerDsiable bool   `long:"external-ip-noserver" description:"disable detect public ip by talk to wireguard config server" env:"WIREGUARD_PUBLIC_IP_NO_SERVER"`
 	IpUpnpDsiable   bool   `long:"external-ip-noupnp" description:"disable detect public ipv4 by UPnP/NAT-PMP" env:"WIREGUARD_PUBLIC_IP_NO_UPNP"`
-	IpHttpDsiable   bool   `long:"external-ip-nohttp" description:"disable detect public ipv4 by request a http api" env:"WIREGUARD_PUBLIC_IP_NO_HTTP"`
+	IpHttpDsiable   bool   `long:"external-ip-nohttp" description:"disable detect public ip by request a http api" env:"WIREGUARD_PUBLIC_IP_NO_HTTP"`
 
 	NoAutoForwardUpnp bool `long:"no-upnp-forward" description:"don't open port with UPnP/NAT-PMP" env:"WIREGUARD_NO_UPNP"`
 

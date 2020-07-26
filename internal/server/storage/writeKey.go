@@ -7,6 +7,7 @@ import (
 	"errors"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 )
 
 func readPKCS1(source string) (key *rsa.PrivateKey, err error) {
@@ -39,7 +40,7 @@ func writePKCS1(target string, content *rsa.PrivateKey) error {
 	return nil
 }
 
-func readCert(source string) ([]byte, error) {
+func readCert(source string) (*x509.Certificate, error) {
 	bytes, err := ioutil.ReadFile(source)
 	if err != nil {
 		return nil, err
@@ -50,14 +51,20 @@ func readCert(source string) ([]byte, error) {
 		return nil, errors.New("expect file " + source + " contains a certificate")
 	}
 
-	return block.Bytes, nil
+	return x509.ParseCertificate(block.Bytes)
 }
 
 func writeCert(target string, content []byte) error {
+	err := os.MkdirAll(filepath.Dir(target), os.FileMode(0755))
+	if err != nil {
+		return err
+	}
+
 	file, err := os.OpenFile(target, os.O_WRONLY+os.O_CREATE, os.FileMode(0600))
 	if err != nil {
 		return err
 	}
+
 	err = pem.Encode(file, &pem.Block{
 		Type:  "CERTIFICATE",
 		Bytes: content,

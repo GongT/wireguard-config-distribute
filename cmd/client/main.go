@@ -7,11 +7,9 @@ import (
 	"github.com/davecgh/go-spew/spew"
 	"github.com/gongt/wireguard-config-distribute/internal/client"
 	"github.com/gongt/wireguard-config-distribute/internal/client/hostfile"
-	"github.com/gongt/wireguard-config-distribute/internal/client/network_detect"
 	"github.com/gongt/wireguard-config-distribute/internal/config"
 	"github.com/gongt/wireguard-config-distribute/internal/detect_ip"
 	"github.com/gongt/wireguard-config-distribute/internal/tools"
-	"github.com/gongt/wireguard-config-distribute/internal/upnp"
 )
 
 func main() {
@@ -30,24 +28,10 @@ func main() {
 		opts.HostFile = "C:/Windows/System32/drivers/etc/hosts"
 	}
 	if len(opts.InternalIp) == 0 {
-		opts.InternalIp = network_detect.DetectLocalNetwork()
+		opts.InternalIp = detect_ip.DetectLocalNetwork()
 	}
-	if len(opts.PublicIp) == 0 && !opts.Ipv6Only {
-		if !opts.IpUpnpDsiable {
-			tools.Error("Finding public ipv4 from router...")
-			opts.PublicIp, _ = upnp.GetPublicIp()
-		}
-		if len(opts.PublicIp) == 0 && !opts.IpHttpDsiable {
-			tools.Error("Fetching IPv4 address...")
-			opts.PublicIp, _ = detect_ip.GetPublicIp()
-		}
-	}
-	if len(opts.PublicIp6) == 0 {
-		if len(opts.PublicIp) == 0 && !opts.IpHttpDsiable {
-			tools.Error("Fetching IPv6 address...")
-			opts.PublicIp6, _ = detect_ip.GetPublicIp6()
-		}
-	}
+
+	detect_ip.Detect(&opts.PublicIp, &opts.PublicIp6, !opts.GetIpHttpDsiable(), !opts.GetIpUpnpDsiable())
 
 	tools.Debug("input config: %s", spew.Sdump(opts))
 
@@ -69,8 +53,8 @@ func main() {
 
 	<-tools.WaitForCtrlC()
 
-	c.Quit()
 	watcher.StopWatch()
+	c.Quit()
 
 	fmt.Println("Bye, bye!")
 }

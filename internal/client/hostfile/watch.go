@@ -3,6 +3,7 @@ package hostfile
 import (
 	"io/ioutil"
 	"log"
+	"sync"
 
 	"github.com/fsnotify/fsnotify"
 	"github.com/gongt/wireguard-config-distribute/internal/tools"
@@ -11,10 +12,15 @@ import (
 type watcher struct {
 	watcher  *fsnotify.Watcher
 	OnChange chan string
+	quit     chan bool
+	mutex    sync.Mutex
 }
 
 func (w *watcher) StopWatch() {
 	w.watcher.Close()
+	close(w.OnChange)
+	w.quit <- true
+	close(w.quit)
 }
 
 func StartWatch(file string) watcher {
@@ -24,8 +30,10 @@ func StartWatch(file string) watcher {
 	}
 
 	w := watcher{
-		fsWatch,
-		make(chan string, 1),
+		watcher:  fsWatch,
+		OnChange: make(chan string, 1),
+		quit:     make(chan bool, 1),
+		mutex:    sync.Mutex{},
 	}
 
 	if data, err := ioutil.ReadFile(file); err == nil {
@@ -53,6 +61,9 @@ func StartWatch(file string) watcher {
 					return
 				}
 				log.Println("fsnotify error:", err)
+			case _ = <-w.quit:
+				log.Println("fsnotify finishing...")
+				return
 			}
 		}
 	}()
