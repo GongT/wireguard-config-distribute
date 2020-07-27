@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/davecgh/go-spew/spew"
 	"github.com/gongt/wireguard-config-distribute/internal/config"
 	serverInternals "github.com/gongt/wireguard-config-distribute/internal/server"
 	"github.com/gongt/wireguard-config-distribute/internal/server/grpcImplements"
@@ -74,6 +75,11 @@ func main() {
 		}
 		fmt.Println("Using TLS transport")
 		certs = &_certs
+	}
+
+	if opts.DebugMode {
+		tools.Error("commandline arguments: %s", spew.Sdump(opts))
+		tools.SetDebugMode(opts.DebugMode)
 	}
 
 	server := serverInternals.NewServer(opts, certs, grpcImplements.CreateServerImplement(opts))

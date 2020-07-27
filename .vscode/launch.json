@@ -9,7 +9,11 @@
 			"type": "go",
 			"request": "launch",
 			"mode": "debug",
-			"program": "${workspaceFolder}/cmd/server"
+			"program": "${workspaceFolder}/cmd/server",
+			"args": [
+				"--server-name=test",
+				"--ip-nohttp"
+			]
 		},
 		{
 			"name": "Launch Client",
@@ -18,10 +22,8 @@
 			"mode": "debug",
 			"program": "${workspaceFolder}/cmd/client",
 			"args": [
-				"-s",
-				"127.0.0.1:12345",
-				"-n",
-				"work",
+				"--server=127.0.0.1",
+				"--server-ca=/root/.wireguard-config-server/ca.cert.pem",
 				"--external-ip-nohttp"
 			]
 		},

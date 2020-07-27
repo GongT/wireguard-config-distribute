@@ -4,7 +4,6 @@ import (
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/x509"
-	"errors"
 	"fmt"
 	"math/big"
 	"net"
@@ -16,9 +15,6 @@ const serverKeyFileName = "ca.key.pem"
 
 func (storage *ServerStorage) createKey(ipList []net.IP, certFile, keyFile string) (err error) {
 	fmt.Println("Siging certificate key...")
-	if storage._cacheCaPri == nil || storage._cacheCa == nil {
-		return errors.New("Invalid program state")
-	}
 
 	certPrivKey, err := readPKCS1(keyFile)
 	if err != nil {

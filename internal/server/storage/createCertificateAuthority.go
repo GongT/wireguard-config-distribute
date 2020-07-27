@@ -28,6 +28,10 @@ func (storage *ServerStorage) loadOrCreateCA(serverName string) (ca *x509.Certif
 		if err != nil {
 			return
 		}
+		ca, err = readCert(storage.Path(caCertFileName))
+		if err != nil {
+			return
+		}
 	}
 
 	pri, err = readPKCS1(storage.Path(caKeyFileName))

@@ -7,8 +7,8 @@ type downloadCaAction struct {
 }
 
 type toolProgramOptions struct {
-	Server   string `short:"s" long:"server" description:"config server ip:port" required:"true" env:"WIREGUARD_SERVER"`
-	Password string `short:"P" long:"password" description:"server password" required:"true" env:"WIREGUARD_PASSWORD"`
+	Server   string `short:"s" long:"server" description:"config server ip:port" default:"127.0.0.1:51820" env:"WIREGUARD_SERVER"`
+	Password string `short:"P" long:"password" description:"server password (required when connect to remote server)" env:"WIREGUARD_PASSWORD"`
 
 	DownloadCA downloadCaAction `command:"download-ca" alias:"auth" description:"Download server's self-signed CA cert file"`
 

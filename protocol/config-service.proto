@@ -27,24 +27,27 @@ message PhysicalNetwork {
 
   repeated string internalIp = 5;
   uint32 internalPort = 6;
+
+  uint32 MTU = 7;
 }
 
 message ClientInfoRequest {
   string groupName = 1;
 
   string title = 2;
-
   string hostname = 3;
-  repeated string services = 4;
 
-  string requestVpnIp = 5;
-  PhysicalNetwork network = 6;
+  repeated string services = 5;
+
+  string requestVpnIp = 6;
+  PhysicalNetwork network = 7;
 }
 
 message ClientInfoResponse {
-  uint64 SessionId =1;
-  string offerIp = 2;
-  string publicIp = 3;
+  uint64 SessionId = 1;
+  string publicIp = 2;
+  string offerIp = 3;
+  string privateKey = 4;
 }
 
 /** 服务器下发配置 */
@@ -56,8 +59,8 @@ message Peers {
     uint32 port = 4;
 
     string vpnIp = 5;
-    int32 keepAlive = 6;
-    int32 MTU = 7;
+    uint32 keepAlive = 6;
+    uint32 MTU = 7;
   }
   message Peer {
     string title = 1;
@@ -73,7 +76,7 @@ message Peers {
 message KeepAliveStatus { bool success = 1; }
 
 message GetCertFileRequest { bytes password = 1; }
-message GetCertFileResponse { bytes certFileText = 1;}
+message GetCertFileResponse { bytes certFileText = 1; }
 message NewGroupRequest {
   string name = 1;
   string title = 2;

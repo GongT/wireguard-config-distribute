@@ -14,7 +14,7 @@ import (
 
 func main() {
 	opts := clientProgramOptions{}
-	config.ParseProgramArguments(&opts)
+	config.InitProgramArguments(&opts)
 
 	if len(opts.Hostname) == 0 {
 		tools.Die("HOSTNAME is empty, please set --hostname")
@@ -33,9 +33,10 @@ func main() {
 
 	detect_ip.Detect(&opts.PublicIp, &opts.PublicIp6, !opts.GetIpHttpDsiable(), !opts.GetIpUpnpDsiable())
 
-	tools.Debug("input config: %s", spew.Sdump(opts))
+	tools.NormalizeServerString(&opts.Server)
 
 	if opts.DebugMode {
+		tools.Error("commandline arguments: %s", spew.Sdump(opts))
 		tools.SetDebugMode(opts.DebugMode)
 	}
 

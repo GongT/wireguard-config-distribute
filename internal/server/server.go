@@ -3,11 +3,9 @@ package server
 import (
 	"fmt"
 	"net"
-	"net/http"
 
 	"github.com/gongt/wireguard-config-distribute/internal/protocol"
 	"github.com/gongt/wireguard-config-distribute/internal/tools"
-	channelzWebDebug "github.com/rantav/go-grpc-channelz"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/channelz/service"
 	"google.golang.org/grpc/credentials"
@@ -25,9 +23,8 @@ type serverStateHolder struct {
 	listenUnix bool
 	_listen    func()
 
-	listener      net.Listener
-	debugListener net.Listener
-	grpc          *grpc.Server
+	listener net.Listener
+	grpc     *grpc.Server
 }
 
 func NewServer(options listenOptions, creds *credentials.TransportCredentials, srv protocol.WireguardApiServer) *serverStateHolder {
@@ -60,7 +57,10 @@ func NewServer(options listenOptions, creds *credentials.TransportCredentials, s
 	}
 
 	protocol.RegisterWireguardApiServer(ret.grpc, srv)
-	service.RegisterChannelzServiceToServer(ret.grpc)
+
+	if tools.IsDevelopmennt() {
+		service.RegisterChannelzServiceToServer(ret.grpc)
+	}
 
 	return ret
 }
@@ -83,21 +83,10 @@ func (srv *serverStateHolder) Listen(options listenOptions) {
 			tools.Die("Server listen unexpected return: %s", err.Error())
 		}
 	}()
-
-	if tools.IsDevelopmennt() {
-		http.Handle("/", channelzWebDebug.CreateHandler("/", listenAddr))
-		srv.debugListener = listenTCP(options.GetListenPort() + 1)
-		go func() {
-			tools.Error("Debug listen port: %v", srv.debugListener.Addr().String())
-			http.Serve(srv.debugListener, nil)
-			tools.Error("Debug listen successfully complete")
-		}()
-	}
 }
 
 func (srv *serverStateHolder) Stop() {
 	srv.grpc.Stop()
-	srv.debugListener.Close()
 }
 
 func (srv *serverStateHolder) IsSecure() bool {

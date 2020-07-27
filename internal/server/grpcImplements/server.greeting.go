@@ -5,9 +5,11 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/davecgh/go-spew/spew"
+	"github.com/gongt/wireguard-config-distribute/internal/constants"
 	"github.com/gongt/wireguard-config-distribute/internal/protocol"
+	"github.com/gongt/wireguard-config-distribute/internal/server/grpcImplements/peerStatus"
 	"github.com/gongt/wireguard-config-distribute/internal/tools"
+	"github.com/gongt/wireguard-config-distribute/internal/wireguard"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/peer"
 )
@@ -19,7 +21,7 @@ func guid() uint64 {
 	return _guid
 }
 
-func (s *serverImplement) Greeting(ctx context.Context, _ *protocol.ClientInfoRequest) (*protocol.ClientInfoResponse, error) {
+func (s *serverImplement) Greeting(ctx context.Context, request *protocol.ClientInfoRequest) (*protocol.ClientInfoResponse, error) {
 	remoteIp := tools.GetRemoteFromContext(ctx)
 	if len(remoteIp) == 0 {
 		return nil, errors.New("Failed find your ip")
@@ -31,13 +33,68 @@ func (s *serverImplement) Greeting(ctx context.Context, _ *protocol.ClientInfoRe
 	}
 
 	md, _ := metadata.FromIncomingContext(ctx)
-	fmt.Printf("New Client Greeting: %s - %s: %s", remoteIp, authtype, spew.Sdump(md))
+	fmt.Printf("New Client Greeting: %s (%s)\n", remoteIp, authtype)
+	for key, value := range md {
+		fmt.Printf("   * %v: %v\n", key, value)
+	}
 
 	clientId := guid()
 
+	if !s.vpnManager.Exists(request.GetGroupName()) {
+		return nil, errors.New("VPN group not exists: " + request.GetGroupName())
+	}
+
+	networkGroup := request.GetNetwork().GetNetworkId()
+	if !s.networkManager.Exists(networkGroup) {
+		return nil, errors.New("Network group not exists: " + networkGroup)
+	}
+
+	allocIp := s.vpnManager.AllocateIp(request.GetGroupName(), request.GetHostname(), request.GetRequestVpnIp())
+	if len(allocIp) == 0 {
+		return nil, errors.New("Can not alloc ip address")
+	}
+
+	keepAlive := uint32(0)
+	externalIps := request.GetNetwork().GetExternalIp()
+	if len(externalIps) == 0 {
+		if request.GetNetwork().GetExternalEnabled() {
+			externalIps = append(externalIps, remoteIp)
+			keepAlive = 25
+		}
+	}
+
+	pubKey, priKey, err := wireguard.GenerateKeyPair()
+	if err != nil {
+		return nil, errors.New("Failed generate wireguard keys: " + err.Error())
+	}
+
+	s.peerStatus.Add(clientId, &peerStatus.PeerData{
+		Title:        request.GetTitle(),
+		Hostname:     request.GetHostname(),
+		PublicKey:    pubKey,
+		VpnIp:        allocIp,
+		KeepAlive:    keepAlive,
+		MTU:          request.GetNetwork().GetMTU(),
+		Hosts:        request.GetServices(),
+		NetworkId:    networkGroup,
+		ExternalIp:   externalIps,
+		ExternalPort: port(request.GetNetwork().GetExternalPort()),
+		InternalIp:   request.GetNetwork().InternalIp,
+		InternalPort: port(request.GetNetwork().GetInternalPort()),
+	})
+
 	return &protocol.ClientInfoResponse{
-		SessionId: clientId,
-		OfferIp:   "1.2",
-		PublicIp:  remoteIp,
+		SessionId:  clientId,
+		PublicIp:   remoteIp,
+		OfferIp:    allocIp,
+		PrivateKey: priKey,
 	}, nil
+}
+
+func port(n uint32) uint32 {
+	if n == 0 {
+		return constants.DEFAULT_PORT_NUMBER
+	} else {
+		return n
+	}
 }

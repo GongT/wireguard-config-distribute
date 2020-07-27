@@ -3,10 +3,8 @@ package server
 import (
 	"context"
 	"fmt"
-	"strings"
 	"time"
 
-	"github.com/gongt/wireguard-config-distribute/internal/config"
 	"github.com/gongt/wireguard-config-distribute/internal/protocol"
 	"github.com/gongt/wireguard-config-distribute/internal/tools"
 	"google.golang.org/grpc"
@@ -15,17 +13,17 @@ import (
 
 type ServerStatus struct {
 	tlsOption grpc.DialOption
-	context   context.Context
 	address   string
+
+	context       context.Context
+	contextMeta   map[string][]string
+	contextCancel context.CancelFunc
 
 	rpc        protocol.WireguardApiClient
 	connection *grpc.ClientConn
 }
 
 func NewGrpcClient(address string, tls TLSOptions) (ret ServerStatus) {
-	if !strings.Contains(address, ":") {
-		address += ":" + config.DEFAULT_PORT
-	}
 	ret.address = address
 
 	creds, err := createClientTls(tls)
@@ -34,7 +32,7 @@ func NewGrpcClient(address string, tls TLSOptions) (ret ServerStatus) {
 	}
 	ret.tlsOption = grpc.WithTransportCredentials(creds)
 
-	ret.context = metadata.NewOutgoingContext(context.Background(), map[string][]string{})
+	ret.context, ret.contextCancel = context.WithCancel(metadata.NewOutgoingContext(context.Background(), ret.contextMeta))
 
 	return
 }
@@ -61,6 +59,8 @@ func (stat *ServerStatus) Connect() {
 }
 
 func (stat *ServerStatus) Disconnect(sessionId uint64) {
+	stat.contextCancel()
+
 	if sessionId != 0 {
 		tools.Error("Sending close command.")
 		if err := stat.Close(sessionId); err != nil {

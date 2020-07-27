@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"errors"
 	"fmt"
 	"net"
 
@@ -9,6 +10,10 @@ import (
 )
 
 func (storage *ServerStorage) loadOrCreateServerKey(options tlsOptions) error {
+	if storage._cacheCaPri == nil || storage._cacheCa == nil {
+		return errors.New("Invalid program state [CA Cache]")
+	}
+
 	ips := options.GetPublicIp()
 
 	var ipv4, ipv6 string

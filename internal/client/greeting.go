@@ -35,6 +35,7 @@ func (s *clientStateHolder) UploadInformation() bool {
 		tools.Error("  * complete. server offer ip address: %s\n", result.OfferIp)
 
 		s.vpn.givenAddress = result.OfferIp
+		s.vpn.interfacePrivateKey = result.PrivateKey
 		s.SessionId = result.SessionId
 		s.isRunning = true
 

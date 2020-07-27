@@ -5,8 +5,9 @@ import (
 )
 
 type wgVpnStatus struct {
-	requestedAddress string
-	givenAddress     string
+	requestedAddress    string
+	givenAddress        string
+	interfacePrivateKey string
 }
 
 type clientStateHolder struct {

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/davecgh/go-spew/spew"
 	"github.com/gongt/wireguard-config-distribute/internal/client/remoteControl"
 	"github.com/gongt/wireguard-config-distribute/internal/tools"
 )
@@ -28,22 +29,41 @@ func (stat *clientStateHolder) StartCommunication() {
 				tools.Error("Event loop finished")
 				return
 			}
-
-			stat.isRunning = false
-
-			tools.Error("Send handshake:")
-			for {
-				if stat.UploadInformation() {
-					break
-				}
-				time.Sleep(5 * time.Second)
-			}
-
-			// todo: boot vpn
-
-			stat.tick()
+			stat.handshake()
+			stat.work()
 		}
 	}()
+}
+
+func (stat *clientStateHolder) handshake() {
+	stat.isRunning = false
+
+	tools.Error("Send handshake:")
+	for {
+		if stat.UploadInformation() {
+			break
+		}
+		time.Sleep(5 * time.Second)
+	}
+}
+
+func (stat *clientStateHolder) work() {
+	stream, err := stat.server.Start()
+	if err != nil {
+		tools.Error("grpc connected but start() failed, is server running? %s", err.Error())
+		return
+	}
+
+	for {
+		peers, err := stream.Recv()
+
+		if err != nil {
+			tools.Error("Failed receive peers, is server ok? %s", err.Error())
+			return
+		}
+
+		spew.Dump(peers)
+	}
 }
 
 func (stat *clientStateHolder) tick() {
