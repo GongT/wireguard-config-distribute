@@ -7,7 +7,7 @@ cd $PSScriptRoot/..
 $host.ui.RawUI.WindowTitle = "== B2 =="
 
 ./dist/client `
-	--insecure -D `
+	--insecure -D --external-ip-nohttp `
 	--hosts-file=/tmp/xxxqqq/hosts0 `
 	--netgroup=B `
 	--server=127.0.0.1 `

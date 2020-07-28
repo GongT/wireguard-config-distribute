@@ -9,7 +9,7 @@ mkdir -p /tmp/xxxqqq/
 $host.ui.RawUI.WindowTitle = "== A2 =="
 
 ./dist/client `
---insecure -D `
+	--insecure -D --external-ip-nohttp `
 	--hosts-file=/tmp/xxxqqq/hosts0 `
 	--netgroup=A `
 	--server=127.0.0.1 `
