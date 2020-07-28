@@ -59,14 +59,13 @@ func (stat *ServerStatus) Connect() {
 }
 
 func (stat *ServerStatus) Disconnect(sessionId uint64) {
-	stat.contextCancel()
-
 	if sessionId != 0 {
 		tools.Error("Sending close command.")
 		if err := stat.Close(sessionId); err != nil {
 			tools.Error("Failed send close command: %s", err.Error())
 		}
 	}
+	stat.contextCancel()
 	tools.Error("Disconnect network.")
 	if err := stat.connection.Close(); err != nil {
 		tools.Error("Failed disconnect network: %s", err.Error())

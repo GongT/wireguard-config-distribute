@@ -10,15 +10,16 @@ import (
 func listenUnix(socketPath string) net.Listener {
 	lis, err := net.Listen("unix", socketPath)
 	if err != nil {
-		tools.Die("failed to listen [[%s]]! %s", lis.Addr().String(), err.Error())
+		tools.Die("failed to listen [[%s]]! %s", socketPath, err.Error())
 	}
 	return lis
 }
 
 func listenTCP(port uint16) net.Listener {
-	lis, err := net.Listen("tcp", "0.0.0.0:"+strconv.FormatInt(int64(port), 10))
+	tryLis := "0.0.0.0:" + strconv.FormatInt(int64(port), 10)
+	lis, err := net.Listen("tcp", tryLis)
 	if err != nil {
-		tools.Die("failed to listen [[%s]]! %s", lis.Addr().String(), err.Error())
+		tools.Die("failed to listen [[%s]]! %s", tryLis, err.Error())
 	}
 	return lis
 }

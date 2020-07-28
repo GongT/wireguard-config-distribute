@@ -3,3 +3,4 @@ dist
 internal/protocol
 .vscode/history
 cmd/*/arguments.getters.go
+__debug_bin

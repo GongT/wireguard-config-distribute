@@ -5,13 +5,14 @@ import (
 	"github.com/gongt/wireguard-config-distribute/internal/tools"
 )
 
-func (s *clientStateHolder) UploadInformation() bool {
+func (s *clientStateHolder) uploadInformation() bool {
+	tools.Error(" ~  uploadInformation()")
 	s.statusData.lock()
 	defer s.statusData.unlock()
 
-	if s.isRunning {
-		return s.isRunning
-	}
+	// if s.isRunning {
+	// 	return s.isRunning
+	// }
 
 	data := s.configData
 
@@ -32,12 +33,14 @@ func (s *clientStateHolder) UploadInformation() bool {
 	})
 
 	if err == nil {
-		tools.Error("  * complete. server offer ip address: %s\n", result.OfferIp)
+		tools.Error("  * complete. server offer ip address: %s", result.OfferIp)
 
 		s.vpn.givenAddress = result.OfferIp
 		s.vpn.interfacePrivateKey = result.PrivateKey
 		s.SessionId = result.SessionId
 		s.isRunning = true
+
+		// TODO create interface
 
 		return true
 	} else {

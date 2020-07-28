@@ -26,6 +26,8 @@ type clientStateHolder struct {
 type connectionOptions interface {
 	GetServer() string
 
+	GetPerferIp() string
+
 	GetGrpcInsecure() bool
 	GetGrpcHostname() string
 	GetGrpcServerKey() string
@@ -39,6 +41,8 @@ func NewClient(options connectionOptions) *clientStateHolder {
 		Hostname:  options.GetGrpcHostname(),
 		ServerKey: options.GetGrpcServerKey(),
 	})
+
+	self.vpn.requestedAddress = options.GetPerferIp()
 
 	self.quitChan = make(chan bool, 1)
 	self.isQuit = false

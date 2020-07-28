@@ -10,6 +10,10 @@ import (
 type NumberBasedIp uint32
 
 func FromNumber(ip string) NumberBasedIp {
+	if len(ip) == 0 {
+		return 0
+	}
+
 	ips := strings.Split(ip, ".")
 	l := 0
 	var v uint32

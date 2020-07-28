@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/davecgh/go-spew/spew"
 	"github.com/gongt/wireguard-config-distribute/internal/client/remoteControl"
 	"github.com/gongt/wireguard-config-distribute/internal/tools"
 )
 
 func (stat *clientStateHolder) startNetwork() {
+	// todo: try 5 times
 	stat.server.Connect()
 }
 
@@ -29,56 +29,66 @@ func (stat *clientStateHolder) StartCommunication() {
 				tools.Error("Event loop finished")
 				return
 			}
-			stat.handshake()
-			stat.work()
+
+			stat.run()
+
+			time.Sleep(5 * time.Second)
 		}
 	}()
 }
 
-func (stat *clientStateHolder) handshake() {
+func (stat *clientStateHolder) run() {
 	stat.isRunning = false
 
 	tools.Error("Send handshake:")
 	for {
-		if stat.UploadInformation() {
+		if stat.uploadInformation() {
 			break
 		}
 		time.Sleep(5 * time.Second)
 	}
-}
+	tools.Error("Complete handshake")
 
-func (stat *clientStateHolder) work() {
-	stream, err := stat.server.Start()
+	channel, err := stat.server.Start(stat.SessionId)
 	if err != nil {
 		tools.Error("grpc connected but start() failed, is server running? %s", err.Error())
 		return
 	}
 
-	for {
-		peers, err := stream.Recv()
-
-		if err != nil {
-			tools.Error("Failed receive peers, is server ok? %s", err.Error())
-			return
-		}
-
-		spew.Dump(peers)
-	}
-}
-
-func (stat *clientStateHolder) tick() {
-	ticker := time.NewTicker(20 * time.Second)
-	defer ticker.Stop()
+	tmr := time.NewTicker(20 * time.Second)
+	defer tmr.Stop()
 
 	for {
 		select {
-		case <-ticker.C:
+		case <-tmr.C:
+			if stat.isQuit {
+				tools.Debug(" ~ quit")
+				return
+			}
+			tools.Debug(" ~ send keep alive")
 			result, err := stat.server.KeepAlive(stat.SessionId)
-			if err != nil || !result.Success {
+			if err != nil {
 				tools.Error("grpc keep alive failed, is server (still) running? %s", err.Error())
 				return
 			}
+			if !result.Success {
+				tools.Error("server cleared, my state will reset.")
+				return
+			}
+		case peers := <-channel:
+			if stat.isQuit {
+				tools.Debug(" ~ quit")
+				return
+			} else if peers == nil {
+				tools.Debug(" ~ server disconnected")
+				return
+			}
+			tools.Debug(" ~ receive peers (%d peer)", len(peers.List))
+			for _, peer := range peers.List {
+				tools.Debug("  * %d: %s -> %s", peer.SessionId, peer.Hostname, peer.GetPeer().GetAddress())
+			}
 		case <-stat.quitChan:
+			tools.Debug(" ~ quit")
 			return
 		}
 	}

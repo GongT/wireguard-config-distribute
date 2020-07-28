@@ -5,6 +5,7 @@ import (
 	"net"
 
 	"github.com/gongt/wireguard-config-distribute/internal/protocol"
+	"github.com/gongt/wireguard-config-distribute/internal/server/grpcImplements"
 	"github.com/gongt/wireguard-config-distribute/internal/tools"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/channelz/service"
@@ -17,20 +18,24 @@ type listenOptions interface {
 }
 
 type serverStateHolder struct {
-	creds  *credentials.TransportCredentials
-	srvice protocol.WireguardApiServer
+	creds   *credentials.TransportCredentials
+	service *grpcImplements.Implements
 
 	listenUnix bool
 	_listen    func()
 
 	listener net.Listener
 	grpc     *grpc.Server
+
+	isQuit bool
 }
 
-func NewServer(options listenOptions, creds *credentials.TransportCredentials, srv protocol.WireguardApiServer) *serverStateHolder {
+func NewServer(options listenOptions, creds *credentials.TransportCredentials, serviceImpl *grpcImplements.Implements) *serverStateHolder {
 	ret := &serverStateHolder{
-		creds:  creds,
-		srvice: srv,
+		creds:   creds,
+		service: serviceImpl,
+
+		isQuit: false,
 	}
 	if len(options.GetListenPath()) > 0 {
 		ret.creds = nil
@@ -56,7 +61,7 @@ func NewServer(options listenOptions, creds *credentials.TransportCredentials, s
 		ret.grpc = grpc.NewServer(grpc.Creds(*ret.creds))
 	}
 
-	protocol.RegisterWireguardApiServer(ret.grpc, srv)
+	protocol.RegisterWireguardApiServer(ret.grpc, serviceImpl)
 
 	if tools.IsDevelopmennt() {
 		service.RegisterChannelzServiceToServer(ret.grpc)
@@ -86,6 +91,12 @@ func (srv *serverStateHolder) Listen(options listenOptions) {
 }
 
 func (srv *serverStateHolder) Stop() {
+	if srv.isQuit {
+		tools.Error("Duplicate call to serverStateHolder.Stop()")
+		return
+	}
+	srv.isQuit = true
+
 	srv.grpc.Stop()
 }
 

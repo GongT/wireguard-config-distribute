@@ -7,6 +7,6 @@ import (
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
-func (s *serverImplement) NewGroup(context.Context, *protocol.NewGroupRequest) (*emptypb.Empty, error) {
+func (s *Implements) NewGroup(context.Context, *protocol.NewGroupRequest) (*emptypb.Empty, error) {
 	return nil, nil
 }

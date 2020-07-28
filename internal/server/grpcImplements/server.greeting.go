@@ -7,7 +7,7 @@ import (
 
 	"github.com/gongt/wireguard-config-distribute/internal/constants"
 	"github.com/gongt/wireguard-config-distribute/internal/protocol"
-	"github.com/gongt/wireguard-config-distribute/internal/server/grpcImplements/peerStatus"
+	"github.com/gongt/wireguard-config-distribute/internal/server/peerStatus"
 	"github.com/gongt/wireguard-config-distribute/internal/tools"
 	"github.com/gongt/wireguard-config-distribute/internal/wireguard"
 	"google.golang.org/grpc/metadata"
@@ -21,7 +21,7 @@ func guid() uint64 {
 	return _guid
 }
 
-func (s *serverImplement) Greeting(ctx context.Context, request *protocol.ClientInfoRequest) (*protocol.ClientInfoResponse, error) {
+func (s *Implements) Greeting(ctx context.Context, request *protocol.ClientInfoRequest) (*protocol.ClientInfoResponse, error) {
 	remoteIp := tools.GetRemoteFromContext(ctx)
 	if len(remoteIp) == 0 {
 		return nil, errors.New("Failed find your ip")
@@ -45,9 +45,6 @@ func (s *serverImplement) Greeting(ctx context.Context, request *protocol.Client
 	}
 
 	networkGroup := request.GetNetwork().GetNetworkId()
-	if !s.networkManager.Exists(networkGroup) {
-		return nil, errors.New("Network group not exists: " + networkGroup)
-	}
 
 	allocIp := s.vpnManager.AllocateIp(request.GetGroupName(), request.GetHostname(), request.GetRequestVpnIp())
 	if len(allocIp) == 0 {
@@ -68,7 +65,8 @@ func (s *serverImplement) Greeting(ctx context.Context, request *protocol.Client
 		return nil, errors.New("Failed generate wireguard keys: " + err.Error())
 	}
 
-	s.peerStatus.Add(clientId, &peerStatus.PeerData{
+	s.peersManager.Add(&peerStatus.PeerData{
+		SessionId:    clientId,
 		Title:        request.GetTitle(),
 		Hostname:     request.GetHostname(),
 		PublicKey:    pubKey,

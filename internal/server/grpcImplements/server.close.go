@@ -8,7 +8,7 @@ import (
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
-func (s *serverImplement) Close(_ context.Context, request *protocol.IdReportingRequest) (*emptypb.Empty, error) {
-	tools.Error("Call to Close (from %v)", request.GetSessionId())
+func (s *Implements) Close(_ context.Context, request *protocol.IdReportingRequest) (*emptypb.Empty, error) {
+	s.peersManager.Delete(request.GetSessionId())
 	return tools.EmptyPb, nil
 }

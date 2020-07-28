@@ -13,14 +13,6 @@ import (
 
 const VPN_STORE_NAME = "vpns.json"
 
-type vpnConfig struct {
-	Prefix      string                   `json:"prefix"`
-	Allocations map[string]NumberBasedIp `json:"allocations"`
-
-	reAllocations   map[NumberBasedIp]bool
-	prefixFreeParts uint
-}
-
 type VpnManager struct {
 	storage *storage.ServerStorage
 	mapper  map[string]*vpnConfig
@@ -77,17 +69,15 @@ func add(mapper map[string]*vpnConfig, storage *storage.ServerStorage, name stri
 	}
 
 	mapper[name] = config
-	err := storage.WriteJson(VPN_STORE_NAME, mapper)
 
-	if err != nil {
-		delete(mapper, name)
-	}
-
-	return err
-
+	return nil
 }
 
-func (vpns *VpnManager) Add(name string, config vpnConfig) error {
+func (vpns *VpnManager) _save() error {
+	return vpns.storage.WriteJson(VPN_STORE_NAME, vpns.mapper)
+}
+
+func (vpns *VpnManager) AddVpnSpace(name string, config vpnConfig) error {
 	vpns.m.Lock()
 	defer vpns.m.Unlock()
 
@@ -100,16 +90,6 @@ func (vpns *VpnManager) Exists(name string) bool {
 
 	_, ok := vpns.mapper[name]
 	return ok
-}
-
-func (vpn *vpnConfig) allocate(hostname string, requestIp NumberBasedIp) {
-	tools.Error("allocate address %s.%s to client %s", vpn.Prefix, requestIp.String(vpn.prefixFreeParts), hostname)
-	vpn.Allocations[hostname] = requestIp
-	vpn.reAllocations[requestIp] = true
-}
-
-func (vpn *vpnConfig) format(hostname string) string {
-	return vpn.Prefix + "." + vpn.Allocations[hostname].String(vpn.prefixFreeParts)
 }
 
 func (vpns *VpnManager) AllocateIp(name string, hostname string, requestIp string) string {
@@ -141,6 +121,7 @@ func (vpns *VpnManager) AllocateIp(name string, hostname string, requestIp strin
 			tools.Error("client %s want address %s, but used by %s", hostname, requestIp, name)
 		} else {
 			vpn.allocate(hostname, reqIp)
+			vpns._save()
 			return vpn.format(hostname)
 		}
 	}
@@ -149,6 +130,7 @@ func (vpns *VpnManager) AllocateIp(name string, hostname string, requestIp strin
 	for i := reqIp; i < avaiable; i += 1 {
 		if _, used := vpn.reAllocations[reqIp]; !used {
 			vpn.allocate(hostname, i)
+			vpns._save()
 			return vpn.format(hostname)
 		}
 	}

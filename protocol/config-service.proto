@@ -6,7 +6,7 @@ import "google/protobuf/empty.proto";
 
 service WireguardApi {
   rpc Greeting(ClientInfoRequest) returns (ClientInfoResponse);
-  rpc Start(google.protobuf.Empty) returns (stream Peers);
+  rpc Start(IdReportingRequest) returns (stream Peers);
   rpc Close(IdReportingRequest) returns (google.protobuf.Empty);
   rpc KeepAlive(IdReportingRequest) returns (KeepAliveStatus);
 
@@ -55,16 +55,17 @@ message Peers {
   message ConnectionTarget {
     string publicKey = 1;
 
-    string address = 3;
-    uint32 port = 4;
+    repeated string address = 2;
+    uint32 port = 3;
 
-    string vpnIp = 5;
-    uint32 keepAlive = 6;
-    uint32 MTU = 7;
+    string vpnIp = 4;
+    uint32 keepAlive = 5;
+    uint32 MTU = 6;
   }
   message Peer {
     string title = 1;
     string hostname = 2;
+    uint64 SessionId = 3;
     ConnectionTarget peer = 4;
   }
 

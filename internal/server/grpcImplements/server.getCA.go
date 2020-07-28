@@ -10,7 +10,7 @@ import (
 	"google.golang.org/grpc/peer"
 )
 
-func (s *serverImplement) GetSelfSignedCertFile(ctx context.Context, req *protocol.GetCertFileRequest) (*protocol.GetCertFileResponse, error) {
+func (s *Implements) GetSelfSignedCertFile(ctx context.Context, req *protocol.GetCertFileRequest) (*protocol.GetCertFileResponse, error) {
 	p, ok := peer.FromContext(ctx)
 	if !ok {
 		return nil, errors.New("Failed get peer info")

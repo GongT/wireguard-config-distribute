@@ -82,11 +82,14 @@ func main() {
 		tools.SetDebugMode(opts.DebugMode)
 	}
 
-	server := serverInternals.NewServer(opts, certs, grpcImplements.CreateServerImplement(opts))
+	impl := grpcImplements.CreateServerImplement(opts)
+	server := serverInternals.NewServer(opts, certs, impl)
 
 	server.Listen(opts)
+	impl.StartWorker()
 
 	<-tools.WaitForCtrlC()
 
+	impl.Quit()
 	server.Stop()
 }

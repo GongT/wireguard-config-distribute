@@ -12,7 +12,8 @@
 			"program": "${workspaceFolder}/cmd/server",
 			"args": [
 				"--server-name=test",
-				"--ip-nohttp"
+				"--ip-nohttp",
+				"--debug"
 			]
 		},
 		{
@@ -24,7 +25,9 @@
 			"args": [
 				"--server=127.0.0.1",
 				"--server-ca=/root/.wireguard-config-server/ca.cert.pem",
-				"--external-ip-nohttp"
+				"--external-ip-nohttp",
+				"--debug",
+				"--hosts-file=/tmp/qqq/hosts0"
 			]
 		},
 		{

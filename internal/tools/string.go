@@ -19,6 +19,15 @@ func ArrayContains(s []string, e string) bool {
 	return false
 }
 
+func ArrayFind(s []string, e string) int {
+	for index, a := range s {
+		if a == e {
+			return index
+		}
+	}
+	return -1
+}
+
 func ArrayUnique(s []string) (ret []string) {
 	uni := map[string]bool{}
 
@@ -30,4 +39,8 @@ func ArrayUnique(s []string) (ret []string) {
 	}
 
 	return
+}
+
+func RemoveIndex(s []string, index int) []string {
+	return append(s[:index], s[index+1:]...)
 }
