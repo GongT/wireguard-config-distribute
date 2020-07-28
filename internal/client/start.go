@@ -49,7 +49,7 @@ func (stat *clientStateHolder) run() {
 	}
 	tools.Error("Complete handshake")
 
-	channel, err := stat.server.Start(stat.SessionId)
+	channel, err := stat.server.Start(stat.MachineId)
 	if err != nil {
 		tools.Error("grpc connected but start() failed, is server running? %s", err.Error())
 		return
@@ -66,7 +66,7 @@ func (stat *clientStateHolder) run() {
 				return
 			}
 			tools.Debug(" ~ send keep alive")
-			result, err := stat.server.KeepAlive(stat.SessionId)
+			result, err := stat.server.KeepAlive(stat.MachineId)
 			if err != nil {
 				tools.Error("grpc keep alive failed, is server (still) running? %s", err.Error())
 				return
@@ -85,7 +85,7 @@ func (stat *clientStateHolder) run() {
 			}
 			tools.Debug(" ~ receive peers (%d peer)", len(peers.List))
 			for _, peer := range peers.List {
-				tools.Debug("  * %d: %s -> %s", peer.SessionId, peer.Hostname, peer.GetPeer().GetAddress())
+				tools.Debug("  * <%s> %s -> %s", peer.MachineId, peer.Hostname, peer.GetPeer().GetAddress())
 			}
 		case <-stat.quitChan:
 			tools.Debug(" ~ quit")

@@ -15,7 +15,7 @@ import (
 type lPeerData *PeerData
 
 type PeerData struct {
-	SessionId uint64
+	MachineId string
 	Title     string
 	Hostname  string
 	PublicKey string
@@ -35,14 +35,14 @@ type PeerData struct {
 }
 
 type PeerStatus struct {
-	list     map[uint64]lPeerData
+	list     map[string]lPeerData
 	m        debugLocker.MyLocker
 	onChange *asyncChan.AsyncChan
 }
 
 func NewPeerStatus() *PeerStatus {
 	return &PeerStatus{
-		list:     make(map[uint64]lPeerData),
+		list:     make(map[string]lPeerData),
 		onChange: asyncChan.NewChan(),
 		m:        debugLocker.NewMutex(),
 	}
@@ -52,8 +52,8 @@ func (peers *PeerStatus) StopHandleChange() {
 	peers.onChange.Close()
 }
 
-func (peers *PeerStatus) AttachSender(cid uint64, sender *protocol.WireguardApi_StartServer) bool {
-	defer peers.m.Lock(fmt.Sprintf("AttachSender[%d]", cid))()
+func (peers *PeerStatus) AttachSender(cid string, sender *protocol.WireguardApi_StartServer) bool {
+	defer peers.m.Lock(fmt.Sprintf("AttachSender[%s]", cid))()
 
 	peer, exists := peers.list[cid]
 
@@ -69,18 +69,18 @@ func (peers *PeerStatus) AttachSender(cid uint64, sender *protocol.WireguardApi_
 }
 
 func (peers *PeerStatus) sendSnapshot(peer lPeerData) {
-	tools.Debug("[%d] ~ send peers", peer.SessionId)
+	tools.Debug("[%s] ~ send peers", peer.MachineId)
 	err := (*peer.sender).Send(peers.createAllView(peer))
 	if err == nil {
-		tools.Debug("[%d] ~ send peers ok", peer.SessionId)
+		tools.Debug("[%s] ~ send peers ok", peer.MachineId)
 	} else {
-		tools.Debug("[%d] ~ send peers failed: %s", peer.SessionId, err.Error())
+		tools.Debug("[%s] ~ send peers failed: %s", peer.MachineId, err.Error())
 	}
 }
 
 func (peers *PeerStatus) StartHandleChange() {
 	for changeCid := range peers.onChange.Read() {
-		unlock := peers.m.Lock(fmt.Sprintf("StartHandleChange[%d]", changeCid))
+		unlock := peers.m.Lock(fmt.Sprintf("StartHandleChange[%s]", changeCid))
 
 		for cid, peer := range peers.list {
 			if cid == changeCid || peer.sender == nil {
@@ -101,44 +101,44 @@ func (peers *PeerStatus) DoCleanup() {
 	expired := time.Now().Add(-1 * time.Minute)
 	for cid, peer := range peers.list {
 		if peer.lastKeepAlive.Before(expired) {
-			tools.Error("[%d] peer exired", peer.SessionId)
+			tools.Error("[%s] peer exired", peer.MachineId)
 			delete(peers.list, cid)
 			peers.onChange.Write(cid)
 		}
 	}
 }
-func (peers *PeerStatus) UpdateKeepAlive(cid uint64) bool {
-	defer peers.m.Lock(fmt.Sprintf("UpdateKeepAlive[%d]", cid))()
+func (peers *PeerStatus) UpdateKeepAlive(cid string) bool {
+	defer peers.m.Lock(fmt.Sprintf("UpdateKeepAlive[%s]", cid))()
 
 	if peer, exists := peers.list[cid]; exists {
-		tools.Debug("[%d] ~ keep alive", peer.SessionId)
+		tools.Debug("[%s] ~ keep alive", peer.MachineId)
 		peer.lastKeepAlive = time.Now()
 		return true
 	} else {
-		tools.Error("[%d] ! keep alive not exists peer", cid)
+		tools.Error("[%s] ! keep alive not exists peer", cid)
 		return false
 	}
 }
-func (peers *PeerStatus) Delete(cid uint64) {
-	defer peers.m.Lock(fmt.Sprintf("Delete[%d]", cid))()
+func (peers *PeerStatus) Delete(cid string) {
+	defer peers.m.Lock(fmt.Sprintf("Delete[%s]", cid))()
 
 	_, exists := peers.list[cid]
 
 	if !exists {
-		tools.Error("[%d] ! delete not exists peer", cid)
+		tools.Error("[%s] ! delete not exists peer", cid)
 		return
 	}
 
-	tools.Debug("[%d] ~ delete peer", cid)
+	tools.Debug("[%s] ~ delete peer", cid)
 
 	delete(peers.list, cid)
 	peers.onChange.Write(cid)
 }
 
 func (peers *PeerStatus) Add(peer lPeerData) {
-	defer peers.m.Lock(fmt.Sprintf("Add[%d]", peer.SessionId))()
+	defer peers.m.Lock(fmt.Sprintf("Add[%s]", peer.MachineId))()
 
-	old, exists := peers.list[peer.SessionId]
+	old, exists := peers.list[peer.MachineId]
 
 	if exists {
 		if exactSame(old, peer) {
@@ -153,8 +153,8 @@ func (peers *PeerStatus) Add(peer lPeerData) {
 		tools.Debug(" ~ add new peer")
 	}
 
-	peers.list[peer.SessionId] = peer
-	peers.onChange.Write(peer.SessionId)
+	peers.list[peer.MachineId] = peer
+	peers.onChange.Write(peer.MachineId)
 }
 
 func (peers *PeerStatus) createAllView(viewer lPeerData) *protocol.Peers {
@@ -162,7 +162,7 @@ func (peers *PeerStatus) createAllView(viewer lPeerData) *protocol.Peers {
 	list := make([]*protocol.Peers_Peer, 0, len(peers.list)-1)
 
 	for cid, peer := range peers.list {
-		if viewer.SessionId == cid {
+		if viewer.MachineId == cid {
 			continue
 		}
 
@@ -188,7 +188,7 @@ func (peers *PeerStatus) createOneView(viewer lPeerData, peer lPeerData) *protoc
 	}
 
 	p := protocol.Peers_Peer{
-		SessionId: peer.SessionId,
+		MachineId: peer.MachineId,
 		Title:     peer.Title,
 		Hostname:  peer.Hostname,
 		Peer: &protocol.Peers_ConnectionTarget{

@@ -2,31 +2,30 @@ package grpcImplements
 
 import (
 	"errors"
-	"strconv"
 
 	"github.com/gongt/wireguard-config-distribute/internal/protocol"
 	"github.com/gongt/wireguard-config-distribute/internal/tools"
 )
 
 func (s *Implements) Start(req *protocol.IdReportingRequest, sender protocol.WireguardApi_StartServer) error {
-	sid := req.SessionId
+	sid := req.MachineId
 
-	tools.Error("[%d] attached sender", sid)
+	tools.Error("[%s] attached sender", sid)
 
 	if !s.peersManager.AttachSender(sid, &sender) {
-		return errors.New("Failed find client [" + strconv.FormatUint(sid, 10) + "] in registry")
+		return errors.New("Failed find client [" + sid + "] in registry")
 	}
 
-	tools.Error("[%d] start loop", sid)
+	tools.Error("[%s] start loop", sid)
 	for {
 		if sender.RecvMsg(nil) == nil {
-			tools.Error("[%d] receive return nil", sid)
+			tools.Error("[%s] receive return nil", sid)
 			break
 		}
 	}
 	s.peersManager.Delete(sid)
 
-	tools.Error("[%d] start return", sid)
+	tools.Error("[%s] start return", sid)
 
 	return nil
 }

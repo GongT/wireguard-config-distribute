@@ -8,12 +8,12 @@ import (
 )
 
 type AsyncChan struct {
-	ch     chan uint64
+	ch     chan string
 	closed bool
 }
 
 func NewChan() *AsyncChan {
-	ch := make(chan uint64)
+	ch := make(chan string)
 	return &AsyncChan{
 		ch:     ch,
 		closed: false,
@@ -24,13 +24,13 @@ func (cc *AsyncChan) Close() {
 	close(cc.ch)
 }
 
-func (cc *AsyncChan) Read() <-chan uint64 {
+func (cc *AsyncChan) Read() <-chan string {
 	if cc.closed {
 		tools.Error("Read channel after closed!")
 	}
 	return cc.ch
 }
-func (cc *AsyncChan) Write(data uint64) {
+func (cc *AsyncChan) Write(data string) {
 	if cc.closed {
 		tools.Error("Write channel after closed!")
 	}

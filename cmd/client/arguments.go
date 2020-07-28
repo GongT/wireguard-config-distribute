@@ -14,9 +14,10 @@ type clientProgramOptions struct {
 	PerferIp    string `long:"perfer-ip" description:"request to use this VPN ip, only last two digist" default-mask:"allocate by server" env:"WIREGUARD_REQUEST_IP"`
 
 	/* Self application config */
-	Title    string `short:"t" long:"title" description:"human readable name of this machine" default-mask:"same with hostname" env:"WIREGUARD_TITLE"`
-	Hostname string `long:"hostname" description:"custom hostname (insteadof environment)" default-mask:"use HOSTNAME" env:"HOSTNAME"`
-	HostFile string `long:"hosts-file" description:"watch and read hosts file" default:"/etc/hosts" env:"WIREGUARD_HOSTS_FILE"`
+	Title     string `short:"t" long:"title" description:"human readable name of this machine" default-mask:"same with hostname" env:"WIREGUARD_TITLE"`
+	Hostname  string `long:"hostname" description:"custom hostname (insteadof environment)" default-mask:"use HOSTNAME" env:"HOSTNAME"`
+	HostFile  string `long:"hosts-file" description:"watch and read hosts file" default:"/etc/hosts" env:"WIREGUARD_HOSTS_FILE"`
+	MachineID string `long:"machine-id" description:"global unique id of this machine" env:"WIREGUARD_MACHINE_ID"`
 
 	/* Public IPv4 */
 	// Ipv4Only bool `short:"4" long:"ipv4only" description:"disable incoming ipv6 connection" env:"WIREGUARD_IPV4"`

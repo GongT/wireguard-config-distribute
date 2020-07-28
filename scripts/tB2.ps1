@@ -11,7 +11,7 @@ $host.ui.RawUI.WindowTitle = "== B2 =="
 	--hosts-file=/tmp/xxxqqq/hosts0 `
 	--netgroup=B `
 	--server=127.0.0.1 `
-	--external-ip=127.0.2.2 `
+	--external-ip=172.0.2.2 `
 	--internal-ip=127.0.2.2 `
 	--perfer-ip=222.2 `
 	--hostname=peer-b2 `

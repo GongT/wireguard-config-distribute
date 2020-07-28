@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"runtime"
 
 	"github.com/davecgh/go-spew/spew"
@@ -13,6 +14,7 @@ import (
 )
 
 func main() {
+	log.Println("program start.")
 	opts := clientProgramOptions{}
 	config.InitProgramArguments(&opts)
 
@@ -42,6 +44,7 @@ func main() {
 
 	watcher := hostfile.StartWatch(opts.HostFile)
 	c := client.NewClient(opts)
+	c.ConfigureVPN(opts)
 	c.Configure(opts)
 
 	go func() {

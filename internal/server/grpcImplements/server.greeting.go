@@ -14,13 +14,6 @@ import (
 	"google.golang.org/grpc/peer"
 )
 
-var _guid uint64 = 0
-
-func guid() uint64 {
-	_guid += 1
-	return _guid
-}
-
 func (s *Implements) Greeting(ctx context.Context, request *protocol.ClientInfoRequest) (*protocol.ClientInfoResponse, error) {
 	remoteIp := tools.GetRemoteFromContext(ctx)
 	if len(remoteIp) == 0 {
@@ -37,8 +30,6 @@ func (s *Implements) Greeting(ctx context.Context, request *protocol.ClientInfoR
 	for key, value := range md {
 		fmt.Printf("   * %v: %v\n", key, value)
 	}
-
-	clientId := guid()
 
 	if !s.vpnManager.Exists(request.GetGroupName()) {
 		return nil, errors.New("VPN group not exists: " + request.GetGroupName())
@@ -65,8 +56,13 @@ func (s *Implements) Greeting(ctx context.Context, request *protocol.ClientInfoR
 		return nil, errors.New("Failed generate wireguard keys: " + err.Error())
 	}
 
+	clientId := request.GetMachineId()
+	if len(clientId) == 0 {
+		clientId = networkGroup + "::" + request.GetHostname()
+	}
+
 	s.peersManager.Add(&peerStatus.PeerData{
-		SessionId:    clientId,
+		MachineId:    clientId,
 		Title:        request.GetTitle(),
 		Hostname:     request.GetHostname(),
 		PublicKey:    pubKey,
@@ -82,7 +78,7 @@ func (s *Implements) Greeting(ctx context.Context, request *protocol.ClientInfoR
 	})
 
 	return &protocol.ClientInfoResponse{
-		SessionId:  clientId,
+		MachineId:  clientId,
 		PublicIp:   remoteIp,
 		OfferIp:    allocIp,
 		PrivateKey: priKey,

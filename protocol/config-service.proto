@@ -16,7 +16,7 @@ service WireguardApi {
 }
 
 message GetIpResponse { string address = 1; }
-message IdReportingRequest { uint64 SessionId = 1; }
+message IdReportingRequest { string MachineId = 1; }
 
 message PhysicalNetwork {
   string networkId = 1;
@@ -34,8 +34,9 @@ message PhysicalNetwork {
 message ClientInfoRequest {
   string groupName = 1;
 
-  string title = 2;
-  string hostname = 3;
+  string MachineId = 2;
+  string title = 3;
+  string hostname = 4;
 
   repeated string services = 5;
 
@@ -44,7 +45,7 @@ message ClientInfoRequest {
 }
 
 message ClientInfoResponse {
-  uint64 SessionId = 1;
+  string MachineId = 1;
   string publicIp = 2;
   string offerIp = 3;
   string privateKey = 4;
@@ -65,7 +66,7 @@ message Peers {
   message Peer {
     string title = 1;
     string hostname = 2;
-    uint64 SessionId = 3;
+    string MachineId = 3;
     ConnectionTarget peer = 4;
   }
 

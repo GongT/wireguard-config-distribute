@@ -58,10 +58,10 @@ func (stat *ServerStatus) Connect() {
 	return
 }
 
-func (stat *ServerStatus) Disconnect(sessionId uint64) {
-	if sessionId != 0 {
+func (stat *ServerStatus) Disconnect(shouldClose bool, machineId string) {
+	if shouldClose {
 		tools.Error("Sending close command.")
-		if err := stat.Close(sessionId); err != nil {
+		if err := stat.Close(machineId); err != nil {
 			tools.Error("Failed send close command: %s", err.Error())
 		}
 	}

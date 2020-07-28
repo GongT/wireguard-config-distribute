@@ -15,7 +15,7 @@ type clientStateHolder struct {
 	isQuit    bool
 	isRunning bool
 
-	SessionId uint64
+	MachineId string
 	server    server.ServerStatus
 	vpn       wgVpnStatus
 
@@ -23,10 +23,12 @@ type clientStateHolder struct {
 	statusData editableConfig
 }
 
+type vpnOptions interface {
+	GetPerferIp() string
+}
+
 type connectionOptions interface {
 	GetServer() string
-
-	GetPerferIp() string
 
 	GetGrpcInsecure() bool
 	GetGrpcHostname() string
@@ -42,15 +44,18 @@ func NewClient(options connectionOptions) *clientStateHolder {
 		ServerKey: options.GetGrpcServerKey(),
 	})
 
-	self.vpn.requestedAddress = options.GetPerferIp()
-
 	self.quitChan = make(chan bool, 1)
 	self.isQuit = false
 
 	return &self
 }
 
+func (self *clientStateHolder) ConfigureVPN(options vpnOptions) {
+	self.vpn.requestedAddress = options.GetPerferIp()
+}
+
 type configureOptions interface {
+	GetMachineID() string
 	GetJoinGroup() string
 	GetNetworkName() string
 	GetTitle() string
@@ -65,4 +70,6 @@ type configureOptions interface {
 
 func (stat *clientStateHolder) Configure(options configureOptions) {
 	stat.configData.configure(options)
+
+	stat.MachineId = options.GetMachineID()
 }

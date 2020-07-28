@@ -12,9 +12,9 @@ func (stat *ServerStatus) Greeting(request *protocol.ClientInfoRequest) (*protoc
 	return stat.rpc.Greeting(ctx, request)
 }
 
-func (stat *ServerStatus) Start(id uint64) (<-chan *protocol.Peers, error) {
+func (stat *ServerStatus) Start(id string) (<-chan *protocol.Peers, error) {
 	cctx, cancel := context.WithCancel(stat.context)
-	stream, err := stat.rpc.Start(cctx, &protocol.IdReportingRequest{SessionId: id})
+	stream, err := stat.rpc.Start(cctx, &protocol.IdReportingRequest{MachineId: id})
 	if err != nil {
 		return nil, err
 	}
@@ -36,17 +36,17 @@ func (stat *ServerStatus) Start(id uint64) (<-chan *protocol.Peers, error) {
 	return ch, nil
 }
 
-func (stat *ServerStatus) Close(id uint64) error {
+func (stat *ServerStatus) Close(id string) error {
 	ctx, cancel := context.WithCancel(stat.context)
 	defer cancel()
-	_, err := stat.rpc.Close(ctx, &protocol.IdReportingRequest{SessionId: id})
+	_, err := stat.rpc.Close(ctx, &protocol.IdReportingRequest{MachineId: id})
 	return err
 }
 
-func (stat *ServerStatus) KeepAlive(id uint64) (*protocol.KeepAliveStatus, error) {
+func (stat *ServerStatus) KeepAlive(id string) (*protocol.KeepAliveStatus, error) {
 	cctx, cancel := context.WithCancel(stat.context)
 	defer cancel()
-	return stat.rpc.KeepAlive(cctx, &protocol.IdReportingRequest{SessionId: id})
+	return stat.rpc.KeepAlive(cctx, &protocol.IdReportingRequest{MachineId: id})
 }
 
 func (stat *ServerStatus) NewGroup(request *protocol.NewGroupRequest) error {

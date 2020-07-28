@@ -37,8 +37,13 @@ func (s *clientStateHolder) uploadInformation() bool {
 
 		s.vpn.givenAddress = result.OfferIp
 		s.vpn.interfacePrivateKey = result.PrivateKey
-		s.SessionId = result.SessionId
 		s.isRunning = true
+		if s.MachineId != result.MachineId {
+			if len(s.MachineId) > 0 {
+				tools.Error("Machine ID is different between server and local")
+			}
+			s.MachineId = result.MachineId
+		}
 
 		// TODO create interface
 
@@ -46,7 +51,6 @@ func (s *clientStateHolder) uploadInformation() bool {
 	} else {
 		tools.Error("  * failed: %s", err.Error())
 
-		s.SessionId = 0
 		s.isRunning = false
 
 		return false

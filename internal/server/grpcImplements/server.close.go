@@ -9,6 +9,6 @@ import (
 )
 
 func (s *Implements) Close(_ context.Context, request *protocol.IdReportingRequest) (*emptypb.Empty, error) {
-	s.peersManager.Delete(request.GetSessionId())
+	s.peersManager.Delete(request.GetMachineId())
 	return tools.EmptyPb, nil
 }

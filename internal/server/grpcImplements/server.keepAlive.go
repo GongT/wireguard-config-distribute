@@ -7,7 +7,7 @@ import (
 )
 
 func (srv *Implements) KeepAlive(_ context.Context, request *protocol.IdReportingRequest) (*protocol.KeepAliveStatus, error) {
-	sid := request.GetSessionId()
+	sid := request.GetMachineId()
 	succ := srv.peersManager.UpdateKeepAlive(sid)
 	return &protocol.KeepAliveStatus{Success: succ}, nil
 }
