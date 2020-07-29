@@ -4,18 +4,19 @@ package main
 
 type clientProgramOptions struct {
 	/* wg interface */
-	ListenPort uint16 `short:"p" long:"port" description:"wireguard listening port" default:"51820" env:"WIREGUARD_PORT"`
-	MTU        uint16 `long:"mtu" description:"wireguard interface MTU" env:"WIREGUARD_MTU"`
+	ListenPort    uint16 `short:"p" long:"port" description:"wireguard listening port" default:"51820" env:"WIREGUARD_PORT"`
+	InterfaceName string `short:"i" long:"interface" description:"wireguard interface name (must not exists)" default-mask:"wg_${group}" env:"WIREGUARD_MTU"`
+	MTU           uint16 `long:"mtu" description:"wireguard interface MTU" env:"WIREGUARD_MTU"`
 
 	/* config server and self config */
 	Server      string `short:"s" long:"server" description:"config server ip:port" required:"true" env:"WIREGUARD_SERVER"`
-	NetworkName string `short:"n" long:"netgroup" description:"a (friendly) name of local network, all machines in one local network should same" default-mask:"no default network" env:"WIREGUARD_NETWORK"`
+	NetworkName string `short:"n" long:"netgroup" description:"a (friendly) name of local network, all machines in one local network should same" env:"WIREGUARD_NETWORK"`
 	JoinGroup   string `short:"g" long:"group" description:"join which VPN network" default:"default" env:"WIREGUARD_GROUP"`
 	PerferIp    string `long:"perfer-ip" description:"request to use this VPN ip, only last two digist" default-mask:"allocate by server" env:"WIREGUARD_REQUEST_IP"`
 
 	/* Self application config */
 	Title     string `short:"t" long:"title" description:"human readable name of this machine" default-mask:"same with hostname" env:"WIREGUARD_TITLE"`
-	Hostname  string `long:"hostname" description:"custom hostname (insteadof environment)" default-mask:"use HOSTNAME" env:"HOSTNAME"`
+	Hostname  string `long:"hostname" description:"custom hostname (insteadof environment)"`
 	HostFile  string `long:"hosts-file" description:"watch and read hosts file" default:"/etc/hosts" env:"WIREGUARD_HOSTS_FILE"`
 	MachineID string `long:"machine-id" description:"global unique id of this machine" env:"WIREGUARD_MACHINE_ID"`
 
@@ -31,7 +32,7 @@ type clientProgramOptions struct {
 	NoAutoForwardUpnp bool `long:"no-upnp-forward" description:"don't open port with UPnP/NAT-PMP" env:"WIREGUARD_NO_UPNP"`
 
 	/* Local IPv4 */
-	InternalIp []string `long:"internal-ip" description:"manually set internal ipv4 address of this device" default-mask:"auto detect" env:"WIREGUARD_PRIVATE_IP"`
+	InternalIp string `long:"internal-ip" description:"manually set internal ipv4 address of this device" default-mask:"auto detect" env:"WIREGUARD_PRIVATE_IP"`
 
 	/* grpc endpoint */
 	GrpcInsecure  bool   `long:"insecure" description:"do not check server key (extreamly dangerous)" env:"WIREGUARD_TLS_INSECURE"`

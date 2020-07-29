@@ -1,6 +1,9 @@
 package detect_ip
 
-import "net"
+import (
+	"net"
+	"strings"
+)
 
 func IsValidIPv6(s string) bool {
 	ip := net.ParseIP(s)
@@ -8,7 +11,7 @@ func IsValidIPv6(s string) bool {
 		return false
 	}
 
-	return len(ip) == net.IPv6len
+	return strings.Contains(s, ":")
 }
 
 func IsValidIPv4(s string) bool {
@@ -17,5 +20,5 @@ func IsValidIPv4(s string) bool {
 		return false
 	}
 
-	return ip.To4() != nil
+	return !strings.Contains(s, ":")
 }

@@ -1,20 +1,20 @@
 #!/usr/bin/env pwsh
 
 $ErrorActionPreference = "Stop"
+cd $PSScriptRoot/../..
 
-mkdir -p /tmp/xxxqqq/
+$tmp = [System.IO.Path]::GetTempPath()
+New-Item -Path $tmp -Name xxxqqq -ItemType "directory" -Force
 
 echo "127.0.0.1 local1
 1.1.1.1 some-service
-" > /tmp/xxxqqq/hosts1
-
-cd $PSScriptRoot/..
+" > $tmp/hosts1
 
 $host.ui.RawUI.WindowTitle = "== A1 =="
 
 ./dist/client `
 	--insecure -D --external-ip-nohttp `
-	--hosts-file=/tmp/xxxqqq/hosts1 `
+	--hosts-file=$tmp/hosts1 `
 	--netgroup=A `
 	--server=127.0.0.1 `
 	--external-ip=172.0.1.1 `

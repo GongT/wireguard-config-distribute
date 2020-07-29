@@ -14,7 +14,7 @@ func Detect(ipv4 *string, ipv6 *string, allowHttp bool, allowUPnP bool) {
 		if err == nil {
 			tools.Error("      -> %s", *ipv4)
 		} else {
-			tools.Error("      -> %s", err.Error())
+			tools.Error("      x> %s", err.Error())
 		}
 	}
 	if len(*ipv4) == 0 && allowHttp {
@@ -23,7 +23,7 @@ func Detect(ipv4 *string, ipv6 *string, allowHttp bool, allowUPnP bool) {
 		if err == nil {
 			tools.Error("      -> %s", *ipv4)
 		} else {
-			tools.Error("      -> %s", err.Error())
+			tools.Error("      x> %s", err.Error())
 		}
 	}
 
@@ -33,7 +33,7 @@ func Detect(ipv4 *string, ipv6 *string, allowHttp bool, allowUPnP bool) {
 		if err == nil {
 			tools.Error("      -> %s", *ipv6)
 		} else {
-			tools.Error("      -> %s", err.Error())
+			tools.Error("      x> %s", err.Error())
 		}
 	}
 }

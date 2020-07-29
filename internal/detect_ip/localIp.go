@@ -1,6 +1,7 @@
 package detect_ip
 
 import (
+	"errors"
 	"fmt"
 	"net"
 
@@ -8,7 +9,7 @@ import (
 	"github.com/gongt/wireguard-config-distribute/internal/tools"
 )
 
-func DetectLocalNetwork() (ret []string) {
+func ListAllLocalNetworkIp() (ret []string) {
 	ifaces, err := net.Interfaces()
 	if err != nil {
 		tools.Die("Failed get local network interface: %s", err.Error())
@@ -35,4 +36,45 @@ func DetectLocalNetwork() (ret []string) {
 	}
 
 	return
+}
+
+func findRouteFromIp(target net.IP) (net.IP, error) {
+	ifaces, err := net.Interfaces()
+	if err != nil {
+		return nil, errors.New("Failed get local network interface: " + err.Error())
+	}
+
+	for _, iface := range ifaces {
+		addrs, err := iface.Addrs()
+		if err != nil {
+			continue
+		}
+
+		for _, addr := range addrs {
+			if ipnet, ok := addr.(*net.IPNet); ok {
+				if ipnet.IP.IsLinkLocalUnicast() || ipnet.IP.IsLoopback() {
+					continue
+				}
+
+				if ipnet.Contains(target) {
+					return ipnet.IP, nil
+				}
+			}
+		}
+	}
+
+	return nil, errors.New("No route to " + target.String())
+}
+
+func GetDefaultNetworkIp() (net.IP, error) {
+	gatewayIP, err := GetGatewayIP()
+	if err != nil {
+		return nil, errors.New("Failed get default gateway: " + err.Error())
+	}
+
+	result, err := findRouteFromIp(gatewayIP)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
 }

@@ -2,9 +2,13 @@ package client
 
 import (
 	server "github.com/gongt/wireguard-config-distribute/internal/client/client.server"
+	"github.com/gongt/wireguard-config-distribute/internal/client/wireguardControl"
+	"github.com/gongt/wireguard-config-distribute/internal/tools"
 )
 
 type wgVpnStatus struct {
+	interfaceController *wireguardControl.InterfaceControl
+
 	requestedAddress    string
 	givenAddress        string
 	interfacePrivateKey string
@@ -53,6 +57,9 @@ func NewClient(options connectionOptions) *clientStateHolder {
 func (self *clientStateHolder) ConfigureVPN(options vpnOptions) {
 	self.vpn.requestedAddress = options.GetPerferIp()
 }
+func (self *clientStateHolder) ConfigureInterface(options wireguardControl.InterfaceOptions) {
+	self.vpn.interfaceController = wireguardControl.CreateInterfaceControl(options)
+}
 
 type configureOptions interface {
 	GetMachineID() string
@@ -63,7 +70,7 @@ type configureOptions interface {
 	GetHostname() string
 	GetPublicIp() string
 	GetPublicIp6() string
-	GetInternalIp() []string
+	GetInternalIp() string
 	GetListenPort() uint16
 	GetIpv6Only() bool
 }
@@ -72,4 +79,16 @@ func (stat *clientStateHolder) Configure(options configureOptions) {
 	stat.configData.configure(options)
 
 	stat.MachineId = options.GetMachineID()
+}
+
+func (s *clientStateHolder) Quit() {
+	if s.isQuit {
+		tools.Error("Duplicate call to Client.quit()")
+		return
+	}
+	s.isQuit = true
+
+	s.server.Disconnect(s.isRunning, s.MachineId)
+
+	s.quitChan <- true
 }
