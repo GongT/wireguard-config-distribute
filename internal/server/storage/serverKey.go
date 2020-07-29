@@ -26,7 +26,7 @@ func (storage *ServerStorage) loadOrCreateServerKey(options tlsOptions) error {
 	}
 
 	ips = append(ips, "127.0.0.1", "::1")
-	ips = append(ips, detect_ip.DetectLocalNetwork()...)
+	ips = append(ips, detect_ip.ListAllLocalNetworkIp()...)
 	ips = tools.ArrayUnique(ips)
 
 	return storage.createServerKey(ips)

@@ -25,7 +25,7 @@ message PhysicalNetwork {
   repeated string externalIp = 3;
   uint32 externalPort = 4;
 
-  repeated string internalIp = 5;
+  string internalIp = 5;
   uint32 internalPort = 6;
 
   uint32 MTU = 7;

@@ -2,5 +2,5 @@
 
 cd $PSScriptRoot/..
 
-mkdir -p internal/protocol
+New-Item -Name internal/protocol -ItemType "directory" -Force | Out-Null
 protoc -I protocol protocol/config-service.proto --go_out=plugins=grpc:internal/protocol

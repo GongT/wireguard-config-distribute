@@ -8,7 +8,7 @@ type oneTimeConfig struct {
 	ExternalEnabled bool
 	ExternalIp      []string
 	ExternalPort    uint32
-	InternalIp      []string
+	InternalIp      string
 	InternalPort    uint32
 }
 
