@@ -73,7 +73,7 @@ func (s *Implements) Greeting(ctx context.Context, request *protocol.ClientInfoR
 		NetworkId:    networkGroup,
 		ExternalIp:   externalIps,
 		ExternalPort: port(request.GetNetwork().GetExternalPort()),
-		InternalIp:   request.GetNetwork().InternalIp,
+		InternalIp:   request.GetNetwork().GetInternalIp(),
 		InternalPort: port(request.GetNetwork().GetInternalPort()),
 	})
 

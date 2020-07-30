@@ -84,9 +84,7 @@ func (stat *clientStateHolder) run() {
 				return
 			}
 			tools.Debug(" ~ receive peers (%d peer)", len(peers.List))
-			for _, peer := range peers.List {
-				tools.Debug("  * <%s> %s -> %s", peer.MachineId, peer.Hostname, peer.GetPeer().GetAddress())
-			}
+			stat.vpn.controller.UpdatePeers(peers.List)
 		case <-stat.quitChan:
 			tools.Debug(" ~ quit")
 			return
