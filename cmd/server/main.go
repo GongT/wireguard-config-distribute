@@ -11,11 +11,12 @@ import (
 	serverInternals "github.com/gongt/wireguard-config-distribute/internal/server"
 	"github.com/gongt/wireguard-config-distribute/internal/server/grpcImplements"
 	"github.com/gongt/wireguard-config-distribute/internal/server/storage"
+	"github.com/gongt/wireguard-config-distribute/internal/systemd"
 	"github.com/gongt/wireguard-config-distribute/internal/tools"
 	"google.golang.org/grpc/credentials"
 )
 
-var opts serverProgramOptions
+var opts *serverProgramOptions = &serverProgramOptions{}
 
 func preparePassword(store *storage.ServerStorage) {
 	save := func() {
@@ -45,7 +46,8 @@ func preparePassword(store *storage.ServerStorage) {
 }
 
 func main() {
-	config.InitProgramArguments(&opts)
+	spew.Config.Indent = "    "
+	config.InitProgramArguments(opts)
 
 	storagePath := opts.GetStorageLocation()
 	if len(storagePath) == 0 {
@@ -88,7 +90,9 @@ func main() {
 	server.Listen(opts)
 	impl.StartWorker()
 
+	systemd.ChangeToReady()
 	<-tools.WaitForCtrlC()
+	systemd.ChangeToQuit()
 
 	impl.Quit()
 	server.Stop()

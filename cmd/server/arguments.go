@@ -1,4 +1,4 @@
-//go:generate go run ../../tools/generate.go
+//go:generate go-generate-struct-interface
 
 package main
 

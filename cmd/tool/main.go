@@ -7,10 +7,11 @@ import (
 	"github.com/gongt/wireguard-config-distribute/internal/tools"
 )
 
-var opts = toolProgramOptions{}
+var opts = &toolProgramOptions{}
 
 func main() {
-	parser := config.InitProgramArguments(&opts)
+	spew.Config.Indent = "    "
+	parser := config.InitProgramArguments(opts)
 
 	if opts.DebugMode {
 		tools.Error("commandline arguments: %s", spew.Sdump(opts))

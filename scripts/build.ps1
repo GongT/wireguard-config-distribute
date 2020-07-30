@@ -7,8 +7,9 @@ cd $PSScriptRoot/..
 function build() {
 	param ([Parameter(Mandatory)]$type)
 	
-	echo "Building $type..."
+	echo "Generate $type..."
 	go generate ./cmd/$type
+	echo "Build $type..."
 	go build -o dist/$type ./cmd/$type
 }
 

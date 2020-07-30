@@ -4,11 +4,13 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/gongt/wireguard-config-distribute/internal/protocol"
 	"github.com/gongt/wireguard-config-distribute/internal/server/peerStatus/asyncChan"
 	"github.com/gongt/wireguard-config-distribute/internal/server/peerStatus/debugLocker"
+	"github.com/gongt/wireguard-config-distribute/internal/systemd"
 	"github.com/gongt/wireguard-config-distribute/internal/tools"
 )
 
@@ -27,7 +29,7 @@ type PeerData struct {
 	NetworkId    string
 	ExternalIp   []string
 	ExternalPort uint32
-	InternalIp   []string
+	InternalIp   string
 	InternalPort uint32
 
 	sender        *protocol.WireguardApi_StartServer
@@ -82,6 +84,7 @@ func (peers *PeerStatus) StartHandleChange() {
 	for changeCid := range peers.onChange.Read() {
 		unlock := peers.m.Lock(fmt.Sprintf("StartHandleChange[%s]", changeCid))
 
+		len := len(peers.list)
 		for cid, peer := range peers.list {
 			if cid == changeCid || peer.sender == nil {
 				continue
@@ -91,6 +94,8 @@ func (peers *PeerStatus) StartHandleChange() {
 		}
 
 		unlock()
+
+		systemd.UpdateState("peers(" + strconv.FormatInt(int64(len), 10) + ")")
 	}
 }
 
@@ -150,6 +155,7 @@ func (peers *PeerStatus) Add(peer lPeerData) {
 		peer.lastKeepAlive = old.lastKeepAlive
 		peer.sender = old.sender
 	} else {
+		peer.lastKeepAlive = time.Now()
 		tools.Debug(" ~ add new peer")
 	}
 
@@ -184,7 +190,7 @@ func (peers *PeerStatus) createOneView(viewer lPeerData, peer lPeerData) *protoc
 	ip := peer.ExternalIp
 	if viewer.NetworkId == peer.NetworkId && len(viewer.NetworkId) > 0 {
 		port = peer.InternalPort
-		ip = peer.InternalIp
+		ip = []string{peer.InternalIp}
 	}
 
 	p := protocol.Peers_Peer{

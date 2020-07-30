@@ -7,7 +7,7 @@ import (
 )
 
 type wgVpnStatus struct {
-	interfaceController *wireguardControl.InterfaceControl
+	controller *wireguardControl.PeersCache
 
 	requestedAddress    string
 	givenAddress        string
@@ -58,7 +58,7 @@ func (self *clientStateHolder) ConfigureVPN(options vpnOptions) {
 	self.vpn.requestedAddress = options.GetPerferIp()
 }
 func (self *clientStateHolder) ConfigureInterface(options wireguardControl.InterfaceOptions) {
-	self.vpn.interfaceController = wireguardControl.CreateInterfaceControl(options)
+	self.vpn.controller = wireguardControl.NewPeersCache(options)
 }
 
 type configureOptions interface {

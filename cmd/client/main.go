@@ -13,13 +13,15 @@ import (
 	"github.com/gongt/wireguard-config-distribute/internal/client/hostfile"
 	"github.com/gongt/wireguard-config-distribute/internal/config"
 	"github.com/gongt/wireguard-config-distribute/internal/detect_ip"
+	"github.com/gongt/wireguard-config-distribute/internal/systemd"
 	"github.com/gongt/wireguard-config-distribute/internal/tools"
 )
 
 func main() {
+	spew.Config.Indent = "    "
 	log.Println("program start.")
-	opts := clientProgramOptions{}
-	config.InitProgramArguments(&opts)
+	opts := &clientProgramOptions{}
+	config.InitProgramArguments(opts)
 
 	if opts.DebugMode {
 		tools.SetDebugMode(opts.DebugMode)
@@ -84,7 +86,9 @@ func main() {
 
 	c.StartCommunication()
 
+	systemd.ChangeToReady()
 	<-tools.WaitForCtrlC()
+	systemd.ChangeToQuit()
 
 	watcher.StopWatch()
 	c.Quit()
