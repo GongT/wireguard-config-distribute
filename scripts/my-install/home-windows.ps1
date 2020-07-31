@@ -10,4 +10,7 @@ $env:WIREGUARD_CONFIG_DEVELOPMENT = "true"
 $env:WIREGUARD_REQUEST_IP = "0.50"
 $env:WIREGUARD_LOG = "A:/wireguard-output.log"
 
-./scripts/run.ps1 client
+./scripts/build.ps1 client
+
+Copy-Item ./dist/client.exe A:/wireguard-config-service.exe
+A:/wireguard-config-service.exe /install
