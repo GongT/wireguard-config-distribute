@@ -13,4 +13,7 @@ $env:WIREGUARD_CONFIG_DEVELOPMENT = "true"
 $env:WIREGUARD_REQUEST_IP = "1.1"
 $env:WIREGUARD_LOG = "D:/Projects/Go/GOPATH/output.log"
 
-./scripts/run.ps1 client
+./scripts/build.ps1 client
+
+Copy-Item ./dist/client.exe D:/Projects/Go/GOPATH/wireguard-config-service.exe
+D:/Projects/Go/GOPATH/wireguard-config-service.exe /install
