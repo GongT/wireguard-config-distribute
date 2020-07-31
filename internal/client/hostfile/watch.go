@@ -9,27 +9,27 @@ import (
 	"github.com/gongt/wireguard-config-distribute/internal/tools"
 )
 
-type watcher struct {
+type Watcher struct {
 	watcher  *fsnotify.Watcher
 	OnChange chan string
 	quit     chan bool
 }
 
-func (w *watcher) StopWatch() {
+func (w *Watcher) StopWatch() {
 	w.watcher.Close()
 	close(w.OnChange)
 	w.quit <- true
 	close(w.quit)
 }
 
-func StartWatch(file string) watcher {
+func StartWatch(file string) *Watcher {
 	fsWatch, err := fsnotify.NewWatcher()
 	if err != nil {
 		tools.Die("Failed create fsnotify", err.Error())
 	}
 	file = filepath.Clean(file)
 
-	w := watcher{
+	w := Watcher{
 		watcher:  fsWatch,
 		OnChange: make(chan string, 1),
 		quit:     make(chan bool, 1),
@@ -77,5 +77,5 @@ func StartWatch(file string) watcher {
 		w.OnChange <- string(data)
 	}
 
-	return w
+	return &w
 }

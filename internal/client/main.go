@@ -8,18 +8,18 @@ import (
 	"github.com/gongt/wireguard-config-distribute/internal/tools"
 )
 
-func (stat *clientStateHolder) startNetwork() {
+func (stat *ClientStateHolder) startNetwork() {
 	// todo: try 5 times
 	stat.server.Connect()
 }
 
-func (stat *clientStateHolder) StartTool() *remoteControl.ToolObject {
+func (stat *ClientStateHolder) StartTool() *remoteControl.ToolObject {
 	stat.startNetwork()
 
 	return remoteControl.Create(stat.server)
 }
 
-func (stat *clientStateHolder) StartCommunication() {
+func (stat *ClientStateHolder) StartCommunication() {
 	stat.startNetwork()
 
 	go func() {
@@ -37,7 +37,7 @@ func (stat *clientStateHolder) StartCommunication() {
 	}()
 }
 
-func (stat *clientStateHolder) run() {
+func (stat *ClientStateHolder) run() {
 	stat.isRunning = false
 
 	tools.Error("Send handshake:")
@@ -49,7 +49,7 @@ func (stat *clientStateHolder) run() {
 	}
 	tools.Error("Complete handshake")
 
-	channel, err := stat.server.Start(stat.MachineId)
+	chanel, err := stat.server.Start(stat.sessionId.Serialize())
 	if err != nil {
 		tools.Error("grpc connected but start() failed, is server running? %s", err.Error())
 		return
@@ -66,7 +66,7 @@ func (stat *clientStateHolder) run() {
 				return
 			}
 			tools.Debug(" ~ send keep alive")
-			result, err := stat.server.KeepAlive(stat.MachineId)
+			result, err := stat.server.KeepAlive(stat.sessionId)
 			if err != nil {
 				tools.Error("grpc keep alive failed, is server (still) running? %s", err.Error())
 				return
@@ -75,7 +75,7 @@ func (stat *clientStateHolder) run() {
 				tools.Error("server cleared, my state will reset.")
 				return
 			}
-		case peers := <-channel:
+		case peers := <-chanel:
 			if stat.isQuit {
 				tools.Debug(" ~ quit")
 				return

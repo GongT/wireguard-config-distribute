@@ -2,5 +2,5 @@ pkg
 dist
 internal/protocol
 .vscode/history
-cmd/*/arguments.getters.go
+cmd/*/generate.*
 __debug_bin

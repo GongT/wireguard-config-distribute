@@ -7,6 +7,7 @@ import (
 
 	"github.com/gongt/wireguard-config-distribute/internal/protocol"
 	"github.com/gongt/wireguard-config-distribute/internal/tools"
+	"github.com/gongt/wireguard-config-distribute/internal/types"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 )
@@ -58,7 +59,7 @@ func (stat *ServerStatus) Connect() {
 	return
 }
 
-func (stat *ServerStatus) Disconnect(shouldClose bool, machineId string) {
+func (stat *ServerStatus) Disconnect(shouldClose bool, machineId types.SidType) {
 	if shouldClose {
 		tools.Error("Sending close command.")
 		if err := stat.Close(machineId); err != nil {

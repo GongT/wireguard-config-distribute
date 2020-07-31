@@ -1,36 +1,39 @@
-package asyncChan
+//go:generate go run ../../tools/create.go SidType "github.com/gongt/wireguard-config-distribute/internal/types"
+
+package asyncChannels
 
 import (
 	"time"
 
 	"github.com/gongt/wireguard-config-distribute/internal/tools"
 	"golang.org/x/net/context"
+	t "github.com/gongt/wireguard-config-distribute/internal/types"
 )
 
-type AsyncChan struct {
-	ch     chan string
+type AsyncChanSidType struct {
+	ch     chan t.SidType
 	closed bool
 }
 
-func NewChan() *AsyncChan {
-	ch := make(chan string)
-	return &AsyncChan{
+func NewChanSidType() *AsyncChanSidType {
+	ch := make(chan t.SidType)
+	return &AsyncChanSidType{
 		ch:     ch,
 		closed: false,
 	}
 }
-func (cc *AsyncChan) Close() {
+func (cc *AsyncChanSidType) Close() {
 	cc.closed = true
 	close(cc.ch)
 }
 
-func (cc *AsyncChan) Read() <-chan string {
+func (cc *AsyncChanSidType) Read() <-chan t.SidType {
 	if cc.closed {
 		tools.Error("Read channel after closed!")
 	}
 	return cc.ch
 }
-func (cc *AsyncChan) Write(data string) {
+func (cc *AsyncChanSidType) Write(data t.SidType) {
 	if cc.closed {
 		tools.Error("Write channel after closed!")
 	}

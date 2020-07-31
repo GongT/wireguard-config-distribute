@@ -1,6 +1,6 @@
 package client
 
-func (stat *clientStateHolder) SetServices(services []string) {
+func (stat *ClientStateHolder) SetServices(services []string) {
 	stat.statusData.lock()
 
 	stat.statusData.services = services

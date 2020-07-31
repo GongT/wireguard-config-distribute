@@ -25,7 +25,7 @@ func CreateStorage(location string) *ServerStorage {
 
 	err := os.MkdirAll(location, os.FileMode(0755))
 	if err != nil {
-		tools.Die("Failed create storage: %s", err.Error())
+		tools.Die("Failed create storage (%s): %s", location, err.Error())
 	}
 
 	return &store

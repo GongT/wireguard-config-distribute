@@ -1,0 +1,23 @@
+[Unit]
+Description=Wireguard configuration distribution (client)
+After=network.target network-online.target
+Wants=network-online.target
+
+[Service]
+Type=notify
+NotifyAccess=all
+
+ProtectSystem=strict
+PrivateDevices=yes
+PrivateTmp=yes
+ProtectKernelTunables=yes
+ProtectControlGroups=yes
+
+EnvironmentFile=/etc/wireguard/client.conf
+
+ExecStart=/usr/local/bin/wireguard-config-client
+
+# Restart=always
+
+[Install]
+WantedBy=multi-user.target

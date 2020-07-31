@@ -36,6 +36,7 @@ func (storage *ServerStorage) createKey(ipList []net.IP, certFile, keyFile strin
 		SerialNumber: big.NewInt(2),
 		Subject:      storage._cacheCa.Subject,
 		IPAddresses:  ipList,
+		DNSNames:     []string{storage._cacheCa.Subject.CommonName, "*." + storage._cacheCa.Subject.CommonName},
 		NotBefore:    time.Now(),
 		NotAfter:     time.Now().AddDate(10, 0, 0),
 		SubjectKeyId: []byte{1, 1, 4, 5, 1, 4},

@@ -4,6 +4,7 @@ import (
 	server "github.com/gongt/wireguard-config-distribute/internal/client/client.server"
 	"github.com/gongt/wireguard-config-distribute/internal/client/wireguardControl"
 	"github.com/gongt/wireguard-config-distribute/internal/tools"
+	"github.com/gongt/wireguard-config-distribute/internal/types"
 )
 
 type wgVpnStatus struct {
@@ -14,12 +15,13 @@ type wgVpnStatus struct {
 	interfacePrivateKey string
 }
 
-type clientStateHolder struct {
+type ClientStateHolder struct {
 	quitChan  chan bool
 	isQuit    bool
 	isRunning bool
 
-	MachineId string
+	sessionId types.SidType
+	machineId string
 	server    server.ServerStatus
 	vpn       wgVpnStatus
 
@@ -39,8 +41,8 @@ type connectionOptions interface {
 	GetGrpcServerKey() string
 }
 
-func NewClient(options connectionOptions) *clientStateHolder {
-	self := clientStateHolder{}
+func NewClient(options connectionOptions) *ClientStateHolder {
+	self := ClientStateHolder{}
 
 	self.server = server.NewGrpcClient(options.GetServer(), server.TLSOptions{
 		Insecure:  options.GetGrpcInsecure(),
@@ -54,10 +56,10 @@ func NewClient(options connectionOptions) *clientStateHolder {
 	return &self
 }
 
-func (self *clientStateHolder) ConfigureVPN(options vpnOptions) {
+func (self *ClientStateHolder) ConfigureVPN(options vpnOptions) {
 	self.vpn.requestedAddress = options.GetPerferIp()
 }
-func (self *clientStateHolder) ConfigureInterface(options wireguardControl.InterfaceOptions) {
+func (self *ClientStateHolder) ConfigureInterface(options wireguardControl.InterfaceOptions) {
 	self.vpn.controller = wireguardControl.NewPeersCache(options)
 }
 
@@ -75,20 +77,20 @@ type configureOptions interface {
 	GetIpv6Only() bool
 }
 
-func (stat *clientStateHolder) Configure(options configureOptions) {
+func (stat *ClientStateHolder) Configure(options configureOptions) {
 	stat.configData.configure(options)
 
-	stat.MachineId = options.GetMachineID()
+	stat.machineId = options.GetMachineID()
 }
 
-func (s *clientStateHolder) Quit() {
+func (s *ClientStateHolder) Quit() {
 	if s.isQuit {
 		tools.Error("Duplicate call to Client.quit()")
 		return
 	}
 	s.isQuit = true
 
-	s.server.Disconnect(s.isRunning, s.MachineId)
+	s.server.Disconnect(s.isRunning, s.sessionId)
 
 	s.quitChan <- true
 }
