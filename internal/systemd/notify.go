@@ -3,7 +3,7 @@
 package systemd
 
 import (
-	"github.com/coreos/go-systemd/daemon"
+	"github.com/coreos/go-systemd/v22/daemon"
 	"github.com/gongt/wireguard-config-distribute/internal/tools"
 )
 

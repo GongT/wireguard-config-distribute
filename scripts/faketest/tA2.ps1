@@ -1,7 +1,7 @@
 #!/usr/bin/env pwsh
 
 $ErrorActionPreference = "Stop"
-cd $PSScriptRoot/../..
+Set-Location $PSScriptRoot/../..
 
 $tmp = [System.IO.Path]::GetTempPath()
 New-Item -Path $tmp -Name xxxqqq -ItemType "directory" -Force

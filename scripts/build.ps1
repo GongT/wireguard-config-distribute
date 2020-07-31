@@ -2,24 +2,30 @@
 
 param([string]$type) 
 
-cd $PSScriptRoot/..
+Set-Location $PSScriptRoot/..
+
+if (($env:SystemRoot) -And (Test-Path "$env:SystemRoot")) {
+	# go build -ldflags -H=windowsgui -o dist/$type ./cmd/$type
+	# $env:GOGCCFLAGS += " -ldflags -H=windowsgui"
+	$ext = ".exe"
+}
 
 function build() {
 	param ([Parameter(Mandatory)]$type)
 	
-	echo "Generate $type..."
+	Write-Output "Generate $type..."
 	go generate ./cmd/$type
-	echo "Build $type..."
-	go build -o dist/$type ./cmd/$type
+	Write-Output "Build $type..."
+	go build @args -o dist/$type$ext ./cmd/$type
 }
 
 
-echo "Creating protocol..."
+Write-Output "Creating protocol..."
 ./scripts/create-protobuf.ps1
 
 if ($type) {
 	build $type
-} else{
+} else {
 	build server
 	build client
 	build tool

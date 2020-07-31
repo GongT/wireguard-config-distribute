@@ -3,7 +3,7 @@
 package main
 
 type serverProgramOptions struct {
-	ServerName string `short:"n" long:"server-name" description:"(friendly) name of this server" env:"WIREGUARD_SERVER_NAME"`
+	ServerName string `short:"n" long:"server-name" description:"(friendly) name of this server" default-mask:"$HOSTNAME" env:"HOSTNAME"`
 	Password   string `short:"P" long:"password" description:"password for configure tool" default-mask:"generate one and save to storage" env:"WIREGUARD_PASSWORD"`
 
 	ListenPath string `short:"u" long:"unix" description:"listen unix socket (and disable TCP)" env:"WIREGUARD_UNIX"`

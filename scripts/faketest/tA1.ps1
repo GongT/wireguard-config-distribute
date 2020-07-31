@@ -1,12 +1,12 @@
 #!/usr/bin/env pwsh
 
 $ErrorActionPreference = "Stop"
-cd $PSScriptRoot/../..
+Set-Location $PSScriptRoot/../..
 
 $tmp = [System.IO.Path]::GetTempPath()
 New-Item -Path $tmp -Name xxxqqq -ItemType "directory" -Force
 
-echo "127.0.0.1 local1
+Write-Output "127.0.0.1 local1
 1.1.1.1 some-service
 " > $tmp/hosts1
 

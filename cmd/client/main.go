@@ -4,94 +4,105 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"runtime"
-	"strings"
 
 	"github.com/davecgh/go-spew/spew"
 	"github.com/gongt/wireguard-config-distribute/internal/client"
-	"github.com/gongt/wireguard-config-distribute/internal/client/elevate"
 	"github.com/gongt/wireguard-config-distribute/internal/client/hostfile"
+	"github.com/gongt/wireguard-config-distribute/internal/client/service"
 	"github.com/gongt/wireguard-config-distribute/internal/config"
-	"github.com/gongt/wireguard-config-distribute/internal/detect_ip"
 	"github.com/gongt/wireguard-config-distribute/internal/systemd"
 	"github.com/gongt/wireguard-config-distribute/internal/tools"
+	"github.com/judwhite/go-svc/svc"
 )
 
+type program struct {
+	client  *client.ClientStateHolder
+	watcher *hostfile.Watcher
+}
+
+var opts = &clientProgramOptions{}
+var logger *os.File
+
 func main() {
-	spew.Config.Indent = "    "
+	prg := &program{}
+	if err := svc.Run(prg); err != nil {
+		tools.Error("Failed run service: %s", err.Error())
+		os.Exit(1)
+	}
+}
+
+func init() {
+	log.Println("program init.")
+	config.UpdateDebug = func(debug bool) {
+		tools.SetDebugMode(debug)
+
+		if f := opts.GetLogFilePath(); len(f) > 0 {
+			log.Println("log will dup to file.")
+			logger = service.SetLogOutput(f)
+			log.Println("log start.")
+		}
+	}
+}
+
+func (p *program) Init(env svc.Environment) error {
 	log.Println("program start.")
-	opts := &clientProgramOptions{}
-	config.InitProgramArguments(opts)
 
-	if opts.DebugMode {
-		tools.SetDebugMode(opts.DebugMode)
-	}
+	spew.Config.Indent = "    "
+	_, err := config.InitProgramArguments(opts)
+	p.client = client.NewClient(opts)
 
-	elevate.EnsureAdminPrivileges()
-
-	if len(opts.Hostname) == 0 {
-		opts.Hostname = os.Getenv("HOSTNAME")
-	}
-	if len(opts.Hostname) == 0 {
-		opts.Hostname = os.Getenv("COMPUTERNAME")
-	}
-	if len(opts.Hostname) == 0 {
-		tools.Die("HOSTNAME and COMPUTERNAME is empty, please set --hostname")
-	}
-
-	if len(opts.Title) == 0 {
-		opts.Title = "Server at " + opts.Hostname
-		tools.Error("title is not set, using hostname")
-	}
-	if opts.HostFile == "/etc/hosts" && runtime.GOOS == "windows" {
-		opts.HostFile = "C:/Windows/System32/drivers/etc/hosts"
-	}
-	if len(opts.InternalIp) == 0 {
-		ip, err := detect_ip.GetDefaultNetworkIp()
-		if err != nil {
-			tools.Die("Failed to find a valid local IP, please set --internal-ip")
-		}
-		opts.InternalIp = ip.String()
-	}
-	if len(opts.InterfaceName) == 0 {
-		opts.InterfaceName = "wg_" + opts.JoinGroup
-	}
-	if len(opts.NetworkName) == 0 {
-		mac, err := detect_ip.GetGatewayMac()
-		if err != nil {
-			tools.Error("Failed get gateway mac address: %s; using networking alone.", err.Error())
-		}
-		opts.NetworkName = "gw[" + strings.ToUpper(strings.ReplaceAll(mac, ":", "")) + "]"
-	}
-
-	detect_ip.Detect(&opts.PublicIp, &opts.PublicIp6, !opts.GetIpHttpDsiable(), !opts.GetIpUpnpDsiable())
-
-	tools.NormalizeServerString(&opts.Server)
-
-	if opts.DebugMode {
+	if opts.GetDebugMode() {
 		tools.Error("commandline arguments: %s", spew.Sdump(opts))
 	}
 
-	watcher := hostfile.StartWatch(opts.HostFile)
-	c := client.NewClient(opts)
-	c.ConfigureVPN(opts)
-	c.ConfigureInterface(opts)
-	c.Configure(opts)
+	if err != nil {
+		return err
+	}
+
+	if !env.IsWindowsService() {
+		service.EnsureAdminPrivileges(opts)
+	}
+
+	return nil
+}
+
+func (p *program) Start() error {
+	p.watcher = hostfile.StartWatch(opts.HostFile)
+	p.client.ConfigureVPN(opts)
+	p.client.ConfigureInterface(opts)
+	p.client.Configure(opts)
 
 	go func() {
-		for content := range watcher.OnChange {
-			c.SetServices(hostfile.ToArray(hostfile.ParseServices(content)))
+		for content := range p.watcher.OnChange {
+			p.client.SetServices(hostfile.ToArray(hostfile.ParseServices(content)))
 		}
 	}()
 
-	c.StartCommunication()
+	p.client.StartCommunication()
 
 	systemd.ChangeToReady()
-	<-tools.WaitForCtrlC()
+
+	return nil
+}
+
+func (p *program) Stop() error {
+	fmt.Println("Service is quitting!")
+
 	systemd.ChangeToQuit()
 
-	watcher.StopWatch()
-	c.Quit()
+	p.watcher.StopWatch()
+	p.client.Quit()
 
 	fmt.Println("Bye, bye!")
+
+	if logger != nil {
+		if err := logger.Sync(); err != nil {
+			tools.Error("file.Sync() fail: %s", err.Error())
+		}
+		if err := logger.Close(); err != nil {
+			tools.Error("file.Close() fail: %s", err.Error())
+		}
+	}
+
+	return nil
 }

@@ -22,7 +22,7 @@ func (storage *ServerStorage) loadOrCreateCA(serverName string) (ca *x509.Certif
 	}
 
 	ca, err = readCert(storage.Path(caCertFileName))
-	if err != nil || !tools.ArrayContains(ca.Subject.Organization, serverName) {
+	if err != nil || ca.Subject.CommonName != serverName {
 		fmt.Println("Creating self-signed TLS certificate authority (CA)")
 		err = storage.createSelfCA(serverName)
 		if err != nil {
@@ -55,6 +55,7 @@ func (storage *ServerStorage) createSelfCA(serverName string) (err error) {
 		Subject: pkix.Name{
 			Country:      []string{"US"},
 			Organization: []string{serverName},
+			CommonName:   serverName,
 		},
 		NotBefore: time.Now(),
 		NotAfter:  time.Now().AddDate(10, 0, 0),

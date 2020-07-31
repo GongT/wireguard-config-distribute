@@ -1,20 +1,25 @@
 // +build windows
 
-package elevate
+package service
 
 import (
-	"fmt"
 	"log"
 	"os"
-	"strings"
 	"syscall"
 
+	"github.com/gongt/wireguard-config-distribute/internal/config"
 	"github.com/gongt/wireguard-config-distribute/internal/tools"
 	"golang.org/x/sys/windows"
 )
 
+type elevateOptions interface {
+	GetInterfaceName() string
+	GetInstallService() bool
+	GetUnInstallService() bool
+}
+
 // https://github.com/golang/go/issues/28804
-func EnsureAdminPrivileges() {
+func EnsureAdminPrivileges(opts elevateOptions) {
 	var sid *windows.SID
 
 	// Although this looks scary, it is directly copied from the
@@ -44,12 +49,37 @@ func EnsureAdminPrivileges() {
 		tools.Die("Token Membership Error: %s", err.Error())
 	}
 
-	// Also note that an admin is _not_ necessarily considered
-	// elevated.
-	// For elevation see https://github.com/mozey/run-as-admin
-	fmt.Println("Elevated?", token.IsElevated())
+	if member /*&& token.IsElevated() */ {
+		if install, uninstall := opts.GetInstallService(), opts.GetUnInstallService(); install || uninstall {
+			if install == uninstall {
+				tools.Die("Can not use /install and /uninstall")
+			}
+			var err error
+			if install {
+				tools.Error("Install Windows Service...")
+				err = installService(opts, true)
+			} else if uninstall {
+				tools.Error("Uninstall Windows Service...")
+				err = installService(opts, false)
+			}
+			if err == nil {
+				tools.Error("Install success!")
+			} else {
+				tools.Error("Failed install service! %s", err.Error())
+			}
+			os.Exit(0)
+		}
+		return
+	}
 
-	fmt.Println("Admin?", member)
+	tools.Error("member=%v ; IsElevated=%v", member, token.IsElevated())
+	if config.IsSuRunning() {
+		tools.Error("Failed start with admin permission")
+		os.Exit(1)
+	} else {
+		tools.Error("Restart self with admin permission...")
+		runMeElevated()
+	}
 }
 
 // https://stackoverflow.com/questions/31558066/how-to-ask-for-administer-privileges-on-windows-with-go
@@ -57,12 +87,11 @@ func runMeElevated() {
 	verb := "runas"
 	exe, _ := os.Executable()
 	cwd, _ := os.Getwd()
-	args := strings.Join(os.Args[1:], " ")
 
 	verbPtr, _ := syscall.UTF16PtrFromString(verb)
 	exePtr, _ := syscall.UTF16PtrFromString(exe)
 	cwdPtr, _ := syscall.UTF16PtrFromString(cwd)
-	argPtr, _ := syscall.UTF16PtrFromString(args)
+	argPtr, _ := syscall.UTF16PtrFromString(config.StringifyOptions())
 
 	var showCmd int32 = 1 //SW_NORMAL
 

@@ -3,9 +3,10 @@ package client
 import (
 	"github.com/gongt/wireguard-config-distribute/internal/protocol"
 	"github.com/gongt/wireguard-config-distribute/internal/tools"
+	"github.com/gongt/wireguard-config-distribute/internal/types"
 )
 
-func (s *clientStateHolder) uploadInformation() bool {
+func (s *ClientStateHolder) uploadInformation() bool {
 	tools.Error(" ~  uploadInformation()")
 	s.statusData.lock()
 	defer s.statusData.unlock()
@@ -17,6 +18,7 @@ func (s *clientStateHolder) uploadInformation() bool {
 	data := s.configData
 
 	result, err := s.server.Greeting(&protocol.ClientInfoRequest{
+		MachineId:    s.machineId,
 		GroupName:    data.GroupName,
 		Title:        data.Title,
 		Hostname:     data.Hostname,
@@ -38,12 +40,13 @@ func (s *clientStateHolder) uploadInformation() bool {
 		s.vpn.givenAddress = result.OfferIp
 		s.vpn.interfacePrivateKey = result.PrivateKey
 		s.isRunning = true
-		if s.MachineId != result.MachineId {
-			if len(s.MachineId) > 0 {
-				tools.Error("Machine ID is different between server and local")
+		if s.machineId != result.MachineId {
+			if len(s.machineId) > 0 {
+				tools.Error("Machine ID is different between server and local (using %s)", result.MachineId)
 			}
-			s.MachineId = result.MachineId
+			s.machineId = result.MachineId
 		}
+		s.sessionId = types.DeSerialize(result.SessionId)
 
 		// TODO create interface
 

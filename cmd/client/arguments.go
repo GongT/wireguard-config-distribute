@@ -2,10 +2,10 @@
 
 package main
 
-type clientProgramOptions struct {
+type clientProgramOptionsBase struct {
 	/* wg interface */
 	ListenPort    uint16 `short:"p" long:"port" description:"wireguard listening port" default:"51820" env:"WIREGUARD_PORT"`
-	InterfaceName string `short:"i" long:"interface" description:"wireguard interface name (must not exists)" default-mask:"wg_${group}" env:"WIREGUARD_MTU"`
+	InterfaceName string `short:"i" long:"interface" description:"wireguard interface name (must not exists)" default-mask:"wg_${group}" env:"WIREGUARD_INTERFACE_NAME"`
 	MTU           uint16 `long:"mtu" description:"wireguard interface MTU" env:"WIREGUARD_MTU"`
 
 	/* config server and self config */
@@ -40,5 +40,6 @@ type clientProgramOptions struct {
 	GrpcServerKey string `long:"server-ca" description:"use self-signed CA cert file" env:"WIREGUARD_TLS_CACERT"`
 
 	/* debug */
-	DebugMode bool `long:"debug" short:"D" description:"enable debug mode" env:"WIREGUARD_CONFIG_DEVELOPMENT"`
+	DebugMode   bool   `long:"debug" short:"D" description:"enable debug mode" env:"WIREGUARD_CONFIG_DEVELOPMENT"`
+	LogFilePath string `long:"logfile" description:"save output to file" env:"WIREGUARD_LOG"`
 }

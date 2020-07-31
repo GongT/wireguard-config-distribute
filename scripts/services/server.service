@@ -1,0 +1,41 @@
+[Unit]
+Description=Wireguard configuration distribution (server)
+After=nginx.pod.service
+
+[Service]
+Type=notify
+NotifyAccess=all
+
+ProtectSystem=strict
+PrivateDevices=yes
+PrivateTmp=yes
+ProtectKernelTunables=yes
+ProtectControlGroups=yes
+
+DynamicUser=yes
+StateDirectory=wireguard-config-server
+ReadWritePaths=/dev/shm/container-shared-socksets
+ExecStartPre=+/usr/bin/chmod 0777 /dev/shm/container-shared-socksets
+Environment=WIREGUARD_UNIX=/dev/shm/container-shared-socksets/grpc.wireguard.sock
+
+# Environment=WIREGUARD_TLS_INSECURE=true
+
+# Environment=WIREGUARD_TLS_KEYFILE=/data/AppData/share/letsencrypt/live/*.services.gongt.me/privkey.pem
+# Environment=WIREGUARD_TLS_PUBFILE=/data/AppData/share/letsencrypt/live/*.services.gongt.me/cert.pem
+
+# Environment=WIREGUARD_PORT=37070
+
+# Environment=WIREGUARD_STORAGE=/data/AppData/data/wireguard-config-server
+# ReadWritePaths=/data/AppData/data/wireguard-config-server
+# ExecStartPre=+/usr/bin/mkdir -p /data/AppData/data/wireguard-config-server
+
+Environment=WIREGUARD_CONFIG_DEVELOPMENT=true
+
+# ExecStartPre=/usr/bin/env
+ExecStart=/usr/local/bin/wireguard-config-server
+# ExecStart=/data/DevelopmentRoot/github.com/gongt/wireguard-config-distribute/dist/server
+
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

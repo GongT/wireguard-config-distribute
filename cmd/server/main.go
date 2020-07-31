@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -47,19 +48,35 @@ func preparePassword(store *storage.ServerStorage) {
 
 func main() {
 	spew.Config.Indent = "    "
+	log.Println("program start.")
 	config.InitProgramArguments(opts)
 
-	storagePath := opts.GetStorageLocation()
-	if len(storagePath) == 0 {
-		home, err := os.UserHomeDir()
-		if err != nil {
-			tools.Die("Failed get user HOME: %s", err.Error())
-		}
-		storagePath = filepath.Join(home, ".wireguard-config-server")
-		opts.StorageLocation = storagePath
+	if opts.DebugMode {
+		tools.SetDebugMode(opts.DebugMode)
 	}
-	store := storage.CreateStorage(storagePath)
-	fmt.Printf("Storage path: %s\n", storagePath)
+
+	if !tools.GetSystemHostName(&opts.ServerName) {
+		tools.Die("HOSTNAME and COMPUTERNAME is empty, please set --server-name")
+	}
+
+	if len(opts.GetStorageLocation()) == 0 {
+		if path, exists := os.LookupEnv("STATE_DIRECTORY"); exists {
+			fmt.Println("use storage path from STATE_DIRECTORY")
+			opts.StorageLocation = path
+		} else {
+			fmt.Println("use storage path from user home dir")
+			home, err := os.UserHomeDir()
+			if err != nil {
+				tools.Die("Failed get user HOME: %s", err.Error())
+			}
+			opts.StorageLocation = filepath.Join(home, ".wireguard-config-server")
+		}
+	}
+	if len(opts.GetStorageLocation()) == 0 {
+		tools.Die("Need a storage path, please set --storage")
+	}
+	fmt.Printf("Storage path: %s\n", opts.GetStorageLocation())
+	store := storage.CreateStorage(opts.GetStorageLocation())
 
 	preparePassword(store)
 
@@ -81,7 +98,6 @@ func main() {
 
 	if opts.DebugMode {
 		tools.Error("commandline arguments: %s", spew.Sdump(opts))
-		tools.SetDebugMode(opts.DebugMode)
 	}
 
 	impl := grpcImplements.CreateServerImplement(opts)

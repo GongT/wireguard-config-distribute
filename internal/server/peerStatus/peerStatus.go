@@ -7,16 +7,18 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/gongt/wireguard-config-distribute/internal/asyncChannels"
 	"github.com/gongt/wireguard-config-distribute/internal/protocol"
-	"github.com/gongt/wireguard-config-distribute/internal/server/peerStatus/asyncChan"
 	"github.com/gongt/wireguard-config-distribute/internal/server/peerStatus/debugLocker"
 	"github.com/gongt/wireguard-config-distribute/internal/systemd"
 	"github.com/gongt/wireguard-config-distribute/internal/tools"
+	"github.com/gongt/wireguard-config-distribute/internal/types"
 )
 
 type lPeerData *PeerData
 
 type PeerData struct {
+	sessionId types.SidType
 	MachineId string
 	Title     string
 	Hostname  string
@@ -37,16 +39,22 @@ type PeerData struct {
 }
 
 type PeerStatus struct {
-	list     map[string]lPeerData
+	list     map[types.SidType]lPeerData
 	m        debugLocker.MyLocker
-	onChange *asyncChan.AsyncChan
+	onChange *asyncChannels.AsyncChanSidType
+
+	guid    types.SidType
+	guidMap map[string]types.SidType
 }
 
 func NewPeerStatus() *PeerStatus {
 	return &PeerStatus{
-		list:     make(map[string]lPeerData),
-		onChange: asyncChan.NewChan(),
+		list:     make(map[types.SidType]lPeerData),
+		onChange: asyncChannels.NewChanSidType(),
 		m:        debugLocker.NewMutex(),
+
+		guid:    0,
+		guidMap: make(map[string]types.SidType),
 	}
 }
 
@@ -54,12 +62,16 @@ func (peers *PeerStatus) StopHandleChange() {
 	peers.onChange.Close()
 }
 
-func (peers *PeerStatus) AttachSender(cid string, sender *protocol.WireguardApi_StartServer) bool {
-	defer peers.m.Lock(fmt.Sprintf("AttachSender[%s]", cid))()
+func (peers *PeerStatus) AttachSender(sid types.SidType, sender *protocol.WireguardApi_StartServer) bool {
+	defer peers.m.Lock(fmt.Sprintf("AttachSender[%v]", sid))()
 
-	peer, exists := peers.list[cid]
+	peer, exists := peers.list[sid]
 
 	if !exists {
+		tools.Error("grpc:Start() fail: %v not exists in:", sid)
+		for k, p := range peers.list {
+			tools.Error("%v: %s", k, p.MachineId)
+		}
 		return false
 	}
 
@@ -71,18 +83,18 @@ func (peers *PeerStatus) AttachSender(cid string, sender *protocol.WireguardApi_
 }
 
 func (peers *PeerStatus) sendSnapshot(peer lPeerData) {
-	tools.Debug("[%s] ~ send peers", peer.MachineId)
+	tools.Debug("[%v|%v] ~ send peers", peer.sessionId, peer.MachineId)
 	err := (*peer.sender).Send(peers.createAllView(peer))
 	if err == nil {
-		tools.Debug("[%s] ~ send peers ok", peer.MachineId)
+		tools.Debug("[%v|%v] ~ send peers ok", peer.sessionId, peer.MachineId)
 	} else {
-		tools.Debug("[%s] ~ send peers failed: %s", peer.MachineId, err.Error())
+		tools.Debug("[%v|%v] ~ send peers failed: %s", peer.sessionId, peer.MachineId, err.Error())
 	}
 }
 
 func (peers *PeerStatus) StartHandleChange() {
 	for changeCid := range peers.onChange.Read() {
-		unlock := peers.m.Lock(fmt.Sprintf("StartHandleChange[%s]", changeCid))
+		unlock := peers.m.Lock(fmt.Sprintf("StartHandleChange[%v]", changeCid))
 
 		len := len(peers.list)
 		for cid, peer := range peers.list {
@@ -106,44 +118,57 @@ func (peers *PeerStatus) DoCleanup() {
 	expired := time.Now().Add(-1 * time.Minute)
 	for cid, peer := range peers.list {
 		if peer.lastKeepAlive.Before(expired) {
-			tools.Error("[%s] peer exired", peer.MachineId)
+			tools.Error("[%v] peer exired", peer.MachineId)
 			delete(peers.list, cid)
 			peers.onChange.Write(cid)
 		}
 	}
 }
-func (peers *PeerStatus) UpdateKeepAlive(cid string) bool {
-	defer peers.m.Lock(fmt.Sprintf("UpdateKeepAlive[%s]", cid))()
+func (peers *PeerStatus) UpdateKeepAlive(cid types.SidType) bool {
+	defer peers.m.Lock(fmt.Sprintf("UpdateKeepAlive[%v]", cid))()
 
 	if peer, exists := peers.list[cid]; exists {
-		tools.Debug("[%s] ~ keep alive", peer.MachineId)
+		tools.Debug("[%v|%v] ~ keep alive", cid, peer.MachineId)
 		peer.lastKeepAlive = time.Now()
 		return true
 	} else {
-		tools.Error("[%s] ! keep alive not exists peer", cid)
+		tools.Error("[%v] ! keep alive not exists peer", cid)
 		return false
 	}
 }
-func (peers *PeerStatus) Delete(cid string) {
-	defer peers.m.Lock(fmt.Sprintf("Delete[%s]", cid))()
+func (peers *PeerStatus) Delete(cid types.SidType) {
+	defer peers.m.Lock(fmt.Sprintf("Delete[%v]", cid))()
 
 	_, exists := peers.list[cid]
 
 	if !exists {
-		tools.Error("[%s] ! delete not exists peer", cid)
+		tools.Error("[%v] ! delete not exists peer", cid)
 		return
 	}
 
-	tools.Debug("[%s] ~ delete peer", cid)
+	tools.Debug("[%v] ~ delete peer", cid)
 
 	delete(peers.list, cid)
 	peers.onChange.Write(cid)
 }
 
-func (peers *PeerStatus) Add(peer lPeerData) {
-	defer peers.m.Lock(fmt.Sprintf("Add[%s]", peer.MachineId))()
+func (peers *PeerStatus) createSessionId(networkId string, machineId string) types.SidType {
+	s := networkId + "::" + machineId
+	if sid, ok := peers.guidMap[s]; ok {
+		return sid
+	}
 
-	old, exists := peers.list[peer.MachineId]
+	peers.guid += 1
+	peers.guidMap[s] = peers.guid
+	return peers.guid
+}
+
+func (peers *PeerStatus) Add(peer lPeerData) (sid types.SidType) {
+	defer peers.m.Lock(fmt.Sprintf("Add[%v]", peer.MachineId))()
+
+	sid = peers.createSessionId(peer.NetworkId, peer.MachineId)
+	peer.sessionId = sid
+	old, exists := peers.list[sid]
 
 	if exists {
 		if exactSame(old, peer) {
@@ -159,8 +184,10 @@ func (peers *PeerStatus) Add(peer lPeerData) {
 		tools.Debug(" ~ add new peer")
 	}
 
-	peers.list[peer.MachineId] = peer
-	peers.onChange.Write(peer.MachineId)
+	peers.list[sid] = peer
+	peers.onChange.Write(sid)
+
+	return
 }
 
 func (peers *PeerStatus) createAllView(viewer lPeerData) *protocol.Peers {
@@ -168,7 +195,7 @@ func (peers *PeerStatus) createAllView(viewer lPeerData) *protocol.Peers {
 	list := make([]*protocol.Peers_Peer, 0, len(peers.list)-1)
 
 	for cid, peer := range peers.list {
-		if viewer.MachineId == cid {
+		if viewer.sessionId == cid {
 			continue
 		}
 
@@ -194,7 +221,7 @@ func (peers *PeerStatus) createOneView(viewer lPeerData, peer lPeerData) *protoc
 	}
 
 	p := protocol.Peers_Peer{
-		MachineId: peer.MachineId,
+		SessionId: peer.sessionId.Serialize(),
 		Title:     peer.Title,
 		Hostname:  peer.Hostname,
 		Peer: &protocol.Peers_ConnectionTarget{

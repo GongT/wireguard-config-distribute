@@ -2,6 +2,7 @@ package server
 
 import (
 	"net"
+	"os"
 	"strconv"
 
 	"github.com/gongt/wireguard-config-distribute/internal/tools"
@@ -12,6 +13,17 @@ func listenUnix(socketPath string) net.Listener {
 	if err != nil {
 		tools.Die("failed to listen [[%s]]! %s", socketPath, err.Error())
 	}
+	err = os.Chmod(socketPath, os.FileMode(0777))
+	if err != nil {
+		tools.Die("failed to chmod socket file! %s", err.Error())
+	}
+
+	fi, err := os.Stat(socketPath)
+	if err != nil {
+		tools.Die("listen socket seems not work [[%s]]! %s", socketPath, err.Error())
+	}
+	tools.Debug("socket file mode:\n%s\t%s", socketPath, fi.Mode().String())
+
 	return lis
 }
 

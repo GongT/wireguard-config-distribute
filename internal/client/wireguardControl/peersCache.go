@@ -69,7 +69,7 @@ func (ic *PeersCache) UpdatePeers(list []*protocol.Peers_Peer) {
 			continue
 		}
 
-		tools.Error("  * <%s> %s -> %s", peer.GetMachineId(), peer.GetHostname(), selectedIp)
+		tools.Error("  * <%d> %s -> %s:%d", peer.GetSessionId(), peer.GetHostname(), selectedIp, peer.GetPeer().GetPort())
 		ic.peers = append(ic.peers, peerData{
 			comment:      peer.GetTitle(),
 			publicKey:    peer.GetPeer().GetPublicKey(),
@@ -91,18 +91,3 @@ func (ic *PeersCache) updateInterface() error {
 	}
 	return update(ic.ifopts.GetInterfaceName(), ic.configFile)
 }
-
-/*
-用法: C:\Program Files\WireGuard\wireguard.exe [
-    (无参数)：提升并安装管理服务
-    /installmanagerservice
-    /installtunnelservice CONFIG_PATH
-    /uninstallmanagerservice
-    /uninstalltunnelservice TUNNEL_NAME
-    /managerservice
-    /tunnelservice CONFIG_PATH
-    /ui CMD_READ_HANDLE CMD_WRITE_HANDLE CMD_EVENT_HANDLE LOG_MAPPING_HANDLE
-    /dumplog OUTPUT_PATH
-    /update [LOG_FILE]
-]
-*/

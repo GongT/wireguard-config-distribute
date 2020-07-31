@@ -61,7 +61,7 @@ func (s *Implements) Greeting(ctx context.Context, request *protocol.ClientInfoR
 		clientId = networkGroup + "::" + request.GetHostname()
 	}
 
-	s.peersManager.Add(&peerStatus.PeerData{
+	sessionId := s.peersManager.Add(&peerStatus.PeerData{
 		MachineId:    clientId,
 		Title:        request.GetTitle(),
 		Hostname:     request.GetHostname(),
@@ -78,6 +78,7 @@ func (s *Implements) Greeting(ctx context.Context, request *protocol.ClientInfoR
 	})
 
 	return &protocol.ClientInfoResponse{
+		SessionId:  sessionId.Serialize(),
 		MachineId:  clientId,
 		PublicIp:   remoteIp,
 		OfferIp:    allocIp,
