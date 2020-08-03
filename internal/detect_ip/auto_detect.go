@@ -9,7 +9,7 @@ import (
 func Detect(ipv4 *string, ipv6 *string, allowHttp bool, allowUPnP bool) {
 	var err error
 	if len(*ipv4) == 0 && allowUPnP {
-		fmt.Println("  * try to get ip from UPnP")
+		tools.Error("  * try to get ip from UPnP")
 		*ipv4, err = upnpGetPublicIp()
 		if err == nil {
 			tools.Error("      -> %s", *ipv4)

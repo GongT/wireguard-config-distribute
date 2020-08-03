@@ -8,8 +8,8 @@ import (
 	"time"
 
 	"github.com/gongt/wireguard-config-distribute/internal/asyncChannels"
+	"github.com/gongt/wireguard-config-distribute/internal/debugLocker"
 	"github.com/gongt/wireguard-config-distribute/internal/protocol"
-	"github.com/gongt/wireguard-config-distribute/internal/server/peerStatus/debugLocker"
 	"github.com/gongt/wireguard-config-distribute/internal/systemd"
 	"github.com/gongt/wireguard-config-distribute/internal/tools"
 	"github.com/gongt/wireguard-config-distribute/internal/types"
@@ -24,7 +24,6 @@ type PeerData struct {
 	Hostname  string
 	PublicKey string
 	VpnIp     string
-	KeepAlive uint32
 	MTU       uint32
 	Hosts     []string
 
@@ -213,11 +212,15 @@ func (peers *PeerStatus) createAllView(viewer lPeerData) *protocol.Peers {
 }
 
 func (peers *PeerStatus) createOneView(viewer lPeerData, peer lPeerData) *protocol.Peers_Peer {
+	var keepAlive uint32 = 0
 	port := peer.ExternalPort
 	ip := peer.ExternalIp
 	if viewer.NetworkId == peer.NetworkId && len(viewer.NetworkId) > 0 {
+		// same local network
 		port = peer.InternalPort
 		ip = []string{peer.InternalIp}
+	} else if len(viewer.ExternalIp) == 0 && len(peer.ExternalIp) != 0 {
+		keepAlive = 25
 	}
 
 	p := protocol.Peers_Peer{
@@ -229,7 +232,7 @@ func (peers *PeerStatus) createOneView(viewer lPeerData, peer lPeerData) *protoc
 			Address:   ip,
 			Port:      port,
 			VpnIp:     peer.VpnIp,
-			KeepAlive: peer.KeepAlive,
+			KeepAlive: keepAlive,
 			MTU:       peer.MTU,
 		},
 	}

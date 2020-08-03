@@ -14,6 +14,7 @@ require (
 	github.com/jessevdk/go-flags v1.4.0
 	github.com/judwhite/go-svc v1.1.2
 	github.com/milosgajdos/tenus v0.0.0-20200730100109-997445a7a4dd
+	github.com/phayes/freeport v0.0.0-20180830031419-95f893ade6f2
 	github.com/tatsushid/go-fastping v0.0.0-20160109021039-d7bb493dee3e
 	golang.org/x/crypto v0.0.0-20200728195943-123391ffb6de
 	golang.org/x/net v0.0.0-20200707034311-ab3426394381

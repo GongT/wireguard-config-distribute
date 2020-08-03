@@ -5,7 +5,8 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"sync"
+
+	"github.com/gongt/wireguard-config-distribute/internal/debugLocker"
 )
 
 type WireguardControl struct {
@@ -15,7 +16,7 @@ type WireguardControl struct {
 	peers      []peerData
 	configFile string
 
-	mu sync.Mutex
+	mu debugLocker.MyLocker
 
 	requestedAddress string
 	givenAddress     string
@@ -53,6 +54,8 @@ func NewWireguardControl(options VpnOptions) *WireguardControl {
 		interfaceTitle:      fmt.Sprintf("%s (%s)", options.GetHostname(), options.GetTitle()),
 		interfaceListenPort: options.GetListenPort(),
 		interfaceMTU:        options.GetMTU(),
+
+		mu: debugLocker.NewMutex(),
 	}
 }
 
