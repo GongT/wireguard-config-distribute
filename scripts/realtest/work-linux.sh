@@ -4,7 +4,6 @@ set -Eeuo pipefail
 
 cat <<- 'EOF' > /etc/wireguard/client.conf
 	WIREGUARD_SERVER="grpc.services.gongt.me:443"
-	WIREGUARD_NETWORK="work"
 	WIREGUARD_TITLE="工作机(linux)"
 	WIREGUARD_IPV6="true"
 	WIREGUARD_PUBLIC_IP_NO_UPNP="true"

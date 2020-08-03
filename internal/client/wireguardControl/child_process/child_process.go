@@ -23,6 +23,7 @@ func ShouldSuccess(title, cmd string, args ...string) {
 }
 
 func RunCmd(cmd string, args ...string) error {
+	tools.Debug("\x1B[2m%s %s\x1B[0m", cmd, strings.Join(args, " "))
 	p := exec.Command(cmd, args...)
 	p.Stdout = os.Stdout
 	p.Stderr = os.Stderr

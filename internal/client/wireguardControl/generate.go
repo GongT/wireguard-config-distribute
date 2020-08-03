@@ -33,7 +33,11 @@ func (wc *WireguardControl) creatConfig() []byte {
 		} else {
 			appendLine("AllowedIPs = %s/32", peer.privateIp)
 		}
-		appendLine("Endpoint = %s:%d", peer.ip, peer.port)
+		if len(peer.ip) > 0 {
+			appendLine("Endpoint = %s:%d", peer.ip, peer.port)
+		} else {
+			appendLine("# Endpoint is not public accessable")
+		}
 		appendLine("PublicKey = %s", peer.publicKey)
 		if len(peer.presharedKey) > 0 {
 			appendLine("PresharedKey = %s", peer.presharedKey)

@@ -42,12 +42,10 @@ func (s *Implements) Greeting(ctx context.Context, request *protocol.ClientInfoR
 		return nil, errors.New("Can not alloc ip address")
 	}
 
-	keepAlive := uint32(0)
 	externalIps := request.GetNetwork().GetExternalIp()
 	if len(externalIps) == 0 {
 		if request.GetNetwork().GetExternalEnabled() {
 			externalIps = append(externalIps, remoteIp)
-			keepAlive = 25
 		}
 	}
 
@@ -67,7 +65,6 @@ func (s *Implements) Greeting(ctx context.Context, request *protocol.ClientInfoR
 		Hostname:     request.GetHostname(),
 		PublicKey:    pubKey,
 		VpnIp:        allocIp,
-		KeepAlive:    keepAlive,
 		MTU:          request.GetNetwork().GetMTU(),
 		Hosts:        request.GetServices(),
 		NetworkId:    networkGroup,

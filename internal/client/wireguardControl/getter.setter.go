@@ -16,26 +16,24 @@ type peerData struct {
 }
 
 func (wc *WireguardControl) UpdatePeers(list []*protocol.Peers_Peer) {
-	wc.mu.Lock()
-	defer wc.mu.Unlock()
+	defer wc.mu.Lock("update peers")()
 
 	tools.Error("Updating peers:")
 	wc.peers = wc.peers[0:0]
 	for _, peer := range list {
+		tools.Error("  * <%d> %s -> %v", peer.GetSessionId(), peer.GetHostname(), peer.GetPeer().GetAddress())
 		selectedIp := selectIp(peer.GetPeer().GetAddress())
-		if len(selectedIp) == 0 {
-			tools.Error("  * DROP <%s>, failed ping any of %v", peer.GetTitle(), peer.GetPeer().GetAddress())
-			continue
-		}
+		tools.Error("      -> %s:%d", selectedIp, peer.GetPeer().GetPort())
 
-		tools.Error("  * <%d> %s -> %s:%d", peer.GetSessionId(), peer.GetHostname(), selectedIp, peer.GetPeer().GetPort())
+		kl := uint(peer.GetPeer().GetKeepAlive())
+
 		wc.peers = append(wc.peers, peerData{
 			comment:      peer.GetTitle(),
 			publicKey:    peer.GetPeer().GetPublicKey(),
 			presharedKey: "",
 			ip:           selectedIp,
 			port:         uint16(peer.GetPeer().GetPort()),
-			keepAlive:    uint(peer.GetPeer().GetKeepAlive()),
+			keepAlive:    kl,
 			privateIp:    peer.GetPeer().GetVpnIp(),
 		})
 	}

@@ -4,7 +4,7 @@ package main
 
 type clientProgramOptionsBase struct {
 	/* wg interface */
-	ListenPort    uint16 `short:"p" long:"port" description:"wireguard listening port" default:"51820" env:"WIREGUARD_PORT"`
+	ListenPort    uint16 `short:"p" long:"port" description:"wireguard listening port" default-mask:"random select" env:"WIREGUARD_PORT"`
 	InterfaceName string `short:"i" long:"interface" description:"wireguard interface name (must not exists)" default-mask:"wg_${group}" env:"WIREGUARD_INTERFACE_NAME"`
 	MTU           uint16 `long:"mtu" description:"wireguard interface MTU" env:"WIREGUARD_MTU"`
 
@@ -26,6 +26,7 @@ type clientProgramOptionsBase struct {
 
 	PublicIp      string `long:"external-ip" description:"manually set public ipv4 address of this device, disable auto detect" env:"WIREGUARD_PUBLIC_IP"`
 	PublicIp6     string `long:"external-ip6" description:"manually set public ipv6 address of this device, disable auto detect" env:"WIREGUARD_PUBLIC_IP6"`
+	PublicPort    uint16 `long:"external-port" description:"manually set public port, if you are behind NAT device" default-mask:"UPnP or same with --port" env:"WIREGUARD_PUBLIC_PORT"`
 	IpUpnpDsiable bool   `long:"external-ip-noupnp" description:"disable detect public ipv4 by UPnP/NAT-PMP" env:"WIREGUARD_PUBLIC_IP_NO_UPNP"`
 	IpHttpDsiable bool   `long:"external-ip-nohttp" description:"disable detect public ip by request a http api" env:"WIREGUARD_PUBLIC_IP_NO_HTTP"`
 

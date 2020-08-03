@@ -30,6 +30,12 @@ func selectIp(ips []string) string {
 		}
 	}
 
+	if len(ipsFilter) == 1 {
+		return ipsFilter[0]
+	}
+	if len(ipsFilter) == 0 {
+		return ""
+	}
 	ip := _selectIp(ipsFilter)
 	if len(ip) > 0 {
 		knownReachableIp[ip] = true
@@ -60,7 +66,7 @@ func _selectIp(ips []string) string {
 	}
 
 	// ping each one
-	ch := make(chan string, 1)
+	ch := make(chan string, 2)
 
 	p := fastping.NewPinger()
 
@@ -74,12 +80,15 @@ func _selectIp(ips []string) string {
 	p.OnIdle = func() {
 		ch <- ""
 	}
-	err = p.Run()
-	if err != nil {
-		tools.Error("Failed run fastping: %s", err.Error())
-	}
 
-	tools.Debug("pinging %d address...", len(ips))
+	go func() {
+		tools.Debug("pinging %d address...", len(ips))
+		err = p.Run()
+		if err != nil {
+			tools.Error("Failed run fastping: %s", err.Error())
+		}
+	}()
+
 	select {
 	case ret := <-ch:
 		tools.Debug("pong: [%s]", ret)
