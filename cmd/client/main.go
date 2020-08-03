@@ -25,6 +25,14 @@ var logger *os.File
 
 func main() {
 	prg := &program{}
+
+	go func() {
+		<-tools.WaitDie()
+		tools.Error("program dying!")
+		svc.Service.Stop(prg)
+		tools.Error("service stop complete.")
+	}()
+
 	if err := svc.Run(prg); err != nil {
 		tools.Error("Failed run service: %s", err.Error())
 		os.Exit(1)
@@ -69,7 +77,6 @@ func (p *program) Init(env svc.Environment) error {
 func (p *program) Start() error {
 	p.watcher = hostfile.StartWatch(opts.HostFile)
 	p.client.ConfigureVPN(opts)
-	p.client.ConfigureInterface(opts)
 	p.client.Configure(opts)
 
 	go func() {
@@ -103,6 +110,8 @@ func (p *program) Stop() error {
 			tools.Error("file.Close() fail: %s", err.Error())
 		}
 	}
+
+	os.Exit(0)
 
 	return nil
 }

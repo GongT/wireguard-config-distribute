@@ -7,14 +7,6 @@ import (
 	"github.com/gongt/wireguard-config-distribute/internal/types"
 )
 
-type wgVpnStatus struct {
-	controller *wireguardControl.PeersCache
-
-	requestedAddress    string
-	givenAddress        string
-	interfacePrivateKey string
-}
-
 type ClientStateHolder struct {
 	quitChan  chan bool
 	isQuit    bool
@@ -23,14 +15,10 @@ type ClientStateHolder struct {
 	sessionId types.SidType
 	machineId string
 	server    server.ServerStatus
-	vpn       wgVpnStatus
+	vpn       *wireguardControl.WireguardControl
 
 	configData oneTimeConfig
 	statusData editableConfig
-}
-
-type vpnOptions interface {
-	GetPerferIp() string
 }
 
 type connectionOptions interface {
@@ -56,11 +44,8 @@ func NewClient(options connectionOptions) *ClientStateHolder {
 	return &self
 }
 
-func (self *ClientStateHolder) ConfigureVPN(options vpnOptions) {
-	self.vpn.requestedAddress = options.GetPerferIp()
-}
-func (self *ClientStateHolder) ConfigureInterface(options wireguardControl.InterfaceOptions) {
-	self.vpn.controller = wireguardControl.NewPeersCache(options)
+func (self *ClientStateHolder) ConfigureVPN(options wireguardControl.VpnOptions) {
+	self.vpn = wireguardControl.NewWireguardControl(options)
 }
 
 type configureOptions interface {
@@ -90,6 +75,7 @@ func (s *ClientStateHolder) Quit() {
 	}
 	s.isQuit = true
 
+	s.vpn.DeleteInterface()
 	s.server.Disconnect(s.isRunning, s.sessionId)
 
 	s.quitChan <- true
