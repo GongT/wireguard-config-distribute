@@ -67,9 +67,11 @@ func (stat *ServerStatus) Disconnect(shouldClose bool, machineId types.SidType) 
 		}
 	}
 	stat.contextCancel()
-	tools.Error("Disconnect network.")
-	if err := stat.connection.Close(); err != nil {
-		tools.Error("Failed disconnect network: %s", err.Error())
+	if stat.connection != nil {
+		tools.Error("Disconnect network.")
+		if err := stat.connection.Close(); err != nil {
+			tools.Error("Failed disconnect network: %s", err.Error())
+		}
 	}
 	fmt.Println("grpc gracefull closed.")
 }

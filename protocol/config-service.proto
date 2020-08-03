@@ -50,7 +50,8 @@ message ClientInfoResponse {
   string MachineId = 2;
   string publicIp = 3;
   string offerIp = 4;
-  string privateKey = 5;
+  uint32 Subnet = 5;
+  string privateKey = 6;
 }
 
 /** 服务器下发配置 */

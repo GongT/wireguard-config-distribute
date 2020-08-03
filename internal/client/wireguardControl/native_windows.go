@@ -1,11 +1,18 @@
-// +build windows
-
 package wireguardControl
 
-import "github.com/gongt/wireguard-config-distribute/internal/tools"
+import (
+	"github.com/gongt/wireguard-config-distribute/internal/tools"
+)
 
-func update(ifName string, configPath string) error {
-	tools.Error("update interface %s from %s", ifName, configPath)
+type nativeInterface struct {
+}
+
+func (wc *WireguardControl) updateInterface() error {
+	tools.Error("update interface %s from %s", wc.interfaceName, wc.configFile)
+	return nil
+}
+
+func (wc *WireguardControl) deleteInterface() error {
 	return nil
 }
 
