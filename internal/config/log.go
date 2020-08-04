@@ -1,22 +1,17 @@
 package config
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 
 	"github.com/gongt/wireguard-config-distribute/internal/tools"
 )
 
-var switchedLog = false
+var originalOut = os.Stdout
+var originalErr = os.Stderr
 
-func Cleanup() {
-	if switchedLog {
-		close(os.Stdout)
-		close(os.Stderr)
-	}
-}
-
-func close(logger *os.File) {
+func my_close(logger *os.File) {
 	if err := logger.Sync(); err != nil {
 		tools.Error("file.Sync() fail: %s", err.Error())
 	} else if err := logger.Close(); err != nil {
@@ -37,5 +32,11 @@ func SetLogOutput(path string) {
 
 	os.Stdout = f
 	os.Stderr = f
-	switchedLog = true
+
+	tools.WaitExit(func(code int) {
+		fmt.Fprintf(f, "[child] exit with code %d", code)
+		os.Stdout = originalOut
+		os.Stderr = originalErr
+		my_close(f)
+	})
 }

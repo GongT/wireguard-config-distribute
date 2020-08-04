@@ -14,7 +14,7 @@ func (wc *WireguardControl) creatConfig() []byte {
 	}
 
 	appendLine("[Interface]")
-	appendLine("# Name = %s (%s)", wc.interfaceTitle)
+	appendLine("# Name = %s", wc.interfaceTitle)
 	appendLine("Address = %s/32", wc.givenAddress)
 	appendLine("ListenPort = %d", wc.interfaceListenPort)
 	appendLine("PrivateKey = %s", wc.privateKey)

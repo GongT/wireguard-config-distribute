@@ -53,7 +53,6 @@ func main() {
 	<-tools.WaitForCtrlC()
 	systemd.ChangeToQuit()
 
-	config.Cleanup()
 	impl.Quit()
 	server.Stop()
 }

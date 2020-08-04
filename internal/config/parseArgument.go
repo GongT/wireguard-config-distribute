@@ -65,7 +65,7 @@ func Exists(name string) bool {
 
 func DieUsage() {
 	parser.WriteHelp(os.Stderr)
-	os.Exit(1)
+	tools.Die("")
 }
 
 func parseCommandline() error {

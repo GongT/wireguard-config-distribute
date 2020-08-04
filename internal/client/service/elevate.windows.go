@@ -3,9 +3,12 @@
 package service
 
 import (
+	"bufio"
 	"io"
 	"log"
 	"os"
+	"strconv"
+	"strings"
 	"sync"
 	"syscall"
 	"time"
@@ -94,12 +97,13 @@ func runMeElevated() {
 
 	config.InternalOption.IsElevated = true
 	config.InternalOption.StandardOutputPath = `\\.\pipe\wireguard-config-client-elevate`
-	config.CommonOption.LogFilePath = "D:/Projects/Go/GOPATH/child.log"
+	config.CommonOption.LogFilePath = ""
 
 	wg := sync.WaitGroup{}
-	wg.Add(2)
-	handleStream(createPipe("stdout"), os.Stdout, &wg)
-	handleStream(createPipe("stderr"), os.Stderr, &wg)
+	wg.Add(3)
+	go handleStream(createPipe("stdout"), os.Stdout, &wg)
+	go handleStream(createPipe("stderr"), os.Stderr, &wg)
+	go handleControl(createPipe("control"), &wg)
 
 	verbPtr, _ := syscall.UTF16PtrFromString(verb)
 	exePtr, _ := syscall.UTF16PtrFromString(exe)
@@ -132,20 +136,51 @@ func waitExit(reason string, err error) {
 	tools.Die(reason)
 }
 
-func handleStream(lis *npipe.PipeListener, out *os.File, wg *sync.WaitGroup) {
+func handleControl(lis *npipe.PipeListener, wg *sync.WaitGroup) {
+	defer wg.Done()
+	conn, err := lis.Accept()
+	lis.Close()
+	if err != nil {
+		waitExit("failed accpet pipes", err)
+	}
+	defer conn.Close()
+
+	tools.Debug("Control socket connected.")
+
 	go func() {
-		defer wg.Done()
-
-		conn, err := lis.Accept()
-		lis.Close()
-		if err != nil {
-			waitExit("failed accpet pipes", err)
-		}
-		defer conn.Close()
-
-		_, err = io.Copy(out, conn)
-		if err != nil {
-			waitExit("failed read pipes", err)
-		}
+		<-tools.WaitForCtrlC()
+		conn.Write([]byte("sigint\n"))
 	}()
+
+	fscanner := bufio.NewScanner(conn)
+	for fscanner.Scan() {
+		text := fscanner.Text()
+		if strings.HasPrefix(text, "exit:") {
+			code, _ := strconv.ParseInt(text[5:], 10, 32)
+			tools.HasError(int(code))
+			tools.Exit()
+		}
+	}
+
+	tools.Debug("Control socket finished.")
+}
+
+func handleStream(lis *npipe.PipeListener, out *os.File, wg *sync.WaitGroup) {
+	defer wg.Done()
+
+	conn, err := lis.Accept()
+	lis.Close()
+	if err != nil {
+		waitExit("failed accpet pipes", err)
+	}
+	defer conn.Close()
+
+	tools.Debug("Output socket (%s) connected.", out.Name())
+
+	_, err = io.Copy(out, conn)
+	tools.Debug("Output socket (%s) finished.", out.Name())
+
+	if err != nil {
+		waitExit("failed read pipes", err)
+	}
 }

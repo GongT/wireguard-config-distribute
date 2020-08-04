@@ -61,7 +61,7 @@ func (s *Implements) Greeting(ctx context.Context, request *protocol.ClientInfoR
 
 	sessionId := s.peersManager.Add(&peerStatus.PeerData{
 		MachineId:    clientId,
-		Title:        request.GetTitle(),
+		Title:        request.GetTitle() + " [AT] " + request.GetNetwork().GetNetworkId(),
 		Hostname:     request.GetHostname(),
 		PublicKey:    pubKey,
 		VpnIp:        allocIp,

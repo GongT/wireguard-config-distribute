@@ -16,6 +16,10 @@ func (wc *WireguardControl) deleteInterface() error {
 	return nil
 }
 
+func init() {
+	tools.EnsureCommandExists(`C:\Program Files\WireGuard\wireguard.exe`)
+}
+
 /*
 用法: C:\Program Files\WireGuard\wireguard.exe [
     (无参数)：提升并安装管理服务
