@@ -1,8 +1,11 @@
 package config
 
 import (
+	"bufio"
+	"fmt"
 	"io"
 	"os"
+	"strconv"
 
 	"github.com/gongt/wireguard-config-distribute/internal/tools"
 	"github.com/natefinch/npipe"
@@ -11,7 +14,30 @@ import (
 func SetLogPipe(path string) {
 	os.Stdout = pipe(path+".stdout", os.Stdout)
 	os.Stderr = pipe(path+".stderr", os.Stderr)
-	switchedLog = true
+
+	controlSocket, err := npipe.Dial(path + ".control")
+	if err != nil {
+		tools.Die("Failed connect pipes (%s): %s", path+".control", err.Error())
+	}
+
+	tools.WaitExit(func(code int) {
+		os.Stdout = originalOut
+		os.Stderr = originalErr
+
+		controlSocket.Write([]byte("exit:" + strconv.FormatInt(int64(code), 10) + "\n"))
+		controlSocket.Close()
+	})
+
+	go func() {
+		fscanner := bufio.NewScanner(controlSocket)
+		for fscanner.Scan() {
+			text := fscanner.Text()
+			if text == "sigint" {
+				tools.Error("receive sigint from control pipe")
+				tools.Exit()
+			}
+		}
+	}()
 }
 
 func pipe(from string, out *os.File) *os.File {
@@ -24,7 +50,16 @@ func pipe(from string, out *os.File) *os.File {
 		tools.Die("Failed create pipe: %s", err.Error())
 	}
 
-	go io.Copy(conn, rd)
+	ch := make(chan bool)
+	go func() {
+		io.Copy(conn, rd)
+		ch <- true
+	}()
+	go tools.WaitExit(func(code int) {
+		fmt.Fprintf(wr, "[child] exit %d", code)
+		my_close(wr)
+		<-ch
+	})
 
 	return wr
 }

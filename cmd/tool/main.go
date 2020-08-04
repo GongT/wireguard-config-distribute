@@ -33,7 +33,6 @@ func main() {
 	} else {
 		config.DieUsage()
 	}
-	config.Cleanup()
 }
 
 func c() *remoteControl.ToolObject {

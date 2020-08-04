@@ -55,7 +55,7 @@ func (srv *Implements) StartWorker() {
 		for {
 			select {
 			case <-srv.keepAliveTimer.C:
-				srv.peersManager.DoCleanup()
+				srv.peersManager.CleanupTimeoutPeers()
 			case <-srv.quitCh:
 				return
 			}

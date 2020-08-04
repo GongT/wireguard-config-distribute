@@ -36,6 +36,8 @@ type VpnOptions interface {
 	GetMTU() uint16
 	GetTitle() string
 	GetHostname() string
+
+	GetNetworkName() string
 }
 
 func NewWireguardControl(options VpnOptions) *WireguardControl {
@@ -51,7 +53,7 @@ func NewWireguardControl(options VpnOptions) *WireguardControl {
 		givenAddress:     "",
 		privateKey:       "",
 
-		interfaceTitle:      fmt.Sprintf("%s (%s)", options.GetHostname(), options.GetTitle()),
+		interfaceTitle:      fmt.Sprintf("%s (%s) [AT] %s", options.GetHostname(), options.GetTitle(), options.GetNetworkName()),
 		interfaceListenPort: options.GetListenPort(),
 		interfaceMTU:        options.GetMTU(),
 

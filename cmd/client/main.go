@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"log"
-	"os"
 
 	"github.com/davecgh/go-spew/spew"
 	"github.com/gongt/wireguard-config-distribute/internal/client"
@@ -21,27 +20,25 @@ type program struct {
 }
 
 var opts = &clientProgramOptions{}
+var prog = &program{}
 
 func main() {
-	prg := &program{}
-
-	go func() {
-		v := <-tools.WaitDie()
-		tools.Error("program dying! (%s)", v)
-		svc.Service.Stop(prg)
+	spew.Config.Indent = "    "
+	tools.WaitExit(func(code int) {
+		tools.Error("program dying!")
+		svc.Service.Stop(prog)
 		tools.Error("service stop complete.")
-	}()
+	})
 
-	if err := svc.Run(prg); err != nil {
+	if err := svc.Run(prog); err != nil {
 		tools.Error("Failed run service: %s", err.Error())
-		os.Exit(1)
+		tools.HasError(100)
 	}
+
+	tools.ExitMain()
 }
 
 func (p *program) Init(env svc.Environment) error {
-	log.Println("program start.")
-
-	spew.Config.Indent = "    "
 	err := config.InitProgramArguments(opts)
 	p.client = client.NewClient(opts.GetConnectionOptions())
 
@@ -57,6 +54,8 @@ func (p *program) Init(env svc.Environment) error {
 }
 
 func (p *program) Start() error {
+	log.Println("service start.")
+
 	p.watcher = hostfile.StartWatch(opts.HostFile)
 	p.client.ConfigureVPN(opts)
 	p.client.Configure(opts)
@@ -82,11 +81,7 @@ func (p *program) Stop() error {
 	p.watcher.StopWatch()
 	p.client.Quit()
 
-	config.Cleanup()
-
 	fmt.Println("Bye, bye!")
-
-	os.Exit(0)
 
 	return nil
 }

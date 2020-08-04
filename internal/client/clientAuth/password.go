@@ -34,6 +34,6 @@ func (*passwordAuth) RequireTransportSecurity() bool {
 }
 
 func CreatePasswordAuth(password string) *passwordAuth {
-	tools.Debug("using password %s.", password)
+	// tools.Debug("using password %s.", password)
 	return &passwordAuth{password}
 }
