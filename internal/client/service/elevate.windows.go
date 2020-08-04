@@ -3,12 +3,16 @@
 package service
 
 import (
+	"io"
 	"log"
 	"os"
+	"sync"
 	"syscall"
+	"time"
 
 	"github.com/gongt/wireguard-config-distribute/internal/config"
 	"github.com/gongt/wireguard-config-distribute/internal/tools"
+	"github.com/natefinch/npipe"
 	"golang.org/x/sys/windows"
 )
 
@@ -52,7 +56,7 @@ func EnsureAdminPrivileges(opts elevateOptions) {
 	if member /*&& token.IsElevated() */ {
 		if install, uninstall := opts.GetInstallService(), opts.GetUnInstallService(); install || uninstall {
 			if install == uninstall {
-				tools.Die("Can not use /install and /uninstall")
+				tools.Die("Can not use /install and /uninstall at same time")
 			}
 			var err error
 			if install {
@@ -84,10 +88,18 @@ func EnsureAdminPrivileges(opts elevateOptions) {
 
 // https://stackoverflow.com/questions/31558066/how-to-ask-for-administer-privileges-on-windows-with-go
 func runMeElevated() {
-	// TODO: open pipe output
 	verb := "runas"
 	exe, _ := os.Executable()
 	cwd, _ := os.Getwd()
+
+	config.InternalOption.IsElevated = true
+	config.InternalOption.StandardOutputPath = `\\.\pipe\wireguard-config-client-elevate`
+	config.CommonOption.LogFilePath = "D:/Projects/Go/GOPATH/child.log"
+
+	wg := sync.WaitGroup{}
+	wg.Add(2)
+	handleStream(createPipe("stdout"), os.Stdout, &wg)
+	handleStream(createPipe("stderr"), os.Stderr, &wg)
 
 	verbPtr, _ := syscall.UTF16PtrFromString(verb)
 	exePtr, _ := syscall.UTF16PtrFromString(exe)
@@ -100,5 +112,40 @@ func runMeElevated() {
 	if err != nil {
 		tools.Die("windows self execute failed: %s", err.Error())
 	}
+
+	wg.Wait()
 	os.Exit(0)
+}
+
+func createPipe(chType string) *npipe.PipeListener {
+	ln, err := npipe.Listen(config.InternalOption.StandardOutputPath + "." + chType)
+	if err != nil {
+		waitExit("failed create pipes", err)
+	}
+
+	return ln
+}
+
+func waitExit(reason string, err error) {
+	tools.Error(reason+": %v", err)
+	time.Sleep(10 * time.Second)
+	tools.Die(reason)
+}
+
+func handleStream(lis *npipe.PipeListener, out *os.File, wg *sync.WaitGroup) {
+	go func() {
+		defer wg.Done()
+
+		conn, err := lis.Accept()
+		lis.Close()
+		if err != nil {
+			waitExit("failed accpet pipes", err)
+		}
+		defer conn.Close()
+
+		_, err = io.Copy(out, conn)
+		if err != nil {
+			waitExit("failed read pipes", err)
+		}
+	}()
 }

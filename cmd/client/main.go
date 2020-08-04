@@ -21,14 +21,13 @@ type program struct {
 }
 
 var opts = &clientProgramOptions{}
-var logger *os.File
 
 func main() {
 	prg := &program{}
 
 	go func() {
-		<-tools.WaitDie()
-		tools.Error("program dying!")
+		v := <-tools.WaitDie()
+		tools.Error("program dying! (%s)", v)
 		svc.Service.Stop(prg)
 		tools.Error("service stop complete.")
 	}()
@@ -39,29 +38,12 @@ func main() {
 	}
 }
 
-func init() {
-	log.Println("program init.")
-	config.UpdateDebug = func(debug bool) {
-		tools.SetDebugMode(debug)
-
-		if f := opts.GetLogFilePath(); len(f) > 0 {
-			log.Println("log will dup to file.")
-			logger = service.SetLogOutput(f)
-			log.Println("log start.")
-		}
-	}
-}
-
 func (p *program) Init(env svc.Environment) error {
 	log.Println("program start.")
 
 	spew.Config.Indent = "    "
-	_, err := config.InitProgramArguments(opts)
-	p.client = client.NewClient(opts)
-
-	if opts.GetDebugMode() {
-		tools.Error("commandline arguments: %s", spew.Sdump(opts))
-	}
+	err := config.InitProgramArguments(opts)
+	p.client = client.NewClient(opts.GetConnectionOptions())
 
 	if err != nil {
 		return err
@@ -100,16 +82,9 @@ func (p *program) Stop() error {
 	p.watcher.StopWatch()
 	p.client.Quit()
 
-	fmt.Println("Bye, bye!")
+	config.Cleanup()
 
-	if logger != nil {
-		if err := logger.Sync(); err != nil {
-			tools.Error("file.Sync() fail: %s", err.Error())
-		}
-		if err := logger.Close(); err != nil {
-			tools.Error("file.Close() fail: %s", err.Error())
-		}
-	}
+	fmt.Println("Bye, bye!")
 
 	os.Exit(0)
 

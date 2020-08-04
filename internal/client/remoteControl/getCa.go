@@ -7,17 +7,10 @@ import (
 
 	"github.com/gongt/wireguard-config-distribute/internal/protocol"
 	"github.com/gongt/wireguard-config-distribute/internal/tools"
-	"golang.org/x/crypto/bcrypt"
 )
 
-func (tool ToolObject) GetCA(password string, target string) {
-	request, err := bcrypt.GenerateFromPassword([]byte(password), 0)
-	if err != nil {
-		tools.Die("Failed encrypt password: %s", err.Error())
-	}
-	ret, err := tool.server.GetSelfSignedCertFile(&protocol.GetCertFileRequest{
-		Password: request,
-	})
+func (tool *ToolObject) GetCA(target string) {
+	ret, err := tool.server.GetSelfSignedCertFile(&protocol.GetCertFileRequest{})
 	if err != nil {
 		tools.Die("Failed request server: %s", err.Error())
 	}

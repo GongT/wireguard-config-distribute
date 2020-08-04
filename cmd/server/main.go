@@ -3,8 +3,6 @@ package main
 import (
 	"fmt"
 	"log"
-	"os"
-	"path/filepath"
 	"strings"
 
 	"github.com/davecgh/go-spew/spew"
@@ -18,6 +16,47 @@ import (
 )
 
 var opts *serverProgramOptions = &serverProgramOptions{}
+
+func main() {
+	spew.Config.Indent = "    "
+	log.Println("program start.")
+	config.InitProgramArguments(opts)
+
+	fmt.Printf("Storage path: %s\n", opts.GetStorageLocation())
+	store := storage.CreateStorage(opts.GetStorageLocation())
+
+	preparePassword(store)
+
+	var certs *credentials.TransportCredentials = nil
+	if opts.GetGrpcInsecure() {
+		if len(opts.GetGrpcServerKey()) > 0 || len(opts.GetGrpcServerPub()) > 0 {
+			tools.Die("Can not use server-key/pub file with --insecure")
+		}
+
+		fmt.Println("Using insecure transport")
+	} else {
+		_certs, err := store.LoadOrCreateTLS(opts)
+		if err != nil {
+			tools.Die("Failed create or load TLS keyfile: %s", err.Error())
+		}
+		fmt.Println("Using TLS transport")
+		certs = &_certs
+	}
+
+	impl := grpcImplements.CreateServerImplement(opts)
+	server := serverInternals.NewServer(opts, certs, impl)
+
+	server.Listen(opts)
+	impl.StartWorker()
+
+	systemd.ChangeToReady()
+	<-tools.WaitForCtrlC()
+	systemd.ChangeToQuit()
+
+	config.Cleanup()
+	impl.Quit()
+	server.Stop()
+}
 
 func preparePassword(store *storage.ServerStorage) {
 	save := func() {
@@ -44,72 +83,4 @@ func preparePassword(store *storage.ServerStorage) {
 	} else if opts.Password != savedPassword {
 		save()
 	}
-}
-
-func main() {
-	spew.Config.Indent = "    "
-	log.Println("program start.")
-	config.InitProgramArguments(opts)
-
-	if opts.DebugMode {
-		tools.SetDebugMode(opts.DebugMode)
-	}
-
-	if !tools.GetSystemHostName(&opts.ServerName) {
-		tools.Die("HOSTNAME and COMPUTERNAME is empty, please set --server-name")
-	}
-
-	if len(opts.GetStorageLocation()) == 0 {
-		if path, exists := os.LookupEnv("STATE_DIRECTORY"); exists {
-			fmt.Println("use storage path from STATE_DIRECTORY")
-			opts.StorageLocation = path
-		} else {
-			fmt.Println("use storage path from user home dir")
-			home, err := os.UserHomeDir()
-			if err != nil {
-				tools.Die("Failed get user HOME: %s", err.Error())
-			}
-			opts.StorageLocation = filepath.Join(home, ".wireguard-config-server")
-		}
-	}
-	if len(opts.GetStorageLocation()) == 0 {
-		tools.Die("Need a storage path, please set --storage")
-	}
-	fmt.Printf("Storage path: %s\n", opts.GetStorageLocation())
-	store := storage.CreateStorage(opts.GetStorageLocation())
-
-	preparePassword(store)
-
-	var certs *credentials.TransportCredentials = nil
-	if opts.GetGrpcInsecure() {
-		if len(opts.GetGrpcServerKey()) > 0 || len(opts.GetGrpcServerPub()) > 0 {
-			tools.Die("Can not use server-key/pub file with --insecure")
-		}
-
-		fmt.Println("Using insecure transport")
-	} else {
-		_certs, err := store.LoadOrCreateTLS(opts)
-		if err != nil {
-			tools.Die("Failed create or load TLS keyfile: %s", err.Error())
-		}
-		fmt.Println("Using TLS transport")
-		certs = &_certs
-	}
-
-	if opts.DebugMode {
-		tools.Error("commandline arguments: %s", spew.Sdump(opts))
-	}
-
-	impl := grpcImplements.CreateServerImplement(opts)
-	server := serverInternals.NewServer(opts, certs, impl)
-
-	server.Listen(opts)
-	impl.StartWorker()
-
-	systemd.ChangeToReady()
-	<-tools.WaitForCtrlC()
-	systemd.ChangeToQuit()
-
-	impl.Quit()
-	server.Stop()
 }

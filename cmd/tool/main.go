@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/davecgh/go-spew/spew"
 	"github.com/gongt/wireguard-config-distribute/internal/client"
+	"github.com/gongt/wireguard-config-distribute/internal/client/remoteControl"
 	"github.com/gongt/wireguard-config-distribute/internal/config"
 	"github.com/gongt/wireguard-config-distribute/internal/tools"
 )
@@ -11,24 +12,30 @@ var opts = &toolProgramOptions{}
 
 func main() {
 	spew.Config.Indent = "    "
-	parser := config.InitProgramArguments(opts)
+	err := config.InitProgramArguments(opts)
 
-	if opts.DebugMode {
-		tools.Error("commandline arguments: %s", spew.Sdump(opts))
-		tools.SetDebugMode(opts.DebugMode)
+	if err != nil {
+		tools.Die("invalid commandline arguments: %s", err.Error())
 	}
 
-	tools.NormalizeServerString(&opts.Server)
-
-	c := client.NewClient(connectionOptions{
-		server: opts.GetServer(),
-	})
-
-	tool := c.StartTool()
-
-	if parser.Exists("download-ca") {
-		tool.GetCA(opts.GetPassword(), opts.DownloadCA.GetOutput())
+	if config.Exists("download-ca") {
+		opts.ConnectionOptions.GrpcInsecure = true
+		c().GetCA(opts.DownloadCA.GetOutput())
+	} else if config.Exists("netgroup") {
+		optsNg := opts.GetNetworkGroup()
+		if config.Exists("create") {
+			c().CreateNetworkGroup(optsNg.GetCreate())
+		} else if config.Exists("create") {
+			c().DeleteNetworkGroup(optsNg.GetDelete())
+		} else {
+			config.DieUsage()
+		}
 	} else {
-		parser.DieUsage()
+		config.DieUsage()
 	}
+	config.Cleanup()
+}
+
+func c() *remoteControl.ToolObject {
+	return client.NewClient(opts.GetConnectionOptions()).StartTool()
 }

@@ -1,19 +1,34 @@
 #!/usr/bin/env pwsh
 
+$ErrorActionPreference = "Stop"
+
 Set-Location $PSScriptRoot/../..
 
-$env:WIREGUARD_SERVER = "grpc.services.gongt.me:443"
-$env:WIREGUARD_NETWORK = "work"
-$env:WIREGUARD_TITLE = "工作机(windows)"
-$env:WIREGUARD_IPV6 = "true"
-$env:WIREGUARD_PUBLIC_IP_NO_UPNP = "true"
-$env:WIREGUARD_PUBLIC_IP_NO_HTTP = "true"
-$env:WIREGUARD_NO_UPNP = "true"
-$env:WIREGUARD_CONFIG_DEVELOPMENT = "true"
-$env:WIREGUARD_REQUEST_IP = "1.1"
-$env:WIREGUARD_LOG = "D:/Projects/Go/GOPATH/output.log"
+if (! (Test-Path $env:GOPATH/bin) ) {
+	Write-Error "No GOPATH, or GOPATH/bin did not exists"
+	return
+}
+
+$hashTable = Get-Content -Encoding utf8 $env:GOPATH/wireguard-client.conf | ConvertFrom-StringData
+foreach ($key in $hashTable.Keys) {
+	$value = $hashTable.$key
+	Set-Item env:$key $value 
+}
 
 ./scripts/build.ps1 client
 
-Copy-Item ./dist/client.exe D:/Projects/Go/GOPATH/wireguard-config-service.exe
-D:/Projects/Go/GOPATH/wireguard-config-service.exe /install
+$binFile = "$env:GOPATH/bin/wireguard-config-service.exe"
+
+Write-Output ""
+
+if (Test-Path $binFile) {
+	Write-Output "Uninstall old service.."
+	& $binFile /D /uninstall
+} else {
+	Write-Output "Old service did not exists."
+}
+Write-Output "Copy binary file..."
+Copy-Item ./dist/client.exe $binFile
+
+Write-Output "Install new service..."
+& $binFile /D /install

@@ -10,3 +10,7 @@ import (
 func (s *Implements) NewGroup(context.Context, *protocol.NewGroupRequest) (*emptypb.Empty, error) {
 	return nil, nil
 }
+
+func (s *Implements) RemoveGroup(context.Context, *protocol.RemoveGroupRequest) (*emptypb.Empty, error) {
+	return nil, nil
+}

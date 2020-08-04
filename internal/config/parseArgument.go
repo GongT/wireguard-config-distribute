@@ -12,45 +12,49 @@ import (
 	"github.com/jessevdk/go-flags"
 )
 
-type DebugOption interface {
-	GetDebugMode() bool
-}
-
 type Sanitizable interface {
 	Sanitize() error
 }
 
-type wrappedParser struct {
-	Parser      *flags.Parser
-	isSuRunning bool
-	options     interface{}
-	parseError  error
-}
+var lastError error
+var parser *flags.Parser
 
-var parserCached *wrappedParser
+var ApplicationOption interface{}
+var InternalOption = &internalOptions{}
+var CommonOption = &commonOptions{}
+var internalConfigGroup *flags.Group
 
-func InitProgramArguments(opts interface{}) (*wrappedParser, error) {
-	if parserCached != nil {
-		return parserCached, nil
+func InitProgramArguments(opts interface{}) error {
+	if parser != nil {
+		panic(fmt.Errorf("duplicate call to InitProgramArguments()"))
 	}
 
-	r := wrappedParser{
-		Parser:  flags.NewParser(opts, flags.HelpFlag|flags.PassDoubleDash),
-		options: opts,
+	ApplicationOption = opts
+
+	parser = flags.NewParser(opts, flags.HelpFlag|flags.PassDoubleDash)
+
+	if _, err := parser.AddGroup("Common Options", "", CommonOption); err != nil {
+		panic(err)
 	}
 
-	r.parseError = r.ParseCommandline()
+	if g, err := parser.AddGroup("Elevate Options", "", InternalOption); err != nil {
+		panic(err)
+	} else {
+		g.Hidden = true
+		internalConfigGroup = g
+	}
 
-	parserCached = &r
-	return parserCached, r.parseError
+	lastError := parseCommandline()
+
+	return lastError
 }
 
-func (wp *wrappedParser) Err() error {
-	return wp.parseError
+func Err() error {
+	return lastError
 }
 
-func (wp *wrappedParser) Exists(name string) bool {
-	for curr := wp.Parser.Active; curr != nil; curr = curr.Active {
+func Exists(name string) bool {
+	for curr := parser.Active; curr != nil; curr = curr.Active {
 		if curr.Name == name || (curr.Aliases != nil && tools.ArrayContains(curr.Aliases, name)) {
 			return true
 		}
@@ -59,28 +63,27 @@ func (wp *wrappedParser) Exists(name string) bool {
 	return false
 }
 
-func (wp *wrappedParser) DieUsage() {
-	wp.Parser.WriteHelp(os.Stderr)
+func DieUsage() {
+	parser.WriteHelp(os.Stderr)
 	os.Exit(1)
 }
 
-func (wp *wrappedParser) ParseCommandline() error {
+func parseCommandline() error {
 	if len(os.Args) == 2 && strings.HasPrefix(os.Args[1], "data:") {
-		ini := flags.NewIniParser(wp.Parser)
+		ini := flags.NewIniParser(parser)
 		bs, _ := base64.StdEncoding.DecodeString(os.Args[1][5:])
 		iniData := bytes.NewReader(bs)
 		err := ini.Parse(iniData)
 		if err != nil {
 			return errors.New(fmt.Sprintf("Failed parse ini arguments: %s", err.Error()))
 		}
-		wp.isSuRunning = true
 
-		wp.updateDebug()
+		commitConfig()
 	} else {
-		_, err := wp.Parser.Parse()
+		_, err := parser.Parse()
 
 		if err != nil {
-			wp.Parser.WriteHelp(os.Stderr)
+			parser.WriteHelp(os.Stderr)
 			serr, ok := err.(*flags.Error)
 			if ok {
 				switch serr.Type {
@@ -91,9 +94,9 @@ func (wp *wrappedParser) ParseCommandline() error {
 			return errors.New(fmt.Sprintf("Failed parse arguments.\n\t%s", err.Error()))
 		}
 
-		wp.updateDebug()
+		commitConfig()
 
-		if opts, ok := wp.options.(Sanitizable); ok {
+		if opts, ok := ApplicationOption.(Sanitizable); ok {
 			err := opts.Sanitize()
 			if err != nil {
 				return err
@@ -101,27 +104,23 @@ func (wp *wrappedParser) ParseCommandline() error {
 		}
 	}
 
+	if CommonOption.DebugMode {
+		dumpCurrentIni()
+	}
+
 	return nil
 }
 
-func (wp *wrappedParser) updateDebug() {
-	if UpdateDebug != nil {
-		if opts, ok := wp.options.(DebugOption); ok {
-			UpdateDebug(opts.GetDebugMode())
-		}
+func commitConfig() {
+	tools.SetDebugMode(CommonOption.DebugMode)
+
+	if InternalOption.IsElevated && len(InternalOption.StandardOutputPath) > 0 {
+		tools.Error("log will dup to pipes (%s).", InternalOption.StandardOutputPath)
+		SetLogPipe(InternalOption.StandardOutputPath)
+		tools.Error("[child] log start.")
+	} else if len(CommonOption.LogFilePath) > 0 {
+		tools.Error("log will dup to file (%s).", CommonOption.LogFilePath)
+		SetLogOutput(CommonOption.LogFilePath)
+		tools.Error("log start.")
 	}
-}
-
-var UpdateDebug func(debug bool)
-
-func StringifyOptions() string {
-	ini := flags.NewIniParser(parserCached.Parser)
-	buff := bytes.Buffer{}
-	ini.Write(&buff, flags.IniIncludeDefaults)
-	encode := base64.StdEncoding.EncodeToString(buff.Bytes())
-	return "data:" + encode
-}
-
-func IsSuRunning() bool {
-	return parserCached.isSuRunning
 }

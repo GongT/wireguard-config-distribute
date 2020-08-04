@@ -2,15 +2,27 @@
 
 package main
 
+import "github.com/gongt/wireguard-config-distribute/internal/client/sharedConfig"
+
 type downloadCaAction struct {
 	Output string `short:"O" long:"output" description:"output file path" default:"./server.cert"`
 }
+type netgroupAction struct {
+	Create netgroupCreateAction `command:"create" description:"create network group"`
+	Delete netgroupDeleteAction `command:"delete" description:"delete network group"`
+}
+type netgroupCreateAction struct {
+	Name   string `short:"n" long:"name" description:"name of the group, name of interfaces, only allow [0-9a-z_]" required:"true"`
+	Prefix string `short:"p" long:"prefix" description:"ip prefix, eg: 192.168.100" required:"true"`
+	Title  string `short:"t" long:"title" description:"friendly name of this group"`
+}
+type netgroupDeleteAction struct {
+	Name string `short:"n" long:"name" description:"name of the group" required:"true"`
+}
 
 type toolProgramOptions struct {
-	Server   string `short:"s" long:"server" description:"config server ip:port" default:"127.0.0.1:51820" env:"WIREGUARD_SERVER"`
-	Password string `short:"P" long:"password" description:"server password (required when connect to remote server)" env:"WIREGUARD_PASSWORD"`
+	ConnectionOptions sharedConfig.ConnectionOptions `group:"Connection Options"`
 
-	DownloadCA downloadCaAction `command:"download-ca" alias:"auth" description:"Download server's self-signed CA cert file"`
-
-	DebugMode bool `long:"debug" short:"D" description:"enable debug mode" env:"WIREGUARD_CONFIG_DEVELOPMENT"`
+	DownloadCA   downloadCaAction `command:"download-ca" alias:"auth" description:"Download server's self-signed CA cert file"`
+	NetworkGroup netgroupAction   `command:"netgroup" description:"configure VPN network groups"`
 }

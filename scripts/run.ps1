@@ -15,7 +15,7 @@ Write-Output "Creating protocol..."
 ./scripts/create-protobuf.ps1
 
 Write-Output "generate..."
-go generate ./cmd/$type/*.go
+go generate ./cmd/$type
 
 Write-Output "run..."
 Write-Output ""
