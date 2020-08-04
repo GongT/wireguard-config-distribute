@@ -27,6 +27,7 @@
 				"--server-ca=/root/.wireguard-config-server/ca.cert.pem",
 				"--external-ip-nohttp",
 				"--debug",
+				"--help",
 				"--hosts-file=/tmp/qqq/hosts0"
 			]
 		},

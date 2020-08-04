@@ -5,37 +5,48 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/gongt/wireguard-config-distribute/internal/client/clientAuth"
 	"github.com/gongt/wireguard-config-distribute/internal/protocol"
 	"github.com/gongt/wireguard-config-distribute/internal/tools"
 	"github.com/gongt/wireguard-config-distribute/internal/types"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/metadata"
 )
 
 type ServerStatus struct {
-	tlsOption grpc.DialOption
-	address   string
+	grpcOptions []grpc.DialOption
+	address     string
 
-	context       context.Context
-	contextMeta   map[string][]string
+	context context.Context
+	// contextMeta   map[string][]string
 	contextCancel context.CancelFunc
 
 	rpc        protocol.WireguardApiClient
 	connection *grpc.ClientConn
 }
 
-func NewGrpcClient(address string, tls TLSOptions) (ret ServerStatus) {
-	ret.address = address
-
+func NewGrpcClient(address string, password string, tls TLSOptions) *ServerStatus {
 	creds, err := createClientTls(tls)
 	if err != nil {
 		tools.Die("Failed create TLS: %s", err.Error())
 	}
-	ret.tlsOption = grpc.WithTransportCredentials(creds)
 
-	ret.context, ret.contextCancel = context.WithCancel(metadata.NewOutgoingContext(context.Background(), ret.contextMeta))
+	context, contextCancel := context.WithCancel(context.Background())
 
-	return
+	grpcOptions := []grpc.DialOption{
+		grpc.WithBlock(),
+		grpc.WithReturnConnectionError(),
+		grpc.WithTransportCredentials(creds),
+	}
+	if len(password) > 0 {
+		grpcOptions = append(grpcOptions, grpc.WithPerRPCCredentials(clientAuth.CreatePasswordAuth(password)))
+	}
+
+	return &ServerStatus{
+		address:       address,
+		context:       context,
+		contextCancel: contextCancel,
+		grpcOptions:   grpcOptions,
+	}
 }
 
 func (stat *ServerStatus) Connect() {
@@ -46,7 +57,7 @@ func (stat *ServerStatus) Connect() {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	conn, err := grpc.DialContext(ctx, stat.address, stat.tlsOption, grpc.WithBlock(), grpc.WithReturnConnectionError())
+	conn, err := grpc.DialContext(ctx, stat.address, stat.grpcOptions...)
 
 	if err != nil {
 		tools.Die("Failed to connect server: %s.", err.Error())

@@ -2,6 +2,7 @@ package client
 
 import (
 	server "github.com/gongt/wireguard-config-distribute/internal/client/client.server"
+	"github.com/gongt/wireguard-config-distribute/internal/client/sharedConfig"
 	"github.com/gongt/wireguard-config-distribute/internal/client/wireguardControl"
 	"github.com/gongt/wireguard-config-distribute/internal/tools"
 	"github.com/gongt/wireguard-config-distribute/internal/types"
@@ -14,29 +15,19 @@ type ClientStateHolder struct {
 
 	sessionId types.SidType
 	machineId string
-	server    server.ServerStatus
+	server    *server.ServerStatus
 	vpn       *wireguardControl.WireguardControl
 
 	configData oneTimeConfig
 	statusData editableConfig
+
+	password string
 }
 
-type connectionOptions interface {
-	GetServer() string
-
-	GetGrpcInsecure() bool
-	GetGrpcHostname() string
-	GetGrpcServerKey() string
-}
-
-func NewClient(options connectionOptions) *ClientStateHolder {
+func NewClient(options sharedConfig.ReadOnlyConnectionOptions) *ClientStateHolder {
 	self := ClientStateHolder{}
 
-	self.server = server.NewGrpcClient(options.GetServer(), server.TLSOptions{
-		Insecure:  options.GetGrpcInsecure(),
-		Hostname:  options.GetGrpcHostname(),
-		ServerKey: options.GetGrpcServerKey(),
-	})
+	self.server = server.NewGrpcClient(options.GetServer(), options.GetPassword(), options)
 
 	self.quitChan = make(chan bool, 1)
 	self.isQuit = false

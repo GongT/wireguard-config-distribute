@@ -2,14 +2,17 @@
 
 package main
 
+import "github.com/gongt/wireguard-config-distribute/internal/client/sharedConfig"
+
 type clientProgramOptionsBase struct {
+	ConnectionOptions sharedConfig.ConnectionOptions `group:"Connection Options"`
+
 	/* wg interface */
 	ListenPort    uint16 `short:"p" long:"port" description:"wireguard listening port" default-mask:"random select" env:"WIREGUARD_PORT"`
 	InterfaceName string `short:"i" long:"interface" description:"wireguard interface name (must not exists)" default-mask:"wg_${group}" env:"WIREGUARD_INTERFACE_NAME"`
 	MTU           uint16 `long:"mtu" description:"wireguard interface MTU" env:"WIREGUARD_MTU"`
 
 	/* config server and self config */
-	Server      string `short:"s" long:"server" description:"config server ip:port" required:"true" env:"WIREGUARD_SERVER"`
 	NetworkName string `short:"n" long:"netgroup" description:"a (friendly) name of local network, all machines in one local network should same" env:"WIREGUARD_NETWORK"`
 	JoinGroup   string `short:"g" long:"group" description:"join which VPN network" default:"default" env:"WIREGUARD_GROUP"`
 	PerferIp    string `long:"perfer-ip" description:"request to use this VPN ip, only last two digist" default-mask:"allocate by server" env:"WIREGUARD_REQUEST_IP"`
@@ -34,13 +37,4 @@ type clientProgramOptionsBase struct {
 
 	/* Local IPv4 */
 	InternalIp string `long:"internal-ip" description:"manually set internal ipv4 address of this device" default-mask:"auto detect" env:"WIREGUARD_PRIVATE_IP"`
-
-	/* grpc endpoint */
-	GrpcInsecure  bool   `long:"insecure" description:"do not check server key (extreamly dangerous)" env:"WIREGUARD_TLS_INSECURE"`
-	GrpcHostname  string `long:"server-name" description:"server hostname to verify with TLS" env:"WIREGUARD_TLS_SERVERNAME"`
-	GrpcServerKey string `long:"server-ca" description:"use self-signed CA cert file" env:"WIREGUARD_TLS_CACERT"`
-
-	/* debug */
-	DebugMode   bool   `long:"debug" short:"D" description:"enable debug mode" env:"WIREGUARD_CONFIG_DEVELOPMENT"`
-	LogFilePath string `long:"logfile" description:"save output to file" env:"WIREGUARD_LOG"`
 }

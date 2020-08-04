@@ -82,6 +82,7 @@ func installService(opts elevateOptions, install bool) error {
 }
 
 func _install(m *mgr.Mgr, execPath string, serviceName string) error {
+	config.ResetInternalOption()
 	s, err := m.CreateService(serviceName, execPath, mgr.Config{
 		DisplayName: "Wireguard Config (" + serviceName + ")",
 		Description: "Wireguard auto config service\r\nWireGuard VPN自动配置服务",

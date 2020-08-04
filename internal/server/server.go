@@ -6,6 +6,7 @@ import (
 
 	"github.com/gongt/wireguard-config-distribute/internal/protocol"
 	"github.com/gongt/wireguard-config-distribute/internal/server/grpcImplements"
+	"github.com/gongt/wireguard-config-distribute/internal/server/serverAuth"
 	"github.com/gongt/wireguard-config-distribute/internal/tools"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/channelz/service"
@@ -15,6 +16,8 @@ import (
 type listenOptions interface {
 	GetListenPath() string
 	GetListenPort() uint16
+
+	GetPassword() string
 }
 
 type serverStateHolder struct {
@@ -55,11 +58,15 @@ func NewServer(options listenOptions, creds *credentials.TransportCredentials, s
 
 	grpc.EnableTracing = tools.IsDevelopmennt()
 
-	if ret.creds == nil {
-		ret.grpc = grpc.NewServer()
-	} else {
-		ret.grpc = grpc.NewServer(grpc.Creds(*ret.creds))
+	serverOptions := []grpc.ServerOption{}
+	if ret.creds != nil {
+		serverOptions = append(serverOptions, grpc.Creds(*ret.creds))
 	}
+	if pwd := options.GetPassword(); len(pwd) > 0 {
+		handler := serverAuth.CreatePasswordCheck(pwd)
+		serverOptions = append(serverOptions, grpc.StreamInterceptor(handler.Stream), grpc.UnaryInterceptor(handler.Unary))
+	}
+	ret.grpc = grpc.NewServer(serverOptions...)
 
 	protocol.RegisterWireguardApiServer(ret.grpc, serviceImpl)
 

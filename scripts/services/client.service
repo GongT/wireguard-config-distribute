@@ -17,7 +17,7 @@ EnvironmentFile=/etc/wireguard/client.conf
 
 ExecStart=/usr/local/bin/wireguard-config-client
 
-# Restart=always
+Restart=always
 
 [Install]
 WantedBy=multi-user.target

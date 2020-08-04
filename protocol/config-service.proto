@@ -12,6 +12,7 @@ service WireguardApi {
 
   // for tool
   rpc NewGroup(NewGroupRequest) returns (google.protobuf.Empty);
+  rpc RemoveGroup(RemoveGroupRequest) returns (google.protobuf.Empty);
   rpc GetSelfSignedCertFile(GetCertFileRequest) returns (GetCertFileResponse);
 }
 
@@ -80,10 +81,11 @@ message Peers {
 
 message KeepAliveStatus { bool success = 1; }
 
-message GetCertFileRequest { bytes password = 1; }
+message GetCertFileRequest {}
 message GetCertFileResponse { bytes certFileText = 1; }
 message NewGroupRequest {
   string name = 1;
   string title = 2;
   string ipPrefix = 3;
 }
+message RemoveGroupRequest { string name = 1; }

@@ -10,7 +10,6 @@ import (
 )
 
 type ServerImplementOptions interface {
-	GetPassword() string
 	GetStorageLocation() string
 	GetGrpcInsecure() bool
 }
@@ -20,7 +19,6 @@ type PeerObject struct {
 }
 
 type Implements struct {
-	password string
 	storage  *storage.ServerStorage
 	insecure bool
 	isQuit   bool
@@ -36,7 +34,6 @@ func CreateServerImplement(opts ServerImplementOptions) *Implements {
 	store := storage.CreateStorage(opts.GetStorageLocation())
 
 	srv := Implements{
-		password: opts.GetPassword(),
 		storage:  store,
 		insecure: opts.GetGrpcInsecure(),
 		isQuit:   false,

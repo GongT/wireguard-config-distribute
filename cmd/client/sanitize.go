@@ -13,7 +13,7 @@ import (
 	"github.com/phayes/freeport"
 )
 
-func (*clientProgramOptions) Sanitize() error {
+func (opts *clientProgramOptions) Sanitize() error {
 	if !tools.GetSystemHostName(&opts.Hostname) {
 		return errors.New("HOSTNAME and COMPUTERNAME is empty, please set --hostname")
 	}
@@ -83,7 +83,7 @@ func (*clientProgramOptions) Sanitize() error {
 		return errors.New("Failed find an ipv4 address, and --ipv6only not set")
 	}
 
-	tools.NormalizeServerString(&opts.Server)
+	tools.NormalizeServerString(&opts.ConnectionOptions.Server)
 
 	return nil
 }

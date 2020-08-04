@@ -9,20 +9,20 @@ import (
 	"google.golang.org/grpc/credentials"
 )
 
-type TLSOptions struct {
-	Insecure  bool
-	Hostname  string
-	ServerKey string
+type TLSOptions interface {
+	GetGrpcInsecure() bool
+	GetGrpcHostname() string
+	GetGrpcServerKey() string
 }
 
 func createClientTls(opts TLSOptions) (credentials.TransportCredentials, error) {
 	cfg := tls.Config{}
 
-	if opts.Insecure {
+	if opts.GetGrpcInsecure() {
 		cfg.InsecureSkipVerify = true
 	}
-	if len(opts.ServerKey) > 0 {
-		b, err := ioutil.ReadFile(opts.ServerKey)
+	if len(opts.GetGrpcServerKey()) > 0 {
+		b, err := ioutil.ReadFile(opts.GetGrpcServerKey())
 		if err != nil {
 			return nil, err
 		}
@@ -35,8 +35,8 @@ func createClientTls(opts TLSOptions) (credentials.TransportCredentials, error) 
 		}
 		cfg.RootCAs = cp
 	}
-	if len(opts.Hostname) > 0 {
-		cfg.ServerName = opts.Hostname
+	if len(opts.GetGrpcHostname()) > 0 {
+		cfg.ServerName = opts.GetGrpcHostname()
 	}
 
 	return credentials.NewTLS(&cfg), nil
