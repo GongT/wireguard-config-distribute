@@ -43,7 +43,10 @@ func (opts *clientProgramOptions) Sanitize() error {
 		if err != nil {
 			return fmt.Errorf("Failed get gateway mac address: %s", err.Error())
 		}
-		opts.NetworkName = "gw[" + strings.ToUpper(strings.ReplaceAll(mac, ":", "")) + "]"
+		mac = strings.ReplaceAll(mac, ":", "")
+		mac = strings.ReplaceAll(mac, "-", "")
+		mac = strings.ToUpper(mac)
+		opts.NetworkName = "gw[" + mac + "]"
 		tools.Debug("  -> %s", mac)
 	}
 	if len(opts.MachineID) == 0 {

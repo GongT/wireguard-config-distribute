@@ -9,7 +9,8 @@ import (
 var suddenDeath bool = true
 var isDying bool = false
 var quitCode int = 0
-var handlers []func(int) = make([]func(int), 0, 5)
+var handlersIndex uint = 0
+var handlers map[uint]func(int) = make(map[uint]func(int))
 
 func HasNoError() {
 	quitCode = 0
@@ -50,17 +51,35 @@ func Die(format string, a ...interface{}) {
 	}
 }
 
-func WaitExit(handler func(int)) {
+func WaitExit(handler func(int)) func() {
 	if suddenDeath {
 		suddenDeath = false
 	}
+	handlersIndex++
 
-	handlers = append(handlers, handler)
+	currIndex := handlersIndex
+
+	handlers[currIndex] = handler
+
+	return func() {
+		if len(handlers) == 0 {
+			suddenDeath = true
+		}
+		delete(handlers, currIndex)
+	}
 }
 
 func callCleanup() {
-	log.Println("program will exit after cleanup")
+	if len(handlers) == 0 {
+		log.Println("no cleanup handler")
+		return
+	}
+	log.Println("program will exit after cleanup -", len(handlers))
 	for _, handler := range handlers {
+		println("---------------")
 		handler(quitCode)
 	}
+	println("---------------")
+	handlers = make(map[uint]func(int))
+	log.Println("all cleanup has been called")
 }

@@ -21,17 +21,20 @@ func tryTempDir(dir string) (string, bool) {
 	return ret, true
 }
 
-func getTempDir() string {
+var TempDir string
+
+func init() {
 	if ret, ok := tryTempDir(os.Getenv("XDG_CACHE_HOME")); ok {
-		return ret
+		TempDir = ret
+		return
 	}
 	if ret, ok := tryTempDir(os.Getenv("CACHE_DIRECTORY")); ok {
-		return ret
+		TempDir = ret
+		return
 	}
 	if ret, ok := tryTempDir(os.TempDir()); ok {
-		return ret
+		TempDir = ret
+		return
 	}
 	tools.Die("failed find location to store temp file(s)")
-
-	return ""
 }

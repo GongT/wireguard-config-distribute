@@ -37,4 +37,7 @@ type clientProgramOptionsBase struct {
 
 	/* Local IPv4 */
 	InternalIp string `long:"internal-ip" description:"manually set internal ipv4 address of this device" default-mask:"auto detect" env:"WIREGUARD_PRIVATE_IP"`
+
+	/* Debug */
+	DryRun bool `long:"dry" description:"do not create any interface" env:"WIREGUARD_DRY_RUN"`
 }

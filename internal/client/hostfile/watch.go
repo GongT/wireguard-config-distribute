@@ -16,10 +16,12 @@ type Watcher struct {
 }
 
 func (w *Watcher) StopWatch() {
+	tools.Error("Stop hosts file watcher")
 	w.watcher.Close()
 	close(w.OnChange)
 	w.quit <- true
 	close(w.quit)
+	tools.Error("hosts file watcher is stop")
 }
 
 func StartWatch(file string) *Watcher {

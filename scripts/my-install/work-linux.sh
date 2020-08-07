@@ -10,6 +10,7 @@ export GOARCH="amd64"
 
 pwsh scripts/build.ps1 client
 
+set -x
 cp scripts/services/client.service /usr/lib/systemd/system/wireguard-config-client.service
 systemctl daemon-reload
 systemctl enable wireguard-config-client

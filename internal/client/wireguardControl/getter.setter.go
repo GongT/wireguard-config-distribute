@@ -1,6 +1,9 @@
 package wireguardControl
 
 import (
+	"strconv"
+
+	"github.com/gongt/wireguard-config-distribute/internal/client/wireguardControl/wgexe"
 	"github.com/gongt/wireguard-config-distribute/internal/protocol"
 	"github.com/gongt/wireguard-config-distribute/internal/tools"
 )
@@ -38,20 +41,40 @@ func (wc *WireguardControl) UpdatePeers(list []*protocol.Peers_Peer) {
 		})
 	}
 
-	err := wc.creatConfigFile()
-	if err != nil {
-		tools.Error("Failed creating config file: %s", err.Error())
+	if err := wc.createConfigFile(); err != nil {
+		tools.Error("failed creating config file: %s", err.Error())
+	}
+
+	if err := wc.nativeInterface.CreateOrUpdateInterface(wc); err != nil {
+		tools.Error("failed update interface: %s", err.Error())
+	}
+
+	if wc.dryRun {
 		return
 	}
 
-	wc.updateInterface()
+	if err := wgexe.GetWireguardCli().SmallChange(wc.interfaceName, wc.configFile); err != nil {
+		tools.Error("failed update peers: %s", err.Error())
+	}
+}
+
+func (wc *WireguardControl) GetNetwork() string {
+	if wc.subnet > 0 {
+		return wc.givenAddress + strconv.FormatUint(uint64(wc.subnet), 10)
+	} else {
+		return wc.givenAddress + "/32"
+	}
+}
+
+func (wc *WireguardControl) GetMtu() int {
+	return int(wc.interfaceMTU)
 }
 
 func (wc *WireguardControl) GetRequestedAddress() string {
 	return wc.requestedAddress
 }
 
-func (wc *WireguardControl) UpdateInterface(address string, privateKey string, subnet uint16) {
+func (wc *WireguardControl) UpdateInterfaceInfo(address string, privateKey string, subnet uint8) {
 	wc.givenAddress = address
 	wc.privateKey = privateKey
 	wc.subnet = subnet

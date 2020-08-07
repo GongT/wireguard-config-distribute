@@ -4,7 +4,9 @@ import (
 	"bytes"
 	"encoding/base64"
 	"os"
+	"strings"
 
+	"github.com/gongt/wireguard-config-distribute/internal/tools"
 	"github.com/jessevdk/go-flags"
 )
 
@@ -13,8 +15,8 @@ func ResetInternalOption() {
 	InternalOption.StandardOutputPath = ""
 }
 
-func StringifyOptions() string {
-	internalConfigGroup.Hidden = false
+func StringifyOptions(withInternal bool) string {
+	internalConfigGroup.Hidden = !withInternal
 
 	ini := flags.NewIniParser(parser)
 	buff := bytes.Buffer{}
@@ -22,7 +24,13 @@ func StringifyOptions() string {
 
 	internalConfigGroup.Hidden = true
 
-	encode := base64.StdEncoding.EncodeToString(buff.Bytes())
+	str := strings.TrimSpace(buff.String())
+
+	tools.Error("================================================================")
+	tools.Error(str)
+	tools.Error("================================================================")
+
+	encode := base64.StdEncoding.EncodeToString([]byte(str))
 	return "data:" + encode
 }
 

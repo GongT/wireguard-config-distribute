@@ -28,7 +28,7 @@ func NewVpnManager(storage *storage.ServerStorage) *VpnManager {
 			tools.Die("Invalid content: " + storage.Path(VPN_STORE_NAME))
 		}
 
-		for _, vpn := range mapper {
+		for name, vpn := range mapper {
 			if vpn.Allocations == nil {
 				vpn.Allocations = make(map[string]NumberBasedIp)
 			}
@@ -37,8 +37,8 @@ func NewVpnManager(storage *storage.ServerStorage) *VpnManager {
 			}
 
 			fp := (3 - strings.Count(vpn.Prefix, "."))
-			if fp <= 1 {
-				tools.Die("Invalid Config: VPN %s should have ip address space to allocate")
+			if fp < 1 {
+				tools.Die("Invalid Config: VPN %s should have ip address space to allocate", name)
 			}
 			vpn.prefixFreeParts = uint(fp)
 
@@ -92,31 +92,33 @@ func (vpns *VpnManager) Exists(name string) bool {
 	return ok
 }
 
-func (vpns *VpnManager) AllocateIp(name string, hostname string, requestIp string) string {
+func (vpns *VpnManager) AllocateIp(vpnname string, hostname string, requestIp string) string {
 	vpns.m.Lock()
 	defer vpns.m.Unlock()
 
-	vpn, ok := vpns.mapper[name]
+	vpn, ok := vpns.mapper[vpnname]
 	if !ok {
-		tools.Die("VPN name %s must exists, but infact not.", name)
+		tools.Die("VPN name %s must exists, but infact not.", vpnname)
 	}
 	if vpn.reAllocations == nil {
-		tools.Die("VPN staus %s.reAllocations must not nil.", name)
+		tools.Die("VPN staus %s.reAllocations must not nil.", vpnname)
 	}
 	if vpn.Allocations == nil {
-		tools.Die("VPN staus %s.Allocations must not nil.", name)
+		tools.Die("VPN staus %s.Allocations must not nil.", vpnname)
 	}
 
 	if _, exists := vpn.Allocations[hostname]; exists {
 		return vpn.format(hostname)
 	}
 
-	reqIp := FromNumber(requestIp)
-	if reqIp == 0 {
+	var reqIp NumberBasedIp
+	if len(requestIp) == 0 {
 		reqIp = 1
 	} else {
+		reqIp = FromNumber(requestIp)
 		if validRequest := net.ParseIP(vpn.Prefix + "." + requestIp); validRequest == nil {
 			// request not valid
+			reqIp = 1
 		} else if name, used := vpn.reAllocations[reqIp]; used {
 			tools.Error("client %s want address %s, but used by %s", hostname, requestIp, name)
 		} else {
@@ -126,14 +128,16 @@ func (vpns *VpnManager) AllocateIp(name string, hostname string, requestIp strin
 		}
 	}
 
-	avaiable := NumberBasedIp(math.Pow(255.0, float64(reqIp)))
-	for i := reqIp; i < avaiable; i += 1 {
-		if _, used := vpn.reAllocations[reqIp]; !used {
+	maximum := NumberBasedIp(math.Pow(255.0, float64(vpn.prefixFreeParts)))
+	for i := reqIp; i < maximum; i++ {
+		if _, used := vpn.reAllocations[i]; !used {
 			vpn.allocate(hostname, i)
 			vpns._save()
 			return vpn.format(hostname)
 		}
 	}
+
+	tools.Debug("Failed alloc ip for %s, request=%d[%s], maximum=%d, size=%d", hostname, reqIp, requestIp, maximum, len(vpn.reAllocations))
 
 	return ""
 }

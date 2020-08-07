@@ -4,3 +4,5 @@ internal/protocol
 .vscode/history
 cmd/*/generate.*
 __debug_bin
+test.go
+*.out

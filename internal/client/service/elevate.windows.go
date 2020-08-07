@@ -97,7 +97,6 @@ func runMeElevated() {
 
 	config.InternalOption.IsElevated = true
 	config.InternalOption.StandardOutputPath = `\\.\pipe\wireguard-config-client-elevate`
-	config.CommonOption.LogFilePath = ""
 
 	wg := sync.WaitGroup{}
 	wg.Add(3)
@@ -108,7 +107,7 @@ func runMeElevated() {
 	verbPtr, _ := syscall.UTF16PtrFromString(verb)
 	exePtr, _ := syscall.UTF16PtrFromString(exe)
 	cwdPtr, _ := syscall.UTF16PtrFromString(cwd)
-	argPtr, _ := syscall.UTF16PtrFromString(config.StringifyOptions())
+	argPtr, _ := syscall.UTF16PtrFromString(config.StringifyOptions(true))
 
 	var showCmd int32 = 1 //SW_NORMAL
 

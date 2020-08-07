@@ -17,13 +17,15 @@ require (
 	github.com/natefinch/npipe v0.0.0-20160621034901-c1b8fa8bdcce
 	github.com/phayes/freeport v0.0.0-20180830031419-95f893ade6f2
 	github.com/tatsushid/go-fastping v0.0.0-20160109021039-d7bb493dee3e
+	github.com/vishvananda/netlink v1.1.0
 	golang.org/x/crypto v0.0.0-20200728195943-123391ffb6de
 	golang.org/x/net v0.0.0-20200707034311-ab3426394381
 	golang.org/x/sys v0.0.0-20200802091954-4b90ce9b60b3
 	golang.org/x/text v0.3.3 // indirect
+	golang.org/x/tools v0.0.0-20200806234136-990129eca547 // indirect
 	golang.zx2c4.com/wireguard/wgctrl v0.0.0-20200609130330-bd2cb7843e1b
 	google.golang.org/genproto v0.0.0-20200731012542-8145dea6a485 // indirect
 	google.golang.org/grpc v1.30.0
 	google.golang.org/protobuf v1.25.0
-	gopkg.in/natefinch/npipe.v2 v2.0.0-20160621034901-c1b8fa8bdcce
+	gopkg.in/natefinch/npipe.v2 v2.0.0-20160621034901-c1b8fa8bdcce // indirect
 )

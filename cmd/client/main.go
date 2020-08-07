@@ -24,7 +24,7 @@ var prog = &program{}
 
 func main() {
 	spew.Config.Indent = "    "
-	tools.WaitExit(func(code int) {
+	dispose := tools.WaitExit(func(code int) {
 		tools.Error("program dying!")
 		svc.Service.Stop(prog)
 		tools.Error("service stop complete.")
@@ -35,6 +35,7 @@ func main() {
 		tools.HasError(100)
 	}
 
+	dispose()
 	tools.ExitMain()
 }
 

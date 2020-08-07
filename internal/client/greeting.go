@@ -11,10 +11,6 @@ func (s *ClientStateHolder) uploadInformation() bool {
 	s.statusData.lock()
 	defer s.statusData.unlock()
 
-	// if s.isRunning {
-	// 	return s.isRunning
-	// }
-
 	data := s.configData
 
 	result, err := s.server.Greeting(&protocol.ClientInfoRequest{
@@ -37,7 +33,7 @@ func (s *ClientStateHolder) uploadInformation() bool {
 	if err == nil {
 		tools.Error("  * complete.\n        server offer ip address: %s/%d\n        interface private key: %s", result.OfferIp, result.Subnet, result.PrivateKey)
 
-		s.vpn.UpdateInterface(result.OfferIp, result.PrivateKey, uint16(result.Subnet))
+		s.vpn.UpdateInterfaceInfo(result.OfferIp, result.PrivateKey, uint8(result.Subnet))
 		s.isRunning = true
 		if s.machineId != result.MachineId {
 			if len(s.machineId) > 0 {
@@ -46,8 +42,6 @@ func (s *ClientStateHolder) uploadInformation() bool {
 			s.machineId = result.MachineId
 		}
 		s.sessionId = types.DeSerialize(result.SessionId)
-
-		// TODO create interface
 
 		return true
 	} else {

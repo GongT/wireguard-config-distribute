@@ -1,52 +1,73 @@
 package wireguardControl
 
 import (
-	"bytes"
 	"fmt"
+	"path/filepath"
 )
 
-func (wc *WireguardControl) creatConfig() []byte {
-	result := bytes.NewBuffer(make([]byte, 0, 2048))
+func (wc *WireguardControl) creatConfigHeader(extendedSyntax bool) []byte {
+	result := newBuffer(extendedSyntax)
 
-	appendLine := func(line string, args ...interface{}) {
-		result.WriteString(fmt.Sprintf(line, args...))
-		result.WriteByte('\n')
-	}
-
-	appendLine("[Interface]")
-	appendLine("# Name = %s", wc.interfaceTitle)
-	appendLine("Address = %s/32", wc.givenAddress)
-	appendLine("ListenPort = %d", wc.interfaceListenPort)
-	appendLine("PrivateKey = %s", wc.privateKey)
-	// appendLine("DNS = 1.1.1.1,8.8.8.8")
-	// appendLine("Table = 12345")
+	result.appendLine("[Interface]")
+	result.appendLine("# Name = %s", wc.interfaceTitle)
+	result.appendLineExtened("Address = %s/32", wc.givenAddress)
+	result.appendLine("ListenPort = %d", wc.interfaceListenPort)
+	result.appendLine("PrivateKey = %s", wc.privateKey)
+	// appendLineExtened("DNS = 1.1.1.1,8.8.8.8")
+	// appendLineExtened("Table = 12345")
 	if wc.interfaceMTU > 0 {
-		appendLine("MTU = %d", wc.interfaceMTU)
+		result.appendLineExtened("MTU = %d", wc.interfaceMTU)
 	}
-	appendLine("")
+	// PreUp, PostUp, PreDown, PostDown
+	// SaveConfig?
+	result.appendLine("")
+
+	return result.Bytes()
+}
+
+func (wc *WireguardControl) creatConfigBody() []byte {
+	result := newBuffer(false)
 
 	for _, peer := range wc.peers {
-		appendLine("[Peer]")
-		appendLine("# Name = %s", peer.comment)
+		result.appendLine("[Peer]")
+		result.appendLine("# Name = %s", peer.comment)
 		if wc.subnet > 0 {
-			appendLine("AllowedIPs = %s/%d", peer.privateIp, wc.subnet)
+			result.appendLine("AllowedIPs = %s/%d", peer.privateIp, wc.subnet)
 		} else {
-			appendLine("AllowedIPs = %s/32", peer.privateIp)
+			result.appendLine("AllowedIPs = %s/32", peer.privateIp)
 		}
 		if len(peer.ip) > 0 {
-			appendLine("Endpoint = %s:%d", peer.ip, peer.port)
+			result.appendLine("Endpoint = %s:%d", peer.ip, peer.port)
 		} else {
-			appendLine("# Endpoint is not public accessable")
+			result.appendLine("# Endpoint is not public accessable")
 		}
-		appendLine("PublicKey = %s", peer.publicKey)
+		result.appendLine("PublicKey = %s", peer.publicKey)
 		if len(peer.presharedKey) > 0 {
-			appendLine("PresharedKey = %s", peer.presharedKey)
+			result.appendLine("PresharedKey = %s", peer.presharedKey)
 		}
 		if peer.keepAlive > 0 {
-			appendLine("PersistentKeepalive = %d", peer.keepAlive)
+			result.appendLine("PersistentKeepalive = %d", peer.keepAlive)
 		}
-		appendLine("")
+		result.appendLine("")
 	}
 
 	return result.Bytes()
+}
+
+func (wc *WireguardControl) createConfigFile() error {
+	wc.extendedConfigCreated = false
+	if err := saveBuffersTo(wc.configFile, wc.creatConfigHeader(false), wc.creatConfigBody()); err != nil {
+		return fmt.Errorf("failed write file [%s]: %v", wc.configFile, err)
+	}
+	return nil
+}
+
+func (wc *WireguardControl) createExtendConfigFile() error {
+	if !wc.extendedConfigCreated {
+		exCfg := filepath.Join(TempDir, wc.interfaceName+".extened.conf")
+		if err := saveBuffersTo(exCfg, wc.creatConfigHeader(false), wc.creatConfigBody()); err != nil {
+			return fmt.Errorf("failed write file [%s]: %v", exCfg, err)
+		}
+	}
+	return nil
 }

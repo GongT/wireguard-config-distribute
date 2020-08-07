@@ -9,20 +9,21 @@ import (
 )
 
 func MustSuccess(title, cmd string, args ...string) {
-	err := RunCmd(cmd, args...)
+	err := runCmd(cmd, args...)
 	if err != nil {
 		tools.Die("failed %s: [%s %s]: %s", title, cmd, strings.Join(args, " "), err.Error())
 	}
 }
 
-func ShouldSuccess(title, cmd string, args ...string) {
-	err := RunCmd(cmd, args...)
+func ShouldSuccess(title, cmd string, args ...string) error {
+	err := runCmd(cmd, args...)
 	if err != nil {
 		tools.Error("failed %s: [%s %s]: %s", title, cmd, strings.Join(args, " "), err.Error())
 	}
+	return err
 }
 
-func RunCmd(cmd string, args ...string) error {
+func runCmd(cmd string, args ...string) error {
 	tools.Debug("\x1B[2m%s %s\x1B[0m", cmd, strings.Join(args, " "))
 	p := exec.Command(cmd, args...)
 	p.Stdout = os.Stdout
@@ -58,4 +59,25 @@ func RunGetStandardOutput(title, cmd string, args ...string) string {
 	}
 
 	return string(ret)
+}
+
+func RunGetReturnCode(title, cmd string, args ...string) int {
+	p := exec.Command(cmd, args...)
+	p.Env = append(os.Environ(), "LANG=C")
+
+	if tools.IsDevelopmennt() {
+		tools.Error("%s %s", cmd, strings.Join(args, " "))
+		p.Stderr = os.Stderr
+		p.Stdout = os.Stdout
+	}
+
+	if err := p.Run(); err != nil {
+		if _, ok := err.(*exec.ExitError); !ok {
+			tools.Error("failed %s: [%s %s]: %s", title, cmd, strings.Join(args, " "), err.Error())
+			return 1
+		}
+	}
+
+	tools.Debug("process exit with code %v", p.ProcessState.ExitCode())
+	return p.ProcessState.ExitCode()
 }

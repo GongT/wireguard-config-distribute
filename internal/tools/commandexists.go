@@ -7,8 +7,12 @@ func CommandExists(cmd string) bool {
 	return err == nil
 }
 
-func EnsureCommandExists(cmd string) {
+func EnsureCommandExists(cmd string, extrainfo string) {
 	if !CommandExists(cmd) {
-		Die("Can not find `%s' executable from PATH", cmd)
+		if len(extrainfo) == 0 {
+			Die("Can not find `%s' executable from PATH", cmd)
+		} else {
+			Die("Can not find `%s' executable from PATH\n    %s", cmd, extrainfo)
+		}
 	}
 }
