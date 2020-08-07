@@ -11,9 +11,12 @@ import (
 
 func GetRemoteFromContext(ctx context.Context) string {
 	p, ok1 := peer.FromContext(ctx)
-	md, ok2 := metadata.FromIncomingContext(ctx)
+	if !ok1 {
+		return ""
+	}
 
-	if !ok1 || !ok2 {
+	md, ok2 := metadata.FromIncomingContext(ctx)
+	if !ok2 {
 		return p.Addr.String()
 	}
 

@@ -11,6 +11,7 @@ $env:WIREGUARD_REQUEST_IP = "0.50"
 $env:WIREGUARD_LOG = "A:/wireguard-output.log"
 
 ./scripts/build.ps1 client
+if ( $? -eq $false ) { exit 1 }
 
 Copy-Item ./dist/client.exe A:/wireguard-config-service.exe
 A:/wireguard-config-service.exe /install

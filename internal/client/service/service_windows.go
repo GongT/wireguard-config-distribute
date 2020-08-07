@@ -90,7 +90,7 @@ func _install(m *mgr.Mgr, execPath string, serviceName string) error {
 		// ServiceStartName: "NetworkService",
 		DelayedAutoStart: true,
 		Dependencies:     []string{"WireGuardManager"},
-	}, config.StringifyOptions())
+	}, config.StringifyOptions(false))
 	if err != nil {
 		return err
 	}

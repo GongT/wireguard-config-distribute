@@ -12,8 +12,13 @@ Write-Output "127.0.0.1 local1
 
 $host.ui.RawUI.WindowTitle = "== A1 =="
 
+$env:WIREGUARD_PASSWORD = Get-Content ~/.wireguard-config-server/password.txt
+
+./scripts/build.ps1 client
+if ( $? -eq $false ) { exit 1 }
+
 ./dist/client `
-	--insecure -D --external-ip-nohttp --external-ip-noupnp --ipv6only --no-upnp-forward `
+	--insecure -D --external-ip-nohttp --external-ip-noupnp --ipv6only --no-upnp-forward --dry `
 	--hosts-file=$tmp/hosts1 `
 	--netgroup=A `
 	--server=127.0.0.1 `

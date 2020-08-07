@@ -13,9 +13,11 @@ $env:GRPC_TRACE = "tcp,http,api"
 
 Write-Output "Creating protocol..."
 ./scripts/create-protobuf.ps1
+if ( $? -eq $false ) { exit 1 }
 
 Write-Output "generate..."
 go generate ./cmd/$type
+if ( $? -eq $false ) { exit 1 }
 
 Write-Output "run..."
 Write-Output ""

@@ -12,7 +12,7 @@ func (peers *PeerStatus) CleanupTimeoutPeers() {
 	defer peers.m.Lock("CleanupTimeoutPeers")()
 
 	tools.Debug(" ~ timer, do cleanup")
-	expired := time.Now().Add(-1 * time.Minute)
+	expired := time.Now().Add(-3 * time.Minute)
 	for cid, peer := range peers.list {
 		if peer.lastKeepAlive.Before(expired) {
 			tools.Error("[%v] peer exired", peer.MachineId)

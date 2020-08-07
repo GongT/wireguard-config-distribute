@@ -14,12 +14,13 @@ ReadWritePaths=/tmp
 ProtectKernelTunables=yes
 ProtectControlGroups=yes
 
-ExecStart=/usr/local/bin/wireguard-config-client
+ExecStart=/usr/local/bin/wireguard-config-client --group %i
 
 Restart=on-abnormal
 RestartSec=15s
 
-EnvironmentFile=/etc/wireguard/client.conf
+EnvironmentFile=-/etc/wireguard/client.conf
+EnvironmentFile=/etc/wireguard/client.%i.conf
 
 [Install]
 WantedBy=multi-user.target

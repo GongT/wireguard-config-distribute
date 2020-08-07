@@ -9,7 +9,6 @@ import (
 	"github.com/gongt/wireguard-config-distribute/internal/server/serverAuth"
 	"github.com/gongt/wireguard-config-distribute/internal/tools"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/channelz/service"
 	"google.golang.org/grpc/credentials"
 )
 
@@ -70,9 +69,9 @@ func NewServer(options listenOptions, creds *credentials.TransportCredentials, s
 
 	protocol.RegisterWireguardApiServer(ret.grpc, serviceImpl)
 
-	if tools.IsDevelopmennt() {
-		service.RegisterChannelzServiceToServer(ret.grpc)
-	}
+	// if tools.IsDevelopmennt() {
+	// 	service.RegisterChannelzServiceToServer(ret.grpc)
+	// }
 
 	return ret
 }

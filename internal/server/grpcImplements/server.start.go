@@ -19,14 +19,8 @@ func (s *Implements) Start(req *protocol.IdReportingRequest, sender protocol.Wir
 	}
 
 	tools.Error("[%v] start loop", sid)
-	for {
-		if sender.RecvMsg(nil) == nil {
-			tools.Error("[%v] receive return nil", sid)
-			break
-		}
-	}
+	<-sender.Context().Done()
 	s.peersManager.Delete(sid)
-
 	tools.Error("[%v] start return", sid)
 
 	return nil

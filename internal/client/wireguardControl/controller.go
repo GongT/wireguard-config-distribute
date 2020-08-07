@@ -2,26 +2,28 @@ package wireguardControl
 
 import (
 	"fmt"
-	"io/ioutil"
-	"os"
 	"path/filepath"
 
+	"github.com/gongt/wireguard-config-distribute/internal/client/wireguardControl/interfaceState"
 	"github.com/gongt/wireguard-config-distribute/internal/debugLocker"
 )
 
 type WireguardControl struct {
 	interfaceName   string
-	nativeInterface *nativeInterface
+	nativeInterface interfaceState.InterfaceState
+	dryRun          bool
 
 	peers      []peerData
 	configFile string
+
+	extendedConfigCreated bool
 
 	mu debugLocker.MyLocker
 
 	requestedAddress string
 	givenAddress     string
 	privateKey       string
-	subnet           uint16
+	subnet           uint8
 
 	interfaceTitle      string
 	interfaceListenPort uint16
@@ -38,16 +40,27 @@ type VpnOptions interface {
 	GetHostname() string
 
 	GetNetworkName() string
+
+	GetDryRun() bool
 }
 
 func NewWireguardControl(options VpnOptions) *WireguardControl {
-	dir := getTempDir()
-
+	var nativeInterface interfaceState.InterfaceState
+	if options.GetDryRun() {
+		nativeInterface = interfaceState.CreateDummy()
+	} else {
+		nativeInterface = interfaceState.CreateInterface(options.GetInterfaceName())
+	}
 	return &WireguardControl{
 		interfaceName: options.GetInterfaceName(),
 
+		nativeInterface: nativeInterface,
+		dryRun:          options.GetDryRun(),
+
 		peers:      make([]peerData, 20),
-		configFile: filepath.Join(dir, options.GetInterfaceName()+".conf"),
+		configFile: filepath.Join(TempDir, options.GetInterfaceName()+".native.conf"),
+
+		extendedConfigCreated: false,
 
 		requestedAddress: options.GetPerferIp(),
 		givenAddress:     "",
@@ -61,10 +74,6 @@ func NewWireguardControl(options VpnOptions) *WireguardControl {
 	}
 }
 
-func (wc *WireguardControl) creatConfigFile() error {
-	return ioutil.WriteFile(wc.configFile, wc.creatConfig(), os.FileMode(0600))
-}
-
 func (wc *WireguardControl) DeleteInterface() error {
-	return wc.deleteInterface()
+	return wc.nativeInterface.DeleteInterface()
 }

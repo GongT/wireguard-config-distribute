@@ -66,8 +66,16 @@ func (s *ClientStateHolder) Quit() {
 	}
 	s.isQuit = true
 
-	s.vpn.DeleteInterface()
+	if s.vpn != nil {
+		tools.Debug("deleting wg interface")
+		s.vpn.DeleteInterface()
+	}
+	tools.Debug("wg interface down")
+
+	tools.Error("disconnect grpc")
 	s.server.Disconnect(s.isRunning, s.sessionId)
+	tools.Error("grpc is end")
 
 	s.quitChan <- true
+	close(s.quitChan)
 }
