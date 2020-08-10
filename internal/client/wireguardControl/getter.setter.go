@@ -26,7 +26,7 @@ func (wc *WireguardControl) UpdatePeers(list []*protocol.Peers_Peer) {
 	wc.peers = wc.peers[0:0]
 	for _, peer := range list {
 		tools.Error("  * <%d> %s -> %v", peer.GetSessionId(), peer.GetHostname(), peer.GetPeer().GetAddress())
-		selectedIp := selectIp(peer.GetPeer().GetAddress())
+		selectedIp := selectIp(peer.GetPeer().GetAddress(), wc.ipv4Only)
 		tools.Error("      -> %s:%d", selectedIp, peer.GetPeer().GetPort())
 
 		kl := uint(peer.GetPeer().GetKeepAlive())

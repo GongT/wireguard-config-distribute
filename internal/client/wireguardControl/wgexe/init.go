@@ -11,28 +11,29 @@ type wgExe struct {
 	updateCmd string
 }
 
-var cache *wgExe
+var wg_cli_cache *wgExe
 
 func GetWireguardCli() *wgExe {
-	if cache != nil {
-		return cache
+	if wg_cli_cache != nil {
+		return wg_cli_cache
 	}
 
 	tools.EnsureCommandExists(WG_BINARY, INSTALL_INFORMATION)
 
-	cache := &wgExe{}
+	wg_cli_cache = &wgExe{}
 
 	output := child_process.RunGetOutput("detect wg version", WG_BINARY, "syncconf", "-h")
-	if strings.Contains(output, "syncconf") {
-		cache.updateCmd = "syncconf"
+	if strings.Contains(output, "Usage: wg setconf") {
+		tools.Error(`Good! Your wireguard is not very old.`)
+		wg_cli_cache.updateCmd = "syncconf"
 	} else {
 		tools.Error(`===========================================
 %s
 Your wireguard is old, please consider update.
 ===========================================`, output)
-		cache.updateCmd = "setconf"
+		wg_cli_cache.updateCmd = "setconf"
 	}
-	return cache
+	return wg_cli_cache
 }
 
 func (wg *wgExe) SmallChange(interfaceName, configFileFiltered string) error {

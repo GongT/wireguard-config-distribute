@@ -4,6 +4,7 @@ import (
 	"net"
 	"time"
 
+	"github.com/gongt/wireguard-config-distribute/internal/detect_ip"
 	"github.com/gongt/wireguard-config-distribute/internal/tools"
 	fastping "github.com/tatsushid/go-fastping"
 )
@@ -13,7 +14,7 @@ const MAX_TRY = 3
 var knownReachableIp map[string]bool = make(map[string]bool)
 var knownUnreachableIp map[string]uint8 = make(map[string]uint8)
 
-func selectIp(ips []string) string {
+func selectIp(ips []string, v4Only bool) string {
 	for _, ip := range ips {
 		if knownReachableIp[ip] {
 			return ip
@@ -28,6 +29,16 @@ func selectIp(ips []string) string {
 		if t, ok := knownUnreachableIp[ip]; !ok || t < MAX_TRY {
 			ipsFilter = append(ipsFilter, ip)
 		}
+	}
+
+	if v4Only {
+		ff := make([]string, 0, len(ipsFilter))
+		for _, ip := range ipsFilter {
+			if detect_ip.IsValidIPv4(ip) {
+				ff = append(ff, ip)
+			}
+		}
+		ipsFilter = ff
 	}
 
 	if len(ipsFilter) == 1 {
