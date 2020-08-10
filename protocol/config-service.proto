@@ -14,7 +14,10 @@ service WireguardApi {
   rpc NewGroup(NewGroupRequest) returns (google.protobuf.Empty);
   rpc RemoveGroup(RemoveGroupRequest) returns (google.protobuf.Empty);
   rpc GetSelfSignedCertFile(GetCertFileRequest) returns (GetCertFileResponse);
+  rpc DumpStatus(google.protobuf.Empty) returns (DumpResponse);
 }
+
+message DumpResponse { string text = 1; }
 
 message GetIpResponse { string address = 1; }
 message IdReportingRequest { uint64 SessionId = 1; }

@@ -8,6 +8,7 @@ type InterfaceState interface {
 type interfaceState struct {
 	ifname string
 
+	address string
 	network string
 	mtu     int
 	dns     []string

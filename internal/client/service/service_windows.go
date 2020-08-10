@@ -7,6 +7,8 @@ import (
 	"strings"
 
 	"github.com/gongt/wireguard-config-distribute/internal/config"
+	"github.com/gongt/wireguard-config-distribute/internal/tools"
+	"golang.org/x/sys/windows/svc"
 	"golang.org/x/sys/windows/svc/eventlog"
 	"golang.org/x/sys/windows/svc/mgr"
 )
@@ -111,6 +113,10 @@ func _uninstall(m *mgr.Mgr, serviceName string) error {
 		return err
 	}
 	defer s.Close()
+
+	if _, err := s.Control(svc.Stop); err != nil {
+		tools.Error("Stop service: %v", err)
+	}
 
 	if err := s.Delete(); err != nil {
 		return err

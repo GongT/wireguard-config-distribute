@@ -2,6 +2,7 @@ package wireguardControl
 
 import (
 	"strconv"
+	"strings"
 
 	"github.com/gongt/wireguard-config-distribute/internal/client/wireguardControl/wgexe"
 	"github.com/gongt/wireguard-config-distribute/internal/protocol"
@@ -59,11 +60,11 @@ func (wc *WireguardControl) UpdatePeers(list []*protocol.Peers_Peer) {
 }
 
 func (wc *WireguardControl) GetNetwork() string {
-	if wc.subnet > 0 {
-		return wc.givenAddress + strconv.FormatUint(uint64(wc.subnet), 10)
-	} else {
-		return wc.givenAddress + "/32"
-	}
+	return wc.networkAddr
+}
+
+func (wc *WireguardControl) GetAddress() string {
+	return wc.givenAddress + "/32"
 }
 
 func (wc *WireguardControl) GetMtu() int {
@@ -75,7 +76,25 @@ func (wc *WireguardControl) GetRequestedAddress() string {
 }
 
 func (wc *WireguardControl) UpdateInterfaceInfo(address string, privateKey string, subnet uint8) {
+	addrs := strings.Split(address, ".")
+	var networkAddr string
+	switch uint64(subnet) {
+	case 24:
+		networkAddr = strings.Join(addrs[:3], ".")
+		networkAddr += ".0"
+	case 16:
+		networkAddr = strings.Join(addrs[:2], ".")
+		networkAddr += ".0.0"
+	case 8:
+		networkAddr = addrs[1]
+		networkAddr += ".0.0.0"
+	default:
+		tools.Die("server did not send subnet infomation")
+	}
+	networkAddr += "/" + strconv.FormatUint(uint64(subnet), 10)
+
 	wc.givenAddress = address
+	wc.networkAddr = networkAddr
 	wc.privateKey = privateKey
 	wc.subnet = subnet
 }

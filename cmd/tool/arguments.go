@@ -19,10 +19,13 @@ type netgroupCreateAction struct {
 type netgroupDeleteAction struct {
 	Name string `short:"n" long:"name" description:"name of the group" required:"true"`
 }
+type dumpAction struct {
+}
 
 type toolProgramOptions struct {
 	ConnectionOptions sharedConfig.ConnectionOptions `group:"Connection Options"`
 
 	DownloadCA   downloadCaAction `command:"download-ca" alias:"auth" description:"Download server's self-signed CA cert file"`
 	NetworkGroup netgroupAction   `command:"netgroup" description:"configure VPN network groups"`
+	DumpServer   dumpAction       `command:"dump" description:"dump server status"`
 }

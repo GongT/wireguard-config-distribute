@@ -22,6 +22,7 @@ type WireguardControl struct {
 
 	requestedAddress string
 	givenAddress     string
+	networkAddr      string
 	privateKey       string
 	subnet           uint8
 

@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"log"
-	"os"
 	"strings"
 
 	"github.com/davecgh/go-spew/spew"
@@ -21,7 +20,6 @@ var opts *serverProgramOptions = &serverProgramOptions{}
 func main() {
 	spew.Config.Indent = "    "
 	log.Println("program start.")
-	spew.Dump(os.Args, os.Environ())
 	if err := config.InitProgramArguments(opts); err != nil {
 		tools.Die("invalid commandline arguments: %s", err.Error())
 	}

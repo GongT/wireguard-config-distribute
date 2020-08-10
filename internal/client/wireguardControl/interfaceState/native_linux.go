@@ -3,6 +3,7 @@ package interfaceState
 import (
 	"fmt"
 	"log"
+	"net"
 
 	"github.com/gongt/wireguard-config-distribute/internal/tools"
 	"github.com/vishvananda/netlink"
@@ -10,6 +11,7 @@ import (
 
 type InterfaceOptions interface {
 	GetNetwork() string
+	GetAddress() string
 	GetMtu() int
 }
 
@@ -86,20 +88,35 @@ func (is *interfaceState) create(options InterfaceOptions) error {
 }
 
 func (is *interfaceState) set_ip(link netlink.Link, options InterfaceOptions) error {
-	network := options.GetNetwork()
+	address := options.GetAddress()
 
-	addr, err := netlink.ParseAddr(network)
+	addr, err := netlink.ParseAddr(address)
 	if err != nil {
-		return fmt.Errorf("failed parse address [%s]: %v", network, err)
+		return fmt.Errorf("failed parse address [%s]: %v", address, err)
 	}
 
+	tools.Debug("<if> ip add %v", addr.String())
 	if err := netlink.AddrReplace(link, addr); err != nil {
 		return fmt.Errorf("failed replace interface address: %v", err)
 	}
 
-	netlink.RouteReplace(&netlink.Route{})
+	// XX dev wg_YY proto static scope link
+	networkStr := options.GetNetwork()
+	_, network, err := net.ParseCIDR(networkStr)
+	if err != nil {
+		return fmt.Errorf("failed parse network [%s]: %v", networkStr, err)
+	}
 
-	is.network = network
+	tools.Debug("<if> route add %v", network.String())
+	netlink.RouteReplace(&netlink.Route{
+		LinkIndex: link.Attrs().Index,
+		Dst:       network,
+		Src:       addr.IP,
+		Table:     254,
+	})
+
+	is.network = networkStr
+	is.address = address
 
 	return nil
 }

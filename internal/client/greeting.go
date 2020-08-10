@@ -41,7 +41,7 @@ func (s *ClientStateHolder) uploadInformation() bool {
 			}
 			s.machineId = result.MachineId
 		}
-		s.sessionId = types.DeSerialize(result.SessionId)
+		s.sessionId = types.DeSerializeSidType(result.SessionId)
 
 		return true
 	} else {

@@ -10,6 +10,6 @@ import (
 )
 
 func (s *Implements) Close(_ context.Context, request *protocol.IdReportingRequest) (*emptypb.Empty, error) {
-	s.peersManager.Delete(types.DeSerialize(request.GetSessionId()))
+	s.peersManager.Delete(types.DeSerializeSidType(request.GetSessionId()))
 	return tools.EmptyPb, nil
 }

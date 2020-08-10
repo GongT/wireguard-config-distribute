@@ -31,11 +31,11 @@ func (wc *WireguardControl) creatConfigBody() []byte {
 	for _, peer := range wc.peers {
 		result.appendLine("[Peer]")
 		result.appendLine("# Name = %s", peer.comment)
-		if wc.subnet > 0 {
-			result.appendLine("AllowedIPs = %s/%d", peer.privateIp, wc.subnet)
-		} else {
-			result.appendLine("AllowedIPs = %s/32", peer.privateIp)
-		}
+		// if wc.subnet > 0 {
+		// 	result.appendLine("AllowedIPs = %s/%d", peer.privateIp, wc.subnet)
+		// } else {
+		result.appendLine("AllowedIPs = %s/32", peer.privateIp)
+		// }
 		if len(peer.ip) > 0 {
 			result.appendLine("Endpoint = %s:%d", peer.ip, peer.port)
 		} else {

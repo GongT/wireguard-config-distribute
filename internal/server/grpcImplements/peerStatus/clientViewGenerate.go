@@ -4,16 +4,16 @@ import (
 	"github.com/gongt/wireguard-config-distribute/internal/protocol"
 )
 
-func (peers *PeerStatus) createAllView(viewer lPeerData) *protocol.Peers {
+func (peersList *vpnPeersMap) generateAllView(viewer *PeerData) *protocol.Peers {
 	hosts := make(map[string]string)
-	list := make([]*protocol.Peers_Peer, 0, len(peers.list)-1)
+	list := make([]*protocol.Peers_Peer, 0, len(*peersList)-1)
 
-	for cid, peer := range peers.list {
+	for cid, peer := range *peersList {
 		if viewer.sessionId == cid {
 			continue
 		}
 
-		list = append(list, peers.createOneView(viewer, peer))
+		list = append(list, peersList.generateOneView(viewer, peer))
 
 		for _, host := range peer.Hosts {
 			hosts[host+"."+peer.Hostname] = peer.VpnIp
@@ -26,7 +26,7 @@ func (peers *PeerStatus) createAllView(viewer lPeerData) *protocol.Peers {
 	}
 }
 
-func (peers *PeerStatus) createOneView(viewer lPeerData, peer lPeerData) *protocol.Peers_Peer {
+func (peersList *vpnPeersMap) generateOneView(viewer *PeerData, peer *PeerData) *protocol.Peers_Peer {
 	var keepAlive uint32 = 0
 	port := peer.ExternalPort
 	ip := peer.ExternalIp

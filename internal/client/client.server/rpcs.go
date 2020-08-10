@@ -65,3 +65,9 @@ func (stat *ServerStatus) GetSelfSignedCertFile(request *protocol.GetCertFileReq
 	defer cancel()
 	return stat.rpc.GetSelfSignedCertFile(ctx, request)
 }
+
+func (stat *ServerStatus) DumpStatus() (*protocol.DumpResponse, error) {
+	ctx, cancel := context.WithCancel(stat.context)
+	defer cancel()
+	return stat.rpc.DumpStatus(ctx, tools.EmptyPb)
+}

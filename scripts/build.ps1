@@ -22,6 +22,7 @@ function build() {
 	if ( $? -eq $false ) { exit 1 }
 }
 
+clear-host
 
 Write-Output "Creating protocol..."
 ./scripts/create-protobuf.ps1

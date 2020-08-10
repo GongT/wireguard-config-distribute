@@ -10,6 +10,7 @@ import (
 )
 
 type InterfaceOptions interface {
+	GetAddress() string
 	GetNetwork() string
 	GetMtu() int
 	GetConfigFile() (string, error)
