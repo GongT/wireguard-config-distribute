@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/gongt/wireguard-config-distribute/internal/client/remoteControl"
+	"github.com/gongt/wireguard-config-distribute/internal/constants"
 	"github.com/gongt/wireguard-config-distribute/internal/tools"
 )
 
@@ -55,7 +56,7 @@ func (stat *ClientStateHolder) run() {
 		return
 	}
 
-	tmr := time.NewTicker(20 * time.Second)
+	tmr := time.NewTicker(constants.KEEY_ALIVE_SECONDS)
 	defer tmr.Stop()
 
 	for {

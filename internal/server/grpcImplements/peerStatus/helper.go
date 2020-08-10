@@ -8,7 +8,7 @@ import (
 	"github.com/gongt/wireguard-config-distribute/internal/types"
 )
 
-func exactSame(a lPeerData, b lPeerData) bool {
+func exactSame(a *PeerData, b *PeerData) bool {
 	j1, err1 := json.Marshal(a)
 	j2, err2 := json.Marshal(b)
 
@@ -19,23 +19,24 @@ func exactSame(a lPeerData, b lPeerData) bool {
 	return bytes.Compare(j1, j2) == 0
 }
 
-func (peers *PeerStatus) createSessionId(networkId string, machineId string) types.SidType {
-	s := networkId + "::" + machineId
+func (peers *PeersManager) createSessionId(peer *PeerData) types.SidType {
+	s := peer.CreateId()
 	if sid, ok := peers.guidMap[s]; ok {
+		peer.sessionId = sid
 		return sid
 	}
 
 	peers.guid += 1
 	peers.guidMap[s] = peers.guid
+	peer.sessionId = peers.guid
 	return peers.guid
 }
 
-func (peers *PeerStatus) sendSnapshot(peer lPeerData) {
-	tools.Debug("[%v|%v] ~ send peers", peer.sessionId, peer.MachineId)
-	err := (*peer.sender).Send(peers.createAllView(peer))
-	if err == nil {
-		tools.Debug("[%v|%v] ~ send peers ok", peer.sessionId, peer.MachineId)
-	} else {
+func (peers *PeersManager) sendSnapshot(peer *PeerData) {
+	tools.Debug("[%v] ~ send peers -> %s", peer.sessionId, peer.Title)
+	list := peers.mapper[peer.VpnId]
+	err := (*peer.sender).Send(list.generateAllView(peer))
+	if err != nil {
 		tools.Debug("[%v|%v] ~ send peers failed: %s", peer.sessionId, peer.MachineId, err.Error())
 	}
 }

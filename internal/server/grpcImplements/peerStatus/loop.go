@@ -5,15 +5,18 @@ import (
 	"strconv"
 
 	"github.com/gongt/wireguard-config-distribute/internal/systemd"
+	"github.com/gongt/wireguard-config-distribute/internal/tools"
 )
 
-func (peers *PeerStatus) StopHandleChange() {
+func (peers *PeersManager) StopHandleChange() {
 	peers.onChange.Close()
 }
 
-func (peers *PeerStatus) StartHandleChange() {
+func (peers *PeersManager) StartHandleChange() {
 	for changeCid := range peers.onChange.Read() {
 		unlock := peers.m.Lock(fmt.Sprintf("StartHandleChange[%v]", changeCid))
+
+		done := tools.TimeMeasure(fmt.Sprintf("peers::onChange[%v]::sendPeers", changeCid.Serialize()))
 
 		len := len(peers.list)
 		for cid, peer := range peers.list {
@@ -27,5 +30,7 @@ func (peers *PeerStatus) StartHandleChange() {
 		unlock()
 
 		systemd.UpdateState("peers(" + strconv.FormatInt(int64(len), 10) + ")")
+
+		done()
 	}
 }

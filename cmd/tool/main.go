@@ -30,6 +30,8 @@ func main() {
 		} else {
 			config.DieUsage()
 		}
+	} else if config.Exists("dump") {
+		c().Dump()
 	} else {
 		config.DieUsage()
 	}

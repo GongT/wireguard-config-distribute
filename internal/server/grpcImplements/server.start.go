@@ -10,7 +10,7 @@ import (
 )
 
 func (s *Implements) Start(req *protocol.IdReportingRequest, sender protocol.WireguardApi_StartServer) error {
-	sid := types.DeSerialize(req.SessionId)
+	sid := types.DeSerializeSidType(req.SessionId)
 
 	tools.Error("[%v] attached sender", sid)
 

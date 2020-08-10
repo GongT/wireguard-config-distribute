@@ -3,8 +3,8 @@ package grpcImplements
 import (
 	"time"
 
+	"github.com/gongt/wireguard-config-distribute/internal/server/grpcImplements/peerStatus"
 	"github.com/gongt/wireguard-config-distribute/internal/server/grpcImplements/vpnManager"
-	"github.com/gongt/wireguard-config-distribute/internal/server/peerStatus"
 	"github.com/gongt/wireguard-config-distribute/internal/server/storage"
 	"github.com/gongt/wireguard-config-distribute/internal/tools"
 )
@@ -24,7 +24,7 @@ type Implements struct {
 	isQuit   bool
 
 	vpnManager   *vpnManager.VpnManager
-	peersManager *peerStatus.PeerStatus
+	peersManager *peerStatus.PeersManager
 
 	keepAliveTimer *time.Ticker
 	quitCh         chan bool
@@ -39,7 +39,7 @@ func CreateServerImplement(opts ServerImplementOptions) *Implements {
 		isQuit:   false,
 
 		vpnManager:   vpnManager.NewVpnManager(store),
-		peersManager: peerStatus.NewPeerStatus(),
+		peersManager: peerStatus.NewPeersManager(),
 
 		keepAliveTimer: nil,
 		quitCh:         make(chan bool, 1),

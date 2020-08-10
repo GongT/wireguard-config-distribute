@@ -9,17 +9,25 @@ if (! (Test-Path $env:GOPATH/bin) ) {
 	return
 }
 
-$hashTable = Get-Content -Encoding utf8 $env:GOPATH/wireguard-client.conf | ConvertFrom-StringData
-Write-Output $hashTable
+./scripts/build.ps1 client
+if ( $? -eq $false ) { exit 1 }
+
+if ($env:OneDriveConsumer) {
+	$Root = "$env:OneDriveConsumer/Software/WireguardConfig"
+} elseif ($env:OneDrive) {
+	$Root = "$env:OneDrive/Software/WireguardConfig"
+} else {
+	Write-Error "木有找到 OneDrive 路径"
+	Exit-PSSession 1
+}
+
+$binFile = "$Root/wireguard-config-service.exe"
+
+$hashTable = Get-Content -Encoding utf8 "$Root/$env:COMPUTERNAME.conf" | ConvertFrom-StringData
 foreach ($key in $hashTable.Keys) {
 	$value = $hashTable.$key
 	Set-Item env:$key $value 
 }
-
-./scripts/build.ps1 client
-if ( $? -eq $false ) { exit 1 }
-
-$binFile = "$env:GOPATH/bin/wireguard-config-service.exe"
 
 Write-Output ""
 
@@ -27,6 +35,7 @@ if (Test-Path $binFile) {
 	Write-Output "Uninstall old service.."
 	& $binFile /D /uninstall
 	if ( $? -eq $false ) { exit 1 }
+	Start-Sleep -Seconds 5
 } else {
 	Write-Output "Old service did not exists."
 }

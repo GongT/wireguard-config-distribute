@@ -9,7 +9,7 @@ import (
 	"github.com/gongt/wireguard-config-distribute/internal/types"
 )
 
-func (peers *PeerStatus) AttachSender(sid types.SidType, sender *protocol.WireguardApi_StartServer) bool {
+func (peers *PeersManager) AttachSender(sid types.SidType, sender *protocol.WireguardApi_StartServer) bool {
 	defer peers.m.Lock(fmt.Sprintf("AttachSender[%v]", sid))()
 
 	peer, exists := peers.list[sid]
@@ -24,32 +24,39 @@ func (peers *PeerStatus) AttachSender(sid types.SidType, sender *protocol.Wiregu
 
 	peer.sender = sender
 
+	done := tools.TimeMeasure(fmt.Sprintf("peers::AttachSender[%v]::sendSnapshot", sid.Serialize()))
 	peers.sendSnapshot(peer)
+	done()
 
 	return true
 }
 
-func (peers *PeerStatus) Delete(cid types.SidType) {
-	defer peers.m.Lock(fmt.Sprintf("Delete[%v]", cid))()
-
-	_, exists := peers.list[cid]
-
+func (peers *PeersManager) _delete(cid types.SidType) error {
+	old, exists := peers.list[cid]
 	if !exists {
-		tools.Error("[%v] ! delete not exists peer", cid)
-		return
+		return fmt.Errorf("[%v] ! delete not exists peer", cid)
 	}
-
 	tools.Debug("[%v] ~ delete peer", cid)
-
+	vpn := old.VpnId
+	delete(peers.mapper[vpn], cid)
 	delete(peers.list, cid)
+	if len(peers.mapper[vpn]) == 0 {
+		tools.Debug(" ~ delete all peer (%v)", vpn.Serialize())
+		delete(peers.mapper, vpn)
+	}
+	return nil
+}
+
+func (peers *PeersManager) Delete(cid types.SidType) {
+	defer peers.m.Lock(fmt.Sprintf("Delete[%v]", cid))()
+	peers._delete(cid)
 	peers.onChange.Write(cid)
 }
 
-func (peers *PeerStatus) Add(peer lPeerData) (sid types.SidType) {
+func (peers *PeersManager) Add(peer *PeerData) (sid types.SidType) {
 	defer peers.m.Lock(fmt.Sprintf("Add[%v]", peer.MachineId))()
 
-	sid = peers.createSessionId(peer.NetworkId, peer.MachineId)
-	peer.sessionId = sid
+	sid = peers.createSessionId(peer)
 	old, exists := peers.list[sid]
 
 	if exists {
@@ -67,6 +74,12 @@ func (peers *PeerStatus) Add(peer lPeerData) (sid types.SidType) {
 	}
 
 	peers.list[sid] = peer
+
+	if _, ok := peers.mapper[peer.VpnId]; !ok {
+		peers.mapper[peer.VpnId] = make(vpnPeersMap)
+	}
+	peers.mapper[peer.VpnId][sid] = peer
+
 	peers.onChange.Write(sid)
 
 	return

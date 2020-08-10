@@ -3,7 +3,6 @@ module github.com/gongt/wireguard-config-distribute
 go 1.14
 
 require (
-	github.com/GongT/go-generate-struct-interface v0.0.0-20200804081306-23aaa0c43689 // indirect
 	github.com/coreos/go-systemd/v22 v22.1.0
 	github.com/davecgh/go-spew v1.1.1
 	github.com/denisbrodbeck/machineid v1.0.1
@@ -22,7 +21,6 @@ require (
 	golang.org/x/net v0.0.0-20200707034311-ab3426394381
 	golang.org/x/sys v0.0.0-20200802091954-4b90ce9b60b3
 	golang.org/x/text v0.3.3 // indirect
-	golang.org/x/tools v0.0.0-20200806234136-990129eca547 // indirect
 	golang.zx2c4.com/wireguard/wgctrl v0.0.0-20200609130330-bd2cb7843e1b
 	google.golang.org/genproto v0.0.0-20200731012542-8145dea6a485 // indirect
 	google.golang.org/grpc v1.30.0
