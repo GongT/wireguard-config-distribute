@@ -2,7 +2,6 @@ package wireguardControl
 
 import (
 	"fmt"
-	"path/filepath"
 )
 
 func (wc *WireguardControl) creatConfigHeader(extendedSyntax bool) []byte {
@@ -58,16 +57,6 @@ func (wc *WireguardControl) createConfigFile() error {
 	wc.extendedConfigCreated = false
 	if err := saveBuffersTo(wc.configFile, wc.creatConfigHeader(false), wc.creatConfigBody()); err != nil {
 		return fmt.Errorf("failed write file [%s]: %v", wc.configFile, err)
-	}
-	return nil
-}
-
-func (wc *WireguardControl) createExtendConfigFile() error {
-	if !wc.extendedConfigCreated {
-		exCfg := filepath.Join(TempDir, wc.interfaceName+".extened.conf")
-		if err := saveBuffersTo(exCfg, wc.creatConfigHeader(false), wc.creatConfigBody()); err != nil {
-			return fmt.Errorf("failed write file [%s]: %v", exCfg, err)
-		}
 	}
 	return nil
 }

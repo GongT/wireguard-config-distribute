@@ -10,6 +10,7 @@ import (
 
 type WireguardControl struct {
 	interfaceName   string
+	ipv4Only        bool
 	nativeInterface interfaceState.InterfaceState
 	dryRun          bool
 
@@ -34,6 +35,8 @@ type WireguardControl struct {
 type VpnOptions interface {
 	GetPerferIp() string
 
+	GetIpv4Only() bool
+
 	GetListenPort() uint16
 	GetInterfaceName() string
 	GetMTU() uint16
@@ -54,6 +57,8 @@ func NewWireguardControl(options VpnOptions) *WireguardControl {
 	}
 	return &WireguardControl{
 		interfaceName: options.GetInterfaceName(),
+
+		ipv4Only: options.GetIpv4Only(),
 
 		nativeInterface: nativeInterface,
 		dryRun:          options.GetDryRun(),

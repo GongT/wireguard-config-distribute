@@ -24,8 +24,8 @@ type clientProgramOptionsBase struct {
 	MachineID string `long:"machine-id" description:"global unique id of this machine" env:"WIREGUARD_MACHINE_ID"`
 
 	/* Public IPv4 */
-	// Ipv4Only bool `short:"4" long:"ipv4only" description:"disable incoming ipv6 connection" env:"WIREGUARD_IPV4"`
-	Ipv6Only bool `short:"6" long:"ipv6only" description:"disable incoming ipv4 connection, disable ipv4 external ip auto detect" env:"WIREGUARD_IPV6"`
+	Ipv4Only bool `short:"4" long:"ipv4only" description:"disable connect anything with ipv6" env:"WIREGUARD_IPV4"`
+	Ipv6Only bool `short:"6" long:"ipv6only" description:"disable ipv4 external ip auto detect" env:"WIREGUARD_IPV6"`
 
 	PublicIp      string `long:"external-ip" description:"manually set public ipv4 address of this device, disable auto detect" env:"WIREGUARD_PUBLIC_IP"`
 	PublicIp6     string `long:"external-ip6" description:"manually set public ipv6 address of this device, disable auto detect" env:"WIREGUARD_PUBLIC_IP6"`
