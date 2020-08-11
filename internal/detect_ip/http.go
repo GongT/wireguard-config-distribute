@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"os"
 	"strings"
+
+	"github.com/gongt/wireguard-config-distribute/internal/tools"
 )
 
 func init() {
@@ -14,8 +16,11 @@ func init() {
 	os.Setenv("NO_PROXY", newEnv)
 }
 
-func httpGetPublicIp4() (ret string, err error) {
-	ret, err = get("https://api.ipify.org/")
+func httpGetPublicIp4(url string) (ret string, err error) {
+	if len(url) == 0 {
+		url = "https://api.ipify.org/"
+	}
+	ret, err = get(url)
 	if err != nil {
 		return
 	}
@@ -27,8 +32,17 @@ func httpGetPublicIp4() (ret string, err error) {
 	return
 }
 
-func httpGetPublicIp6() (ret string, err error) {
-	ret, err = get("https://api6.ipify.org/")
+func httpGetPublicIp6(url string) (ret string, err error) {
+	if len(url) == 0 {
+		url = "https://api.ipify.org/"
+	}
+	for i := 0; i < 3; i++ {
+		ret, err = get(url)
+		if err == nil {
+			break
+		}
+		tools.Error("failed get ip: %v", err)
+	}
 	if err != nil {
 		return
 	}

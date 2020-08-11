@@ -9,7 +9,7 @@
 			"type": "go",
 			"request": "launch",
 			"mode": "debug",
-			"program": "${workspaceFolder}/cmd/server",
+			"program": "${workspaceFolder}/cmd/wireguard-config-server",
 			"args": [
 				"--server-name=test",
 				"--ip-nohttp",
@@ -21,7 +21,7 @@
 			"type": "go",
 			"request": "launch",
 			"mode": "debug",
-			"program": "${workspaceFolder}/cmd/client",
+			"program": "${workspaceFolder}/cmd/wireguard-config-client",
 			"args": [
 				"--server=127.0.0.1",
 				"--server-ca=/root/.wireguard-config-server/ca.cert.pem",
@@ -37,7 +37,7 @@
 			"request": "launch",
 			"mode": "debug",
 			"program": "${workspaceFolder}/tools/generate.go",
-			"cwd": "${workspaceFolder}/cmd/client/client",
+			"cwd": "${workspaceFolder}/cmd/wireguard-config-client",
 			"env": {
 				"GOFILE": "arguments.go",
 				"GOPACKAGE": "client"
