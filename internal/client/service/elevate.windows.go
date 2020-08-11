@@ -72,7 +72,7 @@ func EnsureAdminPrivileges(opts elevateOptions) {
 			if err == nil {
 				tools.Error("Install success!")
 			} else {
-				tools.Error("Failed install service! %s", err.Error())
+				tools.Error(err.Error())
 			}
 			os.Exit(0)
 		}

@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"fmt"
 	"os"
+
+	"github.com/gongt/wireguard-config-distribute/internal/tools"
 )
 
 type Buffer struct {
@@ -34,7 +36,11 @@ func saveBuffersTo(filename string, datas ...[]byte) error {
 	if err != nil {
 		return err
 	}
+	tools.Debug("=====================================")
+	tools.Debug(" FILE [%v]", filename)
+	defer tools.Debug("=====================================")
 	for _, data := range datas {
+		tools.Debug(string(data))
 		if _, err = f.Write(data); err != nil {
 			return err
 		}
