@@ -2,6 +2,9 @@ package wireguardControl
 
 import (
 	"fmt"
+	"strings"
+
+	"github.com/gongt/wireguard-config-distribute/internal/tools"
 )
 
 func (wc *WireguardControl) creatConfigHeader(extendedSyntax bool) []byte {
@@ -36,7 +39,11 @@ func (wc *WireguardControl) creatConfigBody() []byte {
 		result.appendLine("AllowedIPs = %s/32", peer.privateIp)
 		// }
 		if len(peer.ip) > 0 {
-			result.appendLine("Endpoint = %s:%d", peer.ip, peer.port)
+			if strings.Contains(peer.ip, ":") {
+				result.appendLine("Endpoint = [%s]:%d", peer.ip, peer.port)
+			} else {
+				result.appendLine("Endpoint = %s:%d", peer.ip, peer.port)
+			}
 		} else {
 			result.appendLine("# Endpoint is not public accessable")
 		}
@@ -55,6 +62,7 @@ func (wc *WireguardControl) creatConfigBody() []byte {
 
 func (wc *WireguardControl) createConfigFile() error {
 	wc.extendedConfigCreated = false
+	tools.Debug("Create native config file: %v", wc.configFile)
 	if err := saveBuffersTo(wc.configFile, wc.creatConfigHeader(false), wc.creatConfigBody()); err != nil {
 		return fmt.Errorf("failed write file [%s]: %v", wc.configFile, err)
 	}
