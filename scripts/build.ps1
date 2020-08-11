@@ -4,7 +4,7 @@ param([string]$type)
 
 Set-Location $PSScriptRoot/..
 
-if (($env:SystemRoot) -And (Test-Path "$env:SystemRoot")) {
+if ( $(go env GOOS) -Eq "windows" ) {
 	# go build -ldflags -H=windowsgui -o dist/$type ./cmd/$type
 	# $env:GOGCCFLAGS += " -ldflags -H=windowsgui"
 	$ext = ".exe"
