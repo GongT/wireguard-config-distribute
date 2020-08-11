@@ -70,6 +70,9 @@ func (opts *clientProgramOptions) Sanitize() error {
 	if opts.Ipv6Only {
 		opts.NoAutoForwardUpnp = true
 	}
+
+	detect_ip.Detect(&opts.PublicIp, &opts.PublicIp6, opts)
+
 	if !opts.NoAutoForwardUpnp {
 		tools.Debug("forward port with UPnP...")
 		p, err := upnp.TryAddPortMapping(int(opts.ListenPort), int(opts.PublicPort))
@@ -79,8 +82,6 @@ func (opts *clientProgramOptions) Sanitize() error {
 		tools.Debug("  -> %d", p)
 		opts.PublicPort = p
 	}
-
-	detect_ip.Detect(&opts.PublicIp, &opts.PublicIp6, !opts.GetIpHttpDsiable(), !opts.GetIpUpnpDsiable())
 
 	if len(opts.PublicIp) == 0 && !opts.Ipv6Only {
 		return errors.New("Failed find an ipv4 address, and --ipv6only not set")

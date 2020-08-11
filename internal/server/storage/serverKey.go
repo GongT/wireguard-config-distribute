@@ -17,7 +17,7 @@ func (storage *ServerStorage) loadOrCreateServerKey(options tlsOptions) error {
 	ips := options.GetPublicIp()
 
 	var ipv4, ipv6 string
-	detect_ip.Detect(&ipv4, &ipv6, !options.GetIpHttpDsiable(), false)
+	detect_ip.Detect(&ipv4, &ipv6, &wrapGetIpOptions{options})
 	if detect_ip.IsValidIPv4(ipv4) {
 		ips = append(ips, ipv4)
 	}

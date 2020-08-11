@@ -12,7 +12,7 @@ export RHOST="router.home.gongt.me"
 pwsh scripts/build.ps1 client
 
 echo "Build with alpine..."
-podman run --rm --workdir /data --volume "$(pwd):/data" --volume "$GOPATH:/go" "golang:alpine" go build -o ./dist/client.alpine ./cmd/client
+podman run --rm --workdir /data --volume "$(pwd):/data" --volume "$GOPATH:/go" "golang:alpine" go build -o ./dist/client.alpine ./cmd/wireguard-config-client
 
 echo
 echo

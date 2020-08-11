@@ -33,5 +33,5 @@ cat <<- 'EOF' | tee | ssh $RHOST bash
 	set +a
 
 	cd /data/temp/wireguard-config-client-test
-	go run ./cmd/client
+	go run ./cmd/wireguard-config-client
 EOF

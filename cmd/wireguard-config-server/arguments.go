@@ -12,8 +12,11 @@ type serverProgramOptions struct {
 	AutoForwardUpnp bool   `long:"upnp" description:"automantic open TCP port with UPnP/NAT-PMP" env:"WIREGUARD_UPNP"`
 
 	PublicIp []string `long:"ip" description:"manually set public ip address of this device, disable auto detect" env:"WIREGUARD_PUBLIC_IP"`
-	// IpUpnpDsiable bool   `long:"ip-noupnp" description:"disable detect public ipv4 by UPnP/NAT-PMP" env:"WIREGUARD_PUBLIC_IP_NO_UPNP"`
-	IpHttpDsiable bool `long:"ip-nohttp" description:"disable detect public ip by request a http api" env:"WIREGUARD_PUBLIC_IP_NO_HTTP"`
+	// IpUpnpDisable bool   `long:"ip-noupnp" description:"disable detect public ipv4 by UPnP/NAT-PMP" env:"WIREGUARD_PUBLIC_IP_NO_UPNP"`
+	IpHttpDisable bool `long:"ip-nohttp" description:"disable detect public ip by request a http api" env:"WIREGUARD_PUBLIC_IP_NO_HTTP"`
+
+	IpApi6 string `long:"ip-http-url" description:"get ip api url" env:"WIREGUARD_PUBLIC_IP_API6"`
+	IpApi4 string `long:"ip6-http-url" description:"get ip api url" env:"WIREGUARD_PUBLIC_IP_API4"`
 
 	StorageLocation string `shourt:"s" long:"storage" description:"where to save data" default-mask:"~/.wireguard-config-server" env:"WIREGUARD_STORAGE"`
 

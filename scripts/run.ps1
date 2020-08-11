@@ -16,11 +16,11 @@ Write-Output "Creating protocol..."
 if ( $? -eq $false ) { exit 1 }
 
 Write-Output "generate..."
-go generate ./cmd/$type
+go generate ./cmd/wireguard-config-$type
 if ( $? -eq $false ) { exit 1 }
 
 Write-Output "run..."
 Write-Output ""
 Write-Output ""
 Write-Output ""
-go run ./cmd/$type @args
+go run ./cmd/wireguard-config-$type @args
