@@ -23,7 +23,7 @@ func (peers *PeersManager) Dump() string {
     PublicKey: %v
     VpnIp: %v
     MTU: %v
-    Hosts: %v
+    HostsLine: %v
     NetworkId: %v
     ExternalIp: %v
     ExternalPort: %v
@@ -32,7 +32,7 @@ func (peers *PeersManager) Dump() string {
     lastKeepAlive: %v
 `,
 				guid, peer.Title, peer.MachineId, peer.VpnId.Serialize(), peer.Hostname, peer.PublicKey,
-				peer.VpnIp, peer.MTU, peer.Hosts, peer.NetworkId, peer.ExternalIp,
+				peer.VpnIp, peer.MTU, peer.HostsLine, peer.NetworkId, peer.ExternalIp,
 				peer.ExternalPort, peer.InternalIp, peer.InternalPort, peer.lastKeepAlive,
 			)
 		}

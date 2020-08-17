@@ -78,7 +78,7 @@ message Peers {
   }
 
   repeated Peer list = 1;
-  /* hostname => ip */
+  /* ip => hosts file line (without ip)  */
   map<string, string> hosts = 2;
 }
 

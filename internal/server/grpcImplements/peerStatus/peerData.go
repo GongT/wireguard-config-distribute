@@ -16,7 +16,7 @@ type PeerData struct {
 	PublicKey string
 	VpnIp     string
 	MTU       uint32
-	Hosts     []string
+	HostsLine string
 
 	NetworkId    string
 	ExternalIp   []string

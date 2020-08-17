@@ -9,15 +9,13 @@ func (peersList *vpnPeersMap) generateAllView(viewer *PeerData) *protocol.Peers 
 	list := make([]*protocol.Peers_Peer, 0, len(*peersList)-1)
 
 	for cid, peer := range *peersList {
+		hosts[peer.VpnIp] = peer.HostsLine
+
 		if viewer.sessionId == cid {
 			continue
 		}
 
 		list = append(list, peersList.generateOneView(viewer, peer))
-
-		for _, host := range peer.Hosts {
-			hosts[host+"."+peer.Hostname] = peer.VpnIp
-		}
 	}
 
 	return &protocol.Peers{

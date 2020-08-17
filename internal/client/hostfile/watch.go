@@ -13,6 +13,8 @@ type Watcher struct {
 	watcher  *fsnotify.Watcher
 	OnChange chan string
 	quit     chan bool
+	current  string
+	file     string
 }
 
 func (w *Watcher) StopWatch() {
@@ -33,8 +35,13 @@ func StartWatch(file string) *Watcher {
 
 	w := Watcher{
 		watcher:  fsWatch,
+		file:     file,
 		OnChange: make(chan string, 1),
 		quit:     make(chan bool, 1),
+	}
+
+	if data, err := ioutil.ReadFile(file); err == nil {
+		w.current = string(data)
 	}
 
 	go func() {
@@ -49,7 +56,8 @@ func StartWatch(file string) *Watcher {
 				if event.Name == file && (event.Op&emod) != 0 {
 					log.Println("modified file:", event.Name)
 					if data, err := ioutil.ReadFile(file); err == nil {
-						w.OnChange <- string(data)
+						w.current = string(data)
+						w.OnChange <- w.current
 					} else {
 						w.OnChange <- ""
 					}

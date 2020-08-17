@@ -1,4 +1,4 @@
-package detect_ip
+package tools
 
 import (
 	"net"

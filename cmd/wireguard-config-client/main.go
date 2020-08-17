@@ -62,10 +62,17 @@ func (p *program) Start() error {
 	p.client.Configure(opts)
 
 	go func() {
-		for content := range p.watcher.OnChange {
-			p.client.SetServices(hostfile.ToArray(hostfile.ParseServices(content)))
+		for range p.watcher.OnChange {
 		}
 	}()
+	// go func() {
+	// 	for content := range p.watcher.OnChange {
+	// 		p.client.SetServices(hostfile.ToArray(hostfile.ParseServices(content)))
+	// 	}
+	// }()
+	p.client.HandleHosts(func(hosts map[string]string) {
+		p.watcher.WriteBlock(hosts)
+	})
 
 	p.client.StartCommunication()
 

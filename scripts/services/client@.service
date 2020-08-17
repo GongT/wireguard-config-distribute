@@ -11,13 +11,16 @@ ProtectSystem=strict
 PrivateDevices=yes
 PrivateTmp=no
 ReadWritePaths=/tmp
+ReadWritePaths=/etc/hosts
 ProtectKernelTunables=yes
 ProtectControlGroups=yes
 
+ExecStartPre=!/usr/bin/env bash -c 'lsmod | grep -q wireguard || { echo "Wireguard kernel module did not installed, refuse to start."; exit 233; }'
 ExecStart=/usr/local/bin/wireguard-config-client --group %i
 
 Restart=on-abnormal
 RestartSec=15s
+RestartPreventExitStatus=233
 
 EnvironmentFile=-/etc/wireguard/client.conf
 EnvironmentFile=/etc/wireguard/client.%i.conf

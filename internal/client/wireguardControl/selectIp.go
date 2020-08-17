@@ -4,7 +4,6 @@ import (
 	"net"
 	"time"
 
-	"github.com/gongt/wireguard-config-distribute/internal/detect_ip"
 	"github.com/gongt/wireguard-config-distribute/internal/tools"
 	fastping "github.com/tatsushid/go-fastping"
 )
@@ -34,7 +33,7 @@ func selectIp(ips []string, v4Only bool) string {
 	if v4Only {
 		ff := make([]string, 0, len(ipsFilter))
 		for _, ip := range ipsFilter {
-			if detect_ip.IsValidIPv4(ip) {
+			if tools.IsValidIPv4(ip) {
 				ff = append(ff, ip)
 			}
 		}

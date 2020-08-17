@@ -2,7 +2,8 @@
 
 param([string]$type)
 
-Set-Location $PSScriptRoot/..
+$ErrorActionPreference = "Stop"
+. "$PSScriptRoot/inc/env.ps1"
 
 Clear-Host
 
