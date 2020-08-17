@@ -7,7 +7,13 @@ cd ../..
 
 export GOOS="linux"
 export GOARCH="amd64"
-export RHOST="home.gongt.me"
+
+if [[ "${1+found}" != found ]]; then
+	echo "Usage: $0 <hostname>" >&2
+	exit 1
+fi
+
+export RHOST="$1"
 
 pwsh scripts/build.ps1 client
 
@@ -22,9 +28,9 @@ function x() {
 x rsync --progress \
 	scripts/services/client@.service \
 	dist/client \
-	$RHOST:/tmp/
-	
-cat <<- 'EOF' | ssh $RHOST bash
+	"$RHOST:/tmp/"
+
+cat <<- 'EOF' | ssh "$RHOST" bash
 	set -xEeuo pipefail
 
 	systemctl stop wireguard-config-client@normal || true
@@ -36,3 +42,4 @@ cat <<- 'EOF' | ssh $RHOST bash
 
 	cp /tmp/client /usr/local/bin/wireguard-config-client
 	systemctl restart wireguard-config-client@normal
+EOF

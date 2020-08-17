@@ -23,7 +23,7 @@ func GetWireguardCli() *wgExe {
 	wg_cli_cache = &wgExe{}
 
 	output := child_process.RunGetOutput("detect wg version", WG_BINARY, "syncconf", "-h")
-	if strings.Contains(output, "Usage: wg setconf") {
+	if strings.Contains(output, "Usage: wg syncconf") {
 		tools.Error(`Good! Your wireguard is not very old.`)
 		wg_cli_cache.updateCmd = "syncconf"
 	} else {

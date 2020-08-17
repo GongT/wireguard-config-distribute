@@ -82,7 +82,7 @@ func (s *Implements) Greeting(ctx context.Context, request *protocol.ClientInfoR
 		PublicKey:    pubKey,
 		VpnIp:        allocIp,
 		MTU:          request.GetNetwork().GetMTU(),
-		Hosts:        request.GetServices(),
+		HostsLine:    createHostsLine(vpnName, request.GetHostname(), request.GetServices(), request.GetTitle()),
 		NetworkId:    networkGroup,
 		ExternalIp:   externalIps,
 		ExternalPort: port(request.GetNetwork().GetExternalPort()),
@@ -108,4 +108,13 @@ func port(n uint32) uint32 {
 	} else {
 		return n
 	}
+}
+
+func createHostsLine(network string, host string, services []string, title string) string {
+	line := host + "." + network + " "
+	for _, s := range services {
+		line += s + "." + network + " "
+	}
+	line += "## " + title
+	return line
 }

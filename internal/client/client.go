@@ -22,6 +22,8 @@ type ClientStateHolder struct {
 	statusData editableConfig
 
 	password string
+
+	hostsHandler HandlerFunction
 }
 
 func NewClient(options sharedConfig.ReadOnlyConnectionOptions) *ClientStateHolder {

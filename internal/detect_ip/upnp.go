@@ -1,3 +1,5 @@
+// +build !android
+
 package detect_ip
 
 import (
@@ -5,6 +7,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/gongt/wireguard-config-distribute/internal/tools"
 	"github.com/jackpal/gateway"
 	natpmp "github.com/jackpal/go-nat-pmp"
 )
@@ -34,7 +37,7 @@ func upnpGetPublicIp() (string, error) {
 	select {
 	case response := <-rch:
 		ret := fmt.Sprintf("%x.%x.%x.%x", response.ExternalIPAddress[0], response.ExternalIPAddress[1], response.ExternalIPAddress[2], response.ExternalIPAddress[3])
-		if !IsValidIPv4(ret) {
+		if !tools.IsValidIPv4(ret) {
 			return "", errors.New("Invalid UPnP response.")
 		}
 		return ret, nil

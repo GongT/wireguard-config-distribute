@@ -1,3 +1,5 @@
+// +build !android
+
 package detect_ip
 
 import (

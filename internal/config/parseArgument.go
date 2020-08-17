@@ -94,6 +94,11 @@ func parseCommandline() error {
 			return errors.New(fmt.Sprintf("Failed parse arguments.\n\t%s", err.Error()))
 		}
 
+		if CommonOption.ShowVersion {
+			tools.ShowVersion()
+			os.Exit(0)
+		}
+
 		commitConfig()
 
 		if opts, ok := ApplicationOption.(Sanitizable); ok {

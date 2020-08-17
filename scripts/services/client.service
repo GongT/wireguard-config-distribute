@@ -11,6 +11,7 @@ ProtectSystem=strict
 PrivateDevices=yes
 PrivateTmp=no
 ReadWritePaths=/tmp
+ReadWritePaths=/etc/hosts
 ProtectKernelTunables=yes
 ProtectControlGroups=yes
 

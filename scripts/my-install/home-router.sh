@@ -9,10 +9,7 @@ export GOOS="linux"
 export GOARCH="amd64"
 export RHOST="router.home.gongt.me"
 
-pwsh scripts/build.ps1 client
-
-echo "Build with alpine..."
-podman run --rm --workdir /data --volume "$(pwd):/data" --volume "$GOPATH:/go" "golang:alpine" go build -o ./dist/client.alpine ./cmd/wireguard-config-client
+pwsh scripts/build.ps1 musl
 
 echo
 echo

@@ -23,6 +23,11 @@ type clientProgramOptionsBase struct {
 	HostFile  string `long:"hosts-file" description:"watch and read hosts file" default:"/etc/hosts" env:"WIREGUARD_HOSTS_FILE"`
 	MachineID string `long:"machine-id" description:"global unique id of this machine" env:"WIREGUARD_MACHINE_ID"`
 
+	/* Debug */
+	DryRun bool `long:"dry" description:"do not create any interface" env:"WIREGUARD_DRY_RUN"`
+}
+
+type notMoveArguments struct {
 	/* Public IPv4 */
 	Ipv4Only bool `short:"4" long:"ipv4only" description:"disable connect anything with ipv6" env:"WIREGUARD_IPV4"`
 	Ipv6Only bool `short:"6" long:"ipv6only" description:"disable ipv4 external ip auto detect" env:"WIREGUARD_IPV6"`
@@ -39,7 +44,4 @@ type clientProgramOptionsBase struct {
 
 	/* Local IPv4 */
 	InternalIp string `long:"internal-ip" description:"manually set internal ipv4 address of this device" default-mask:"auto detect" env:"WIREGUARD_PRIVATE_IP"`
-
-	/* Debug */
-	DryRun bool `long:"dry" description:"do not create any interface" env:"WIREGUARD_DRY_RUN"`
 }

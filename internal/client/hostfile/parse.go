@@ -7,10 +7,19 @@ import (
 
 func ParseServices(hosts string) map[string]string {
 	var set = make(map[string]string)
+	skip := true
 
 	for _, line := range strings.Split(hosts, "\n") {
 		line = strings.TrimSpace(line)
 		if len(line) == 0 || line[0] == '#' {
+			if line == COMMENT_START {
+				skip = true
+			} else if line == COMMENT_END {
+				skip = false
+			}
+			continue
+		}
+		if skip {
 			continue
 		}
 

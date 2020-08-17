@@ -84,11 +84,22 @@ func (stat *ClientStateHolder) run() {
 				tools.Debug(" ~ server disconnected")
 				return
 			}
-			tools.Debug(" ~ receive peers (%d peer)", len(peers.List))
+			tools.Debug(" ~ receive peers (%d peer, %d host)", len(peers.List), len(peers.Hosts))
 			stat.vpn.UpdatePeers(peers.List)
+			if stat.hostsHandler != nil {
+				stat.hostsHandler(peers.Hosts)
+			} else {
+				tools.Error("hosts handler did not register?")
+			}
 		case <-stat.quitChan:
 			tools.Debug(" ~ quit")
 			return
 		}
 	}
+}
+
+type HandlerFunction = func(map[string]string)
+
+func (stat *ClientStateHolder) HandleHosts(fn HandlerFunction) {
+	stat.hostsHandler = fn
 }

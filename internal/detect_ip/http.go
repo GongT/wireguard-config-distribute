@@ -1,3 +1,5 @@
+// +build !android
+
 package detect_ip
 
 import (
@@ -25,7 +27,7 @@ func httpGetPublicIp4(url string) (ret string, err error) {
 		return
 	}
 
-	if !IsValidIPv4(ret) {
+	if !tools.IsValidIPv4(ret) {
 		return "", errors.New("Not valid ipv4: " + ret)
 	}
 
@@ -47,7 +49,7 @@ func httpGetPublicIp6(url string) (ret string, err error) {
 		return
 	}
 
-	if !IsValidIPv6(ret) {
+	if !tools.IsValidIPv6(ret) {
 		return "", errors.New("Not valid ipv6: " + ret)
 	}
 
