@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/gongt/wireguard-config-distribute/internal/config"
 	"github.com/gongt/wireguard-config-distribute/internal/tools"
@@ -12,6 +13,8 @@ import (
 	"golang.org/x/sys/windows/svc/eventlog"
 	"golang.org/x/sys/windows/svc/mgr"
 )
+
+const distPath = `C:\Program Files\WireGuard\config-client.exe`
 
 func exePath() (string, error) {
 	prog := os.Args[0]
@@ -39,18 +42,40 @@ func exePath() (string, error) {
 	return "", err
 }
 
-func isServiceExists(m *mgr.Mgr, serviceName string) (exists bool, err error) {
-	s, err := m.OpenService(serviceName)
-	if err == nil {
-		s.Close()
-		err = fmt.Errorf("service %s already exists", serviceName)
-		exists = true
-	} else {
-		err = fmt.Errorf("service %s did not exists", serviceName)
-		exists = false
+func stopService(s *mgr.Service) error {
+	for {
+		if status, err := s.Query(); err != nil {
+			return fmt.Errorf("failed query service: %v", err)
+		} else if status.State == svc.Stopped {
+			break
+		} else if status.State == svc.StopPending {
+			time.Sleep(1)
+		} else {
+			if _, err := s.Control(svc.Stop); err != nil {
+				return fmt.Errorf("failed stop service: %v", err)
+			}
+		}
 	}
 
-	return
+	return nil
+}
+
+func startService(s *mgr.Service) error {
+	for {
+		if status, err := s.Query(); err != nil {
+			return fmt.Errorf("failed query service: %v", err)
+		} else if status.State == svc.Running {
+			break
+		} else if status.State == svc.StartPending {
+			time.Sleep(1)
+		} else {
+			if _, err := s.Control(svc.Continue); err != nil {
+				return fmt.Errorf("failed start service: %v", err)
+			}
+		}
+	}
+
+	return nil
 }
 
 func installService(opts elevateOptions, install bool) error {
@@ -62,22 +87,45 @@ func installService(opts elevateOptions, install bool) error {
 	}
 	defer m.Disconnect()
 
-	if ex, err := isServiceExists(m, serviceName); ex == install {
-		return fmt.Errorf("failed install/uninstall service: %s", err.Error())
+	service, serr := m.OpenService(serviceName)
+	exists := serr == nil
+	if exists {
+		defer service.Close()
 	}
 
 	if install {
+		if exists {
+			return fmt.Errorf("service already exists")
+		}
+
 		exec, err := exePath()
 		if err != nil {
 			return fmt.Errorf("invalid executable file: %s", err.Error())
 		}
 
-		err = _install(m, exec, serviceName)
+		if err := tools.CopyFile(exec, distPath); err != nil {
+			return fmt.Errorf("failed copy binary: %v", err)
+		}
+
+		if err := _install(m, distPath, serviceName); err != nil {
+			return fmt.Errorf("failed install windows service: %v", err)
+		}
+
+		if err := startService(service); err != nil {
+			tools.Error("failed start windows service: %v", err)
+		}
 	} else {
-		err = _uninstall(m, serviceName)
-	}
-	if err != nil {
-		return fmt.Errorf("failed install/uninstall windows service: %s", err.Error())
+		if !exists {
+			tools.Error("service did not exists")
+			return nil
+		}
+
+		if err := stopService(service); err != nil {
+			return fmt.Errorf("failed stop windows service: %v", err)
+		}
+		if err := _uninstall(m, serviceName); err != nil {
+			return fmt.Errorf("failed uninstall windows service: %v", err)
+		}
 	}
 
 	return nil
