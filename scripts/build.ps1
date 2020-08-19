@@ -14,24 +14,31 @@ function x() {
 		[string]$cmd,
 		[Parameter(ValueFromRemainingArguments)][string[]]$args
 	)
-	Write-Output "$cmd '$($args -join "' '")'"
+	$argstr = $args -join " "
+	Write-Host -Separator " " -ForegroundColor Gray $cmd $argstr
 	& $cmd @args
 	if ( $? -eq $false ) { exit 1 }
 }
 function build() {
 	param (
-		[parameter(position=0, Mandatory=$true)][string]$type,
-		[parameter(Mandatory=$false)][switch]$docker
-		)
+		[parameter(position = 0, Mandatory = $true)][string]$type,
+		[parameter(Mandatory = $false)][switch]$docker
+	)
 	
 	Write-Output "Generate $type..."
 	go generate ./cmd/wireguard-config-$type
 	if ( $? -eq $false ) { exit 1 }
 
-	Write-Output "Build $type..."
+	Write-Output "Build $type${env:GOEXE}..."
+
 	[string[]]$build = @('go', 'build', '-ldflags', $env:LDFLAGS) + $iargs + $args + @('-o', "dist/$type${env:GOEXE}", "./cmd/wireguard-config-$type")
 	if ($docker) {
-		x podman run --rm "--workdir=/data" "--volume=$(pwd):/data" "--volume=${GOPATH}:/go" "golang:alpine" @build
+		x podman run --rm `
+			"--workdir=/data" `
+			"--volume=$(Get-Location):/data" `
+			"--volume=${GOPATH}:/go" `
+			"golang:alpine" `
+			@build
 	} else {
 		x @build
 	}
