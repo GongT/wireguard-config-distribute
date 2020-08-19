@@ -13,7 +13,7 @@ func (w *Watcher) WriteBlock(hosts map[string]string) {
 
 	generated := COMMENT_START + "\n"
 	for ip, hostline := range hosts {
-		generated += ip + " " + hostline + "\n"
+		generated += hostLine(ip+" "+hostline) + "\n"
 	}
 	generated += COMMENT_END + "\n"
 
