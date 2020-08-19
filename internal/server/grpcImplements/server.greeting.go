@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/gongt/wireguard-config-distribute/internal/constants"
 	"github.com/gongt/wireguard-config-distribute/internal/protocol"
@@ -110,10 +111,16 @@ func port(n uint32) uint32 {
 	}
 }
 
-func createHostsLine(network string, host string, services []string, title string) string {
-	line := host + "." + network + " "
+func createHostsLine(vpnname string, host string, services []string, title string) string {
+	line := host + "." + vpnname + " "
+	if host != strings.ToLower(host) {
+		line += strings.ToLower(host) + "." + vpnname + " "
+	}
 	for _, s := range services {
-		line += s + "." + network + " "
+		line += s + "." + vpnname + " "
+		if s != strings.ToLower(s) {
+			line += strings.ToLower(s) + "." + vpnname + " "
+		}
 	}
 	line += "## " + title
 	return line
