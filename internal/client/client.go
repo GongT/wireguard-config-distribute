@@ -53,6 +53,7 @@ type configureOptions interface {
 	GetInternalIp() string
 	GetListenPort() uint16
 	GetIpv6Only() bool
+	GetMTU() uint16
 }
 
 func (stat *ClientStateHolder) Configure(options configureOptions) {

@@ -12,7 +12,7 @@ import (
 type InterfaceOptions interface {
 	GetNetwork() string
 	GetAddress() string
-	GetMtu() int
+	GetMtu() uint16
 }
 
 type nativeState struct {
@@ -54,7 +54,7 @@ func (is *interfaceState) CreateOrUpdateInterface(options InterfaceOptions) erro
 		}
 		if changed.mtu {
 			tools.Debug("interface configure has changed: MTU: %v -> %v", is.mtu, options.GetMtu())
-			err := netlink.LinkSetMTU(link, options.GetMtu())
+			err := netlink.LinkSetMTU(link, int(options.GetMtu()))
 			if err != nil {
 				return fmt.Errorf("failed set network interface MTU: %s", err)
 			}
@@ -67,7 +67,7 @@ func (is *interfaceState) CreateOrUpdateInterface(options InterfaceOptions) erro
 func (is *interfaceState) create(options InterfaceOptions) error {
 	la := netlink.NewLinkAttrs()
 	if options.GetMtu() > 0 {
-		la.MTU = options.GetMtu()
+		la.MTU = int(options.GetMtu())
 	}
 	la.Name = is.ifname
 	link := &netlink.GenericLink{

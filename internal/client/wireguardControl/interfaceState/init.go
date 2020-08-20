@@ -10,7 +10,7 @@ type interfaceState struct {
 
 	address string
 	network string
-	mtu     int
+	mtu     uint16
 	dns     []string
 	table   string
 

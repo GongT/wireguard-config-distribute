@@ -29,7 +29,7 @@ type WireguardControl struct {
 
 	interfaceTitle      string
 	interfaceListenPort uint16
-	interfaceMTU        uint16
+	lowestMtu           uint16
 }
 
 type VpnOptions interface {
@@ -39,7 +39,6 @@ type VpnOptions interface {
 
 	GetListenPort() uint16
 	GetInterfaceName() string
-	GetMTU() uint16
 	GetTitle() string
 	GetHostname() string
 
@@ -74,7 +73,6 @@ func NewWireguardControl(options VpnOptions) *WireguardControl {
 
 		interfaceTitle:      fmt.Sprintf("%s (%s) [AT] %s", options.GetHostname(), options.GetTitle(), options.GetNetworkName()),
 		interfaceListenPort: options.GetListenPort(),
-		interfaceMTU:        options.GetMTU(),
 
 		mu: debugLocker.NewMutex(),
 	}

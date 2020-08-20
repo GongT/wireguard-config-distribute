@@ -31,6 +31,14 @@ func (helper *VpnHelper) Subnet() uint {
 	return (4 - helper.config.prefixFreeParts) * 8
 }
 
+func (helper *VpnHelper) GetMTU(ifmtu uint32) uint32 {
+	if ifmtu >= MIN_VALID_MTU {
+		return ifmtu
+	} else {
+		return helper.config.DefaultMtu
+	}
+}
+
 func (helper *VpnHelper) AllocateIp(hostname string, requestIp string) string {
 	manager := helper.manager
 	config := helper.config

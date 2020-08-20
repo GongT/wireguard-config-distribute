@@ -17,6 +17,7 @@ type peerData struct {
 	port         uint16
 	keepAlive    uint
 	privateIp    string
+	mtu          uint16
 }
 
 func (wc *WireguardControl) UpdatePeers(list []*protocol.Peers_Peer) {
@@ -27,7 +28,7 @@ func (wc *WireguardControl) UpdatePeers(list []*protocol.Peers_Peer) {
 	for _, peer := range list {
 		tools.Error("  * <%d> %s -> %v", peer.GetSessionId(), peer.GetHostname(), peer.GetPeer().GetAddress())
 		selectedIp := selectIp(peer.GetPeer().GetAddress(), wc.ipv4Only)
-		tools.Error("      -> %s:%d", selectedIp, peer.GetPeer().GetPort())
+		tools.Error("      endpoint: %s:%d, mtu: %v", selectedIp, peer.GetPeer().GetPort(), peer.GetPeer().GetMTU())
 
 		kl := uint(peer.GetPeer().GetKeepAlive())
 
@@ -39,7 +40,15 @@ func (wc *WireguardControl) UpdatePeers(list []*protocol.Peers_Peer) {
 			port:         uint16(peer.GetPeer().GetPort()),
 			keepAlive:    kl,
 			privateIp:    peer.GetPeer().GetVpnIp(),
+			mtu:          uint16(peer.GetPeer().GetMTU()),
 		})
+	}
+
+	wc.lowestMtu = uint16(1420)
+	for _, p := range wc.peers {
+		if p.mtu > 0 && wc.lowestMtu > p.mtu {
+			wc.lowestMtu = p.mtu
+		}
 	}
 
 	if err := wc.createConfigFile(); err != nil {
@@ -67,8 +76,8 @@ func (wc *WireguardControl) GetAddress() string {
 	return wc.givenAddress + "/32"
 }
 
-func (wc *WireguardControl) GetMtu() int {
-	return int(wc.interfaceMTU)
+func (wc *WireguardControl) GetMtu() uint16 {
+	return wc.lowestMtu
 }
 
 func (wc *WireguardControl) GetRequestedAddress() string {
