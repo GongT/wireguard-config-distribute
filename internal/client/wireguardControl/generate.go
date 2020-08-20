@@ -17,8 +17,8 @@ func (wc *WireguardControl) creatConfigHeader(extendedSyntax bool) []byte {
 	result.appendLine("PrivateKey = %s", wc.privateKey)
 	// appendLineExtened("DNS = 1.1.1.1,8.8.8.8")
 	// appendLineExtened("Table = 12345")
-	if wc.interfaceMTU > 0 {
-		result.appendLineExtened("MTU = %d", wc.interfaceMTU)
+	if wc.lowestMtu > 0 {
+		result.appendLineExtened("MTU = %d", wc.lowestMtu)
 	}
 	// PreUp, PostUp, PreDown, PostDown
 	// SaveConfig?

@@ -27,6 +27,7 @@ func (s *ClientStateHolder) uploadInformation() bool {
 			ExternalPort:    data.ExternalPort,
 			InternalIp:      data.InternalIp,
 			InternalPort:    data.InternalPort,
+			MTU:             uint32(data.SelfMtu),
 		},
 	})
 

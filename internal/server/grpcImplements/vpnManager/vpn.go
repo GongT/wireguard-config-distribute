@@ -10,6 +10,7 @@ import (
 type vpnConfig struct {
 	Prefix      string                   `json:"prefix"`
 	Allocations map[string]NumberBasedIp `json:"allocations"`
+	DefaultMtu  uint32                   `json:"mtu"`
 
 	reAllocations   map[NumberBasedIp]bool
 	prefixFreeParts uint
@@ -25,10 +26,13 @@ func (vpn *vpnConfig) format(hostname string) string {
 	return vpn.Prefix + "." + vpn.Allocations[hostname].String(vpn.prefixFreeParts)
 }
 
-func (vpn *vpnConfig) cache() {
+func (vpn *vpnConfig) cacheAndNormalize() {
 	vpn.reAllocations = make(map[NumberBasedIp]bool)
 	for _, ip := range vpn.Allocations {
 		vpn.reAllocations[ip] = true
+	}
+	if vpn.DefaultMtu < MIN_VALID_MTU {
+		vpn.DefaultMtu = DEFAULT_MTU
 	}
 }
 

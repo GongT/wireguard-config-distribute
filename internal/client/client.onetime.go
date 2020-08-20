@@ -10,6 +10,7 @@ type oneTimeConfig struct {
 	ExternalPort    uint32
 	InternalIp      string
 	InternalPort    uint32
+	SelfMtu         uint16
 }
 
 func (cd *oneTimeConfig) configure(options configureOptions) {
@@ -35,4 +36,5 @@ func (cd *oneTimeConfig) configure(options configureOptions) {
 	cd.ExternalPort = uint32(options.GetListenPort())
 	cd.InternalIp = options.GetInternalIp()
 	cd.InternalPort = uint32(options.GetListenPort())
+	cd.SelfMtu = options.GetMTU()
 }

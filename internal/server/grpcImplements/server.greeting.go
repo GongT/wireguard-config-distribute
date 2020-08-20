@@ -75,6 +75,8 @@ func (s *Implements) Greeting(ctx context.Context, request *protocol.ClientInfoR
 	}
 	fmt.Printf("   * client id: %v\n", clientId)
 
+	mtu := vpn.GetMTU(request.GetNetwork().GetMTU())
+
 	sessionId := s.peersManager.Add(&peerStatus.PeerData{
 		MachineId:    clientId,
 		VpnId:        types.DeSerializeVpnIdType(vpnName),
@@ -82,7 +84,7 @@ func (s *Implements) Greeting(ctx context.Context, request *protocol.ClientInfoR
 		Hostname:     request.GetHostname(),
 		PublicKey:    pubKey,
 		VpnIp:        allocIp,
-		MTU:          request.GetNetwork().GetMTU(),
+		MTU:          mtu,
 		HostsLine:    createHostsLine(vpnName, request.GetHostname(), request.GetServices(), request.GetTitle()),
 		NetworkId:    networkGroup,
 		ExternalIp:   externalIps,

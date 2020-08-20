@@ -5,7 +5,7 @@ import "fmt"
 func (peers *PeersManager) Dump() string {
 	defer peers.m.Lock("Dump")()
 
-	ret := ""
+	ret := "== Peers Mamager Status ==\n"
 
 	ret += fmt.Sprintf("GUID Map: (next=%v)\n", peers.guid)
 	for id, guid := range peers.guidMap {

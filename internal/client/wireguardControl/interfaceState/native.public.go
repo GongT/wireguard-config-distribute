@@ -5,7 +5,7 @@ import "github.com/gongt/wireguard-config-distribute/internal/tools"
 type publicIfOptions interface {
 	GetNetwork() string
 	GetAddress() string
-	GetMtu() int
+	GetMtu() uint16
 }
 
 type changed struct {

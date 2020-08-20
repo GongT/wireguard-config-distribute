@@ -2,6 +2,7 @@ package vpnManager
 
 import (
 	"errors"
+	"fmt"
 	"sync"
 
 	"github.com/gongt/wireguard-config-distribute/internal/server/storage"
@@ -12,7 +13,7 @@ const VPN_STORE_NAME = "vpns.json"
 
 type VpnManager struct {
 	storage *storage.ServerStorage
-	mapper  map[string]*vpnConfig
+	mapper  map[string] /* vpn name, eg: default */ *vpnConfig
 
 	m sync.Mutex
 }
@@ -33,7 +34,7 @@ func NewVpnManager(storage *storage.ServerStorage) *VpnManager {
 			if err := vpn.calcAllocSpace(); err != nil {
 				tools.Die("invalid config: VPN %s wrong prefix: %s", name, err.Error())
 			}
-			vpn.cache()
+			vpn.cacheAndNormalize()
 		}
 	} else {
 		add(mapper, storage, "default", &vpnConfig{
@@ -54,11 +55,10 @@ func add(mapper map[string]*vpnConfig, storage *storage.ServerStorage, name stri
 	if _, ok := mapper[name]; ok {
 		return errors.New("Adding vpn name is already exists")
 	}
-
 	if err := config.calcAllocSpace(); err != nil {
 		return err
 	}
-	config.cache()
+	config.cacheAndNormalize()
 	mapper[name] = config
 
 	return nil
@@ -82,4 +82,22 @@ func (vpns *VpnManager) GetLocked(name string) (*VpnHelper, bool) {
 	} else {
 		return nil, false
 	}
+}
+
+func (vpns *VpnManager) Dump() string {
+	vpns.m.Lock()
+	defer vpns.m.Unlock()
+
+	ret := "== Vpn Mamager Status ==\n"
+
+	ret += "Storage path: " + vpns.storage.Path(VPN_STORE_NAME) + "\n"
+
+	for name, vpn := range vpns.mapper {
+		ret += fmt.Sprintf("> %v: %v(%v) | MTU=%v\n", name, vpn.Prefix, vpn.prefixFreeParts, vpn.DefaultMtu)
+		for host, ip := range vpn.Allocations {
+			ret += fmt.Sprintf("\t%-15v => %v\n", vpn.Prefix+"."+ip.String(vpn.prefixFreeParts), host)
+		}
+	}
+
+	return ret
 }

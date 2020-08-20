@@ -28,6 +28,8 @@ func (b *Buffer) appendLine(line string, args ...interface{}) {
 func (b *Buffer) appendLineExtened(line string, args ...interface{}) {
 	if b.extended {
 		b.appendLine(line, args...)
+	} else {
+		b.appendLine("## ex: "+line, args...)
 	}
 }
 

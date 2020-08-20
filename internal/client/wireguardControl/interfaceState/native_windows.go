@@ -12,7 +12,7 @@ import (
 type InterfaceOptions interface {
 	GetAddress() string
 	GetNetwork() string
-	GetMtu() int
+	GetMtu() uint16
 	GetConfigFile() (string, error)
 }
 
