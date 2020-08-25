@@ -26,7 +26,7 @@ function build() {
 	)
 	
 	Write-Output "Generate $type..."
-	go generate ./cmd/wireguard-config-$type
+	x go generate ./cmd/wireguard-config-$type
 	if ( $? -eq $false ) { exit 1 }
 
 	Write-Output "Build $type${env:GOEXE}..."

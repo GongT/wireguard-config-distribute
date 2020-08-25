@@ -12,6 +12,7 @@ func (wc *WireguardControl) creatConfigHeader(extendedSyntax bool) []byte {
 
 	result.appendLine("[Interface]")
 	result.appendLine("# Name = %s", wc.interfaceTitle)
+	result.appendLine("# Id = %v", wc.id)
 	result.appendLineExtened("Address = %s/32", wc.givenAddress)
 	result.appendLine("ListenPort = %d", wc.listenPort)
 	result.appendLine("PrivateKey = %s", wc.privateKey)
@@ -33,6 +34,7 @@ func (wc *WireguardControl) creatConfigBody() []byte {
 	for _, peer := range wc.peers {
 		result.appendLine("[Peer]")
 		result.appendLine("# Name = %s", peer.comment)
+		result.appendLine("# Id = %v", peer.id)
 		// if wc.subnet > 0 {
 		// 	result.appendLine("AllowedIPs = %s/%d", peer.privateIp, wc.subnet)
 		// } else {
