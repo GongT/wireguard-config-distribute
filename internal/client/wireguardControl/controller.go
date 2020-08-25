@@ -9,10 +9,10 @@ import (
 )
 
 type WireguardControl struct {
-	interfaceName   string
-	ipv4Only        bool
+	interfaceName string
+	dryRun        bool
+
 	nativeInterface interfaceState.InterfaceState
-	dryRun          bool
 
 	peers      []peerData
 	configFile string
@@ -26,18 +26,15 @@ type WireguardControl struct {
 	networkAddr      string
 	privateKey       string
 	subnet           uint8
+	listenPort       uint32
 
-	interfaceTitle      string
-	interfaceListenPort uint16
-	lowestMtu           uint16
+	interfaceTitle string
+	lowestMtu      uint16
 }
 
 type VpnOptions interface {
 	GetPerferIp() string
 
-	GetIpv4Only() bool
-
-	GetListenPort() uint16
 	GetInterfaceName() string
 	GetTitle() string
 	GetHostname() string
@@ -54,10 +51,9 @@ func NewWireguardControl(options VpnOptions) *WireguardControl {
 	} else {
 		nativeInterface = interfaceState.CreateInterface(options.GetInterfaceName())
 	}
+
 	return &WireguardControl{
 		interfaceName: options.GetInterfaceName(),
-
-		ipv4Only: options.GetIpv4Only(),
 
 		nativeInterface: nativeInterface,
 		dryRun:          options.GetDryRun(),
@@ -71,11 +67,15 @@ func NewWireguardControl(options VpnOptions) *WireguardControl {
 		givenAddress:     "",
 		privateKey:       "",
 
-		interfaceTitle:      fmt.Sprintf("%s (%s) [AT] %s", options.GetHostname(), options.GetTitle(), options.GetNetworkName()),
-		interfaceListenPort: options.GetListenPort(),
+		interfaceTitle: fmt.Sprintf("%s (%s) [AT] %s", options.GetHostname(), options.GetTitle(), options.GetNetworkName()),
+		listenPort:     0,
 
 		mu: debugLocker.NewMutex(),
 	}
+}
+
+func (wc *WireguardControl) SetWireguardListenPort(port uint32) {
+	wc.listenPort = port
 }
 
 func (wc *WireguardControl) DeleteInterface() error {

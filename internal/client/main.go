@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/gongt/wireguard-config-distribute/internal/client/clientType"
 	"github.com/gongt/wireguard-config-distribute/internal/client/remoteControl"
 	"github.com/gongt/wireguard-config-distribute/internal/constants"
 	"github.com/gongt/wireguard-config-distribute/internal/tools"
@@ -43,7 +44,7 @@ func (stat *ClientStateHolder) run() {
 
 	tools.Error("Send handshake:")
 	for {
-		if stat.uploadInformation() {
+		if stat.handshake() {
 			break
 		}
 		time.Sleep(1 * time.Second)
@@ -85,7 +86,10 @@ func (stat *ClientStateHolder) run() {
 				return
 			}
 			tools.Debug(" ~ receive peers (%d peer, %d host)", len(peers.List), len(peers.Hosts))
-			stat.vpn.UpdatePeers(peers.List)
+			list := clientType.WrapList(peers.List, stat.ipv4Only)
+
+			stat.nat.ModifyPeers(list)
+			stat.vpn.UpdatePeers(list)
 			if stat.hostsHandler != nil {
 				stat.hostsHandler(peers.Hosts)
 			} else {

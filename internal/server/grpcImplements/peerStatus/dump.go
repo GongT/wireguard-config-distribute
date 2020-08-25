@@ -14,7 +14,7 @@ func (peers *PeersManager) Dump() string {
 	ret += "\n"
 
 	for vpn, peersList := range peers.mapper {
-		ret += fmt.Sprintf("Peers List: %v (count=%v)\n", vpn.Serialize(), len(peers.list))
+		ret += fmt.Sprintf("Peers List: %v (count=%v)\n", vpn.Serialize(), len(peersList))
 		for guid, peer := range peersList {
 			ret += fmt.Sprintf(`> %v - %v
     MachineId: %v
@@ -32,7 +32,7 @@ func (peers *PeersManager) Dump() string {
     lastKeepAlive: %v
 `,
 				guid, peer.Title, peer.MachineId, peer.VpnId.Serialize(), peer.Hostname, peer.PublicKey,
-				peer.VpnIp, peer.MTU, peer.HostsLine, peer.NetworkId, peer.ExternalIp,
+				peer.VpnIp, peer.MTU, peer.HostsLine, peer.WorkgroupId, peer.ExternalIp,
 				peer.ExternalPort, peer.InternalIp, peer.InternalPort, peer.lastKeepAlive,
 			)
 		}

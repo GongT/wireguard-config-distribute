@@ -28,10 +28,12 @@ func (peersList *vpnPeersMap) generateOneView(viewer *PeerData, peer *PeerData) 
 	var keepAlive uint32 = 0
 	port := peer.ExternalPort
 	ip := peer.ExternalIp
-	if viewer.NetworkId == peer.NetworkId && len(viewer.NetworkId) > 0 {
+	sameNetwork := false
+	if viewer.WorkgroupId == peer.WorkgroupId && len(viewer.WorkgroupId) > 0 {
 		// same local network
 		port = peer.InternalPort
 		ip = []string{peer.InternalIp}
+		sameNetwork = true
 	} else if len(viewer.ExternalIp) == 0 && len(peer.ExternalIp) != 0 {
 		keepAlive = 25
 	}
@@ -41,12 +43,13 @@ func (peersList *vpnPeersMap) generateOneView(viewer *PeerData, peer *PeerData) 
 		Title:     peer.Title,
 		Hostname:  peer.Hostname,
 		Peer: &protocol.Peers_ConnectionTarget{
-			PublicKey: peer.PublicKey,
-			Address:   ip,
-			Port:      port,
-			VpnIp:     peer.VpnIp,
-			KeepAlive: keepAlive,
-			MTU:       peer.MTU,
+			PublicKey:   peer.PublicKey,
+			Address:     ip,
+			Port:        port,
+			VpnIp:       peer.VpnIp,
+			KeepAlive:   keepAlive,
+			MTU:         peer.MTU,
+			SameNetwork: sameNetwork,
 		},
 	}
 

@@ -33,9 +33,12 @@ func (peers *PeersManager) createSessionId(peer *PeerData) types.SidType {
 }
 
 func (peers *PeersManager) sendSnapshot(peer *PeerData) {
-	tools.Debug("[%v] ~ send peers -> %s", peer.sessionId, peer.Title)
 	list := peers.mapper[peer.VpnId]
-	err := (*peer.sender).Send(list.generateAllView(peer))
+	output := list.generateAllView(peer)
+
+	tools.Debug("[%v] ~ send peers (%v items) -> [to peer: %s]", peer.sessionId, len(output.List), peer.Title)
+
+	err := (*peer.sender).Send(output)
 	if err != nil {
 		tools.Debug("[%v|%v] ~ send peers failed: %s", peer.sessionId, peer.MachineId, err.Error())
 	}

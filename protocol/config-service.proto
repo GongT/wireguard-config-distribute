@@ -5,7 +5,8 @@ option go_package = ".;protocol";
 import "google/protobuf/empty.proto";
 
 service WireguardApi {
-  rpc Greeting(ClientInfoRequest) returns (ClientInfoResponse);
+  rpc RegisterClient(RegisterClientRequest) returns (RegisterClientResponse);
+  rpc UpdateClientInfo(ClientInfoRequest) returns (ClientInfoResponse);
   rpc Start(IdReportingRequest) returns (stream Peers);
   rpc Close(IdReportingRequest) returns (google.protobuf.Empty);
   rpc KeepAlive(IdReportingRequest) returns (KeepAliveStatus);
@@ -20,11 +21,9 @@ service WireguardApi {
 message DumpResponse { string text = 1; }
 
 message GetIpResponse { string address = 1; }
-message IdReportingRequest { uint64 SessionId = 1; }
+message IdReportingRequest { uint64 sessionId = 1; }
 
 message PhysicalNetwork {
-  string networkId = 1;
-
   bool externalEnabled = 2;
   repeated string externalIp = 3;
   uint32 externalPort = 4;
@@ -35,28 +34,35 @@ message PhysicalNetwork {
   uint32 MTU = 7;
 }
 
-message ClientInfoRequest {
-  string groupName = 1;
+message RegisterClientRequest {
+  string vpnGroup = 1;
 
-  string MachineId = 2;
-  uint64 SessionId = 3;
+  string machineId = 2;
+  uint64 sessionId = 3;
   string title = 4;
   string hostname = 5;
-
-  repeated string services = 6;
+  string localGroup = 6;
 
   string requestVpnIp = 7;
-  PhysicalNetwork network = 8;
 }
 
-message ClientInfoResponse {
-  uint64 SessionId = 1;
-  string MachineId = 2;
+message RegisterClientResponse {
+  uint64 sessionId = 1;
+  string machineId = 2;
   string publicIp = 3;
   string offerIp = 4;
-  uint32 Subnet = 5;
+  uint32 subnet = 5;
   string privateKey = 6;
+  bool enableObfuse = 7;
 }
+
+message ClientInfoRequest {
+  uint64 sessionId = 1;
+  repeated string services = 2;
+  PhysicalNetwork network = 3;
+}
+
+message ClientInfoResponse {}
 
 /** 服务器下发配置 */
 message Peers {
@@ -69,11 +75,13 @@ message Peers {
     string vpnIp = 4;
     uint32 keepAlive = 5;
     uint32 MTU = 6;
+
+    bool sameNetwork = 7;
   }
   message Peer {
     string title = 1;
     string hostname = 2;
-    uint64 SessionId = 3;
+    uint64 sessionId = 3;
     ConnectionTarget peer = 4;
   }
 

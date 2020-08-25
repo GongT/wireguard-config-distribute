@@ -5,6 +5,7 @@ import (
 	"github.com/gongt/wireguard-config-distribute/internal/client/sharedConfig"
 	"github.com/gongt/wireguard-config-distribute/internal/client/wireguardControl"
 	"github.com/gongt/wireguard-config-distribute/internal/tools"
+	"github.com/gongt/wireguard-config-distribute/internal/transport"
 	"github.com/gongt/wireguard-config-distribute/internal/types"
 )
 
@@ -13,10 +14,13 @@ type ClientStateHolder struct {
 	isQuit    bool
 	isRunning bool
 
+	ipv4Only bool
+
 	sessionId types.SidType
 	machineId string
 	server    *server.ServerStatus
 	vpn       *wireguardControl.WireguardControl
+	nat       *transport.Transport
 
 	configData oneTimeConfig
 	statusData editableConfig
@@ -30,6 +34,7 @@ func NewClient(options sharedConfig.ReadOnlyConnectionOptions) *ClientStateHolde
 	self := ClientStateHolder{}
 
 	self.server = server.NewGrpcClient(options.GetServer(), options.GetPassword(), options)
+	self.nat = transport.NewTransport()
 
 	self.quitChan = make(chan bool, 1)
 	self.isQuit = false
@@ -37,27 +42,27 @@ func NewClient(options sharedConfig.ReadOnlyConnectionOptions) *ClientStateHolde
 	return &self
 }
 
-func (self *ClientStateHolder) ConfigureVPN(options wireguardControl.VpnOptions) {
-	self.vpn = wireguardControl.NewWireguardControl(options)
-}
-
 type configureOptions interface {
+	wireguardControl.VpnOptions
+
 	GetMachineID() string
 	GetJoinGroup() string
-	GetNetworkName() string
-	GetTitle() string
-	GetPerferIp() string
-	GetHostname() string
 	GetPublicIp() string
 	GetPublicIp6() string
 	GetInternalIp() string
 	GetListenPort() uint16
+	GetPublicPort() uint16
 	GetIpv6Only() bool
 	GetMTU() uint16
+
+	GetIpv4Only() bool
 }
 
 func (stat *ClientStateHolder) Configure(options configureOptions) {
 	stat.configData.configure(options)
+
+	stat.vpn = wireguardControl.NewWireguardControl(options)
+	stat.ipv4Only = options.GetIpv4Only()
 
 	stat.machineId = options.GetMachineID()
 }

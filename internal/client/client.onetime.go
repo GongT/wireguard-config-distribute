@@ -1,16 +1,17 @@
 package client
 
 type oneTimeConfig struct {
-	GroupName       string
-	Title           string
-	Hostname        string
-	NetworkId       string
-	ExternalEnabled bool
-	ExternalIp      []string
-	ExternalPort    uint32
-	InternalIp      string
-	InternalPort    uint32
-	SelfMtu         uint16
+	VpnGroupName        string
+	Title               string
+	Hostname            string
+	LocalNetworkName    string
+	ExternalEnabled     bool
+	ExternalIp          []string
+	ExternalPort        uint32
+	InternalIp          string
+	InternalPortDefault uint32
+	InternalPort        uint32
+	SelfMtu             uint16
 }
 
 func (cd *oneTimeConfig) configure(options configureOptions) {
@@ -29,12 +30,14 @@ func (cd *oneTimeConfig) configure(options configureOptions) {
 		cd.ExternalEnabled = true
 	}
 
-	cd.GroupName = options.GetJoinGroup()
+	cd.VpnGroupName = options.GetJoinGroup()
 	cd.Title = options.GetTitle()
 	cd.Hostname = options.GetHostname()
-	cd.NetworkId = options.GetNetworkName()
-	cd.ExternalPort = uint32(options.GetListenPort())
+	cd.LocalNetworkName = options.GetNetworkName()
 	cd.InternalIp = options.GetInternalIp()
-	cd.InternalPort = uint32(options.GetListenPort())
 	cd.SelfMtu = options.GetMTU()
+
+	cd.ExternalPort = uint32(options.GetPublicPort())
+	cd.InternalPortDefault = uint32(options.GetListenPort())
+	cd.InternalPort = cd.InternalPortDefault
 }

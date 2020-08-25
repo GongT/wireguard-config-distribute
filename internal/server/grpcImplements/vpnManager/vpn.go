@@ -5,15 +5,23 @@ import (
 	"strings"
 
 	"github.com/gongt/wireguard-config-distribute/internal/tools"
+	"github.com/gongt/wireguard-config-distribute/internal/types"
 )
 
 type vpnConfig struct {
-	Prefix      string                   `json:"prefix"`
-	Allocations map[string]NumberBasedIp `json:"allocations"`
-	DefaultMtu  uint32                   `json:"mtu"`
+	id types.VpnIdType
+
+	Prefix       string                   `json:"prefix"`
+	Allocations  map[string]NumberBasedIp `json:"allocations"`
+	DefaultMtu   uint32                   `json:"mtu"`
+	EnableObfuse bool                     `json:"obfuse"`
 
 	reAllocations   map[NumberBasedIp]bool
 	prefixFreeParts uint
+}
+
+func (vpn *vpnConfig) getHostDomain() string {
+	return vpn.id.Serialize()
 }
 
 func (vpn *vpnConfig) allocate(hostname string, requestIp NumberBasedIp) {

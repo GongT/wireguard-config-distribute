@@ -19,6 +19,10 @@ var opts *serverProgramOptions = &serverProgramOptions{}
 
 func main() {
 	spew.Config.Indent = "    "
+	spew.Config.DisablePointerAddresses = true
+	spew.Config.DisableCapacities = true
+	spew.Config.MaxDepth = 3
+
 	log.Println("program start.")
 	if err := config.InitProgramArguments(opts); err != nil {
 		tools.Die("invalid commandline arguments: %s", err.Error())

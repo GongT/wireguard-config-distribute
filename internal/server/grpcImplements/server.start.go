@@ -18,7 +18,7 @@ func (s *Implements) Start(req *protocol.IdReportingRequest, sender protocol.Wir
 		return errors.New(fmt.Sprintf("Failed find client [%v] in registry", sid))
 	}
 
-	tools.Error("[%v] start loop", sid)
+	tools.Error("[%v] start send peers event loop", sid)
 	<-sender.Context().Done()
 	s.peersManager.Delete(sid)
 	tools.Error("[%v] start return", sid)

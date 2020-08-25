@@ -9,6 +9,32 @@ import (
 	"github.com/gongt/wireguard-config-distribute/internal/types"
 )
 
+type LockedPeerData struct {
+	*PeerData
+	Unlock func()
+}
+
+func (peers *PeersManager) GetLocked(sid types.SidType) *LockedPeerData {
+	unlock := peers.m.Lock(fmt.Sprintf("AttachSender[%v]", sid))
+
+	if _, exists := peers.list[sid]; !exists {
+		tools.Error("grpc:UpdateClientInfo() fail: %v not exists in:", sid)
+		for k, p := range peers.list {
+			tools.Error("  %v: %s", k, p.MachineId)
+		}
+		unlock()
+		return nil
+	}
+
+	return &LockedPeerData{
+		PeerData: peers.list[sid],
+		Unlock: func() {
+			unlock()
+			peers.onChange.Write(sid)
+		},
+	}
+}
+
 func (peers *PeersManager) AttachSender(sid types.SidType, sender *protocol.WireguardApi_StartServer) bool {
 	defer peers.m.Lock(fmt.Sprintf("AttachSender[%v]", sid))()
 
@@ -41,7 +67,7 @@ func (peers *PeersManager) _delete(cid types.SidType) error {
 	delete(peers.mapper[vpn], cid)
 	delete(peers.list, cid)
 	if len(peers.mapper[vpn]) == 0 {
-		tools.Debug(" ~ delete all peer (%v)", vpn.Serialize())
+		tools.Debug(" ~ all peer deleted. (%v)", vpn.Serialize())
 		delete(peers.mapper, vpn)
 	}
 	return nil
@@ -79,8 +105,6 @@ func (peers *PeersManager) Add(peer *PeerData) (sid types.SidType) {
 		peers.mapper[peer.VpnId] = make(vpnPeersMap)
 	}
 	peers.mapper[peer.VpnId][sid] = peer
-
-	peers.onChange.Write(sid)
 
 	return
 }
