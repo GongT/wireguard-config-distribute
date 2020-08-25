@@ -11,6 +11,7 @@ import (
 type WireguardControl struct {
 	interfaceName string
 	dryRun        bool
+	id            uint64
 
 	nativeInterface interfaceState.InterfaceState
 

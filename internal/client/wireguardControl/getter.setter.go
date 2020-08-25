@@ -10,6 +10,7 @@ import (
 )
 
 type peerData struct {
+	id           uint64
 	comment      string
 	publicKey    string
 	presharedKey string
@@ -39,6 +40,7 @@ func (wc *WireguardControl) UpdatePeers(list clientType.PeerDataList) {
 		kl := uint(peer.GetKeepAlive())
 
 		wc.peers = append(wc.peers, peerData{
+			id:           client.GetSessionId(),
 			comment:      client.GetTitle(),
 			publicKey:    peer.GetPublicKey(),
 			presharedKey: "",
@@ -90,7 +92,7 @@ func (wc *WireguardControl) GetRequestedAddress() string {
 	return wc.requestedAddress
 }
 
-func (wc *WireguardControl) UpdateInterfaceInfo(address string, privateKey string, subnet uint8) {
+func (wc *WireguardControl) UpdateInterfaceInfo(id uint64, address string, privateKey string, subnet uint8) {
 	addrs := strings.Split(address, ".")
 	var networkAddr string
 	switch uint64(subnet) {
@@ -112,4 +114,5 @@ func (wc *WireguardControl) UpdateInterfaceInfo(address string, privateKey strin
 	wc.networkAddr = networkAddr
 	wc.privateKey = privateKey
 	wc.subnet = subnet
+	wc.id = id
 }

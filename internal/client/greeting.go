@@ -14,7 +14,7 @@ func (s *ClientStateHolder) handshake() bool {
 	defer s.statusData.unlock()
 
 	s.isRunning = false
-	data := s.configData
+	data := &s.configData
 
 	result1, err := s.server.RegisterClient(&protocol.RegisterClientRequest{
 		MachineId:    s.machineId,
@@ -29,7 +29,7 @@ func (s *ClientStateHolder) handshake() bool {
 		return false
 	}
 
-	s.vpn.UpdateInterfaceInfo(result1.OfferIp, result1.PrivateKey, uint8(result1.Subnet))
+	s.vpn.UpdateInterfaceInfo(result1.SessionId, result1.OfferIp, result1.PrivateKey, uint8(result1.Subnet))
 	s.isRunning = true
 	if s.machineId != result1.MachineId {
 		if len(s.machineId) > 0 {
@@ -41,16 +41,16 @@ func (s *ClientStateHolder) handshake() bool {
 	tools.Error("  * register: ok. Session Id: %v\n    server offer ip address: %s/%d\n    interface private key: %s", result1.SessionId, result1.OfferIp, result1.Subnet, result1.PrivateKey)
 
 	if result1.GetEnableObfuse() {
-		shadow, err := s.nat.Start(uint16(s.configData.InternalPortDefault))
+		shadow, err := s.nat.Start(uint16(data.InternalPortDefault))
 		if err != nil {
 			panic(fmt.Errorf("failed create nat: %v", err))
 		}
-		s.configData.InternalPort = uint32(shadow)
+		data.InternalPort = uint32(shadow)
 	} else {
 		s.nat.Stop()
-		s.configData.InternalPort = s.configData.InternalPortDefault
+		data.InternalPort = data.InternalPortDefault
 	}
-	s.vpn.SetWireguardListenPort(s.configData.InternalPort)
+	s.vpn.SetWireguardListenPort(data.InternalPort)
 
 	_, err = s.server.UpdateClientInfo(&protocol.ClientInfoRequest{
 		SessionId: s.sessionId.Serialize(),
