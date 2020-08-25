@@ -9,16 +9,16 @@ echo -ne "\ec"
 
 export GOOS="linux"
 export GOARCH="amd64"
-export RHOST="home.gongt.me"
+export RHOST="$1"
 
 pwsh scripts/build.ps1 client
 
 rsync -v dist/client $RHOST:/tmp/wireguard-config-client
 
 ssh -tt $RHOST bash -c "
-	export WIREGUARD_SERVER='grpc.services.gongt.me:443'
-	export WIREGUARD_TITLE='家里服务器主机'
-	export WIREGUARD_CONFIG_DEVELOPMENT='true'
-	export WIREGUARD_REQUEST_IP='0.10'
-	exec /tmp/wireguard-config-client
+	set -a
+	source /etc/wireguard/client.normal.conf
+	source /etc/wireguard/client.conf
+	set +a
+	exec /tmp/wireguard-config-client --group normal
 "

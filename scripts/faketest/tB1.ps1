@@ -20,4 +20,6 @@ $env:WIREGUARD_PASSWORD = Get-Content ~/.wireguard-config-server/password.txt
 	--perfer-ip=222.1 `
 	--hostname=peer-b1 `
 	--title="test B 1" `
-	--netgroup="B" @args
+	--interface="wgt_b1" `
+	--machine-id="machineidB1" `
+	@args

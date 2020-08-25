@@ -5,15 +5,16 @@ import (
 	"net"
 
 	"github.com/gongt/wireguard-config-distribute/internal/tools"
+	"github.com/gongt/wireguard-config-distribute/internal/types"
 )
 
 type VpnHelper struct {
 	manager *VpnManager
 	config  *vpnConfig
-	name    string
+	name    types.VpnIdType
 }
 
-func createHelper(vpns *VpnManager, config *vpnConfig, name string) *VpnHelper {
+func createHelper(vpns *VpnManager, config *vpnConfig, name types.VpnIdType) *VpnHelper {
 	vpns.m.Lock()
 
 	return &VpnHelper{
@@ -37,6 +38,14 @@ func (helper *VpnHelper) GetMTU(ifmtu uint32) uint32 {
 	} else {
 		return helper.config.DefaultMtu
 	}
+}
+
+func (helper *VpnHelper) GetObfuse() bool {
+	return helper.config.EnableObfuse
+}
+
+func (helper *VpnHelper) GetHostDomain() string {
+	return helper.config.getHostDomain()
 }
 
 func (helper *VpnHelper) AllocateIp(hostname string, requestIp string) string {

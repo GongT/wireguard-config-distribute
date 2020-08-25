@@ -1,4 +1,4 @@
-package wireguardControl
+package clientType
 
 import (
 	"net"

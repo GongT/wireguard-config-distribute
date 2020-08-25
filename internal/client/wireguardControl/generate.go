@@ -13,7 +13,7 @@ func (wc *WireguardControl) creatConfigHeader(extendedSyntax bool) []byte {
 	result.appendLine("[Interface]")
 	result.appendLine("# Name = %s", wc.interfaceTitle)
 	result.appendLineExtened("Address = %s/32", wc.givenAddress)
-	result.appendLine("ListenPort = %d", wc.interfaceListenPort)
+	result.appendLine("ListenPort = %d", wc.listenPort)
 	result.appendLine("PrivateKey = %s", wc.privateKey)
 	// appendLineExtened("DNS = 1.1.1.1,8.8.8.8")
 	// appendLineExtened("Table = 12345")

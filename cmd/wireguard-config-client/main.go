@@ -58,7 +58,6 @@ func (p *program) Start() error {
 	log.Println("service start.")
 
 	p.watcher = hostfile.StartWatch(opts.HostFile)
-	p.client.ConfigureVPN(opts)
 	p.client.Configure(opts)
 
 	go func() {

@@ -4,8 +4,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/gongt/wireguard-config-distribute/internal/client/clientType"
 	"github.com/gongt/wireguard-config-distribute/internal/client/wireguardControl/wgexe"
-	"github.com/gongt/wireguard-config-distribute/internal/protocol"
 	"github.com/gongt/wireguard-config-distribute/internal/tools"
 )
 
@@ -20,27 +20,33 @@ type peerData struct {
 	mtu          uint16
 }
 
-func (wc *WireguardControl) UpdatePeers(list []*protocol.Peers_Peer) {
+func (wc *WireguardControl) UpdatePeers(list clientType.PeerDataList) {
 	defer wc.mu.Lock("update peers")()
 
 	tools.Error("Updating peers:")
 	wc.peers = wc.peers[0:0]
-	for _, peer := range list {
-		tools.Error("  * <%d> %s -> %v", peer.GetSessionId(), peer.GetHostname(), peer.GetPeer().GetAddress())
-		selectedIp := selectIp(peer.GetPeer().GetAddress(), wc.ipv4Only)
-		tools.Error("      endpoint: %s:%d, mtu: %v", selectedIp, peer.GetPeer().GetPort(), peer.GetPeer().GetMTU())
+	for _, client := range list {
+		peer := client.GetPeer()
+		selectedIp := client.GetSelectedAddress()
+		remotePort := client.GetSelectedPort()
+		tools.Error("  * <%d> %s", client.GetSessionId(), client.GetTitle())
+		if len(selectedIp) == 0 {
+			tools.Error("      endpoint: <no external ip>:%d, mtu: %v", remotePort, peer.GetMTU())
+		} else {
+			tools.Error("      endpoint: %s:%d, mtu: %v", selectedIp, remotePort, peer.GetMTU())
+		}
 
-		kl := uint(peer.GetPeer().GetKeepAlive())
+		kl := uint(peer.GetKeepAlive())
 
 		wc.peers = append(wc.peers, peerData{
-			comment:      peer.GetTitle(),
-			publicKey:    peer.GetPeer().GetPublicKey(),
+			comment:      client.GetTitle(),
+			publicKey:    peer.GetPublicKey(),
 			presharedKey: "",
 			ip:           selectedIp,
-			port:         uint16(peer.GetPeer().GetPort()),
+			port:         remotePort,
 			keepAlive:    kl,
-			privateIp:    peer.GetPeer().GetVpnIp(),
-			mtu:          uint16(peer.GetPeer().GetMTU()),
+			privateIp:    peer.GetVpnIp(),
+			mtu:          uint16(peer.GetMTU()),
 		})
 	}
 

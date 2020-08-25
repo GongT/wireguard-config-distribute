@@ -8,17 +8,17 @@ import (
 )
 
 type PeerData struct {
-	sessionId types.SidType
-	MachineId string
-	VpnId     types.VpnIdType
-	Title     string
-	Hostname  string
-	PublicKey string
-	VpnIp     string
-	MTU       uint32
-	HostsLine string
+	sessionId   types.SidType
+	MachineId   string
+	VpnId       types.VpnIdType
+	Title       string
+	Hostname    string
+	PublicKey   string
+	VpnIp       string
+	WorkgroupId string
 
-	NetworkId    string
+	MTU          uint32
+	HostsLine    string
 	ExternalIp   []string
 	ExternalPort uint32
 	InternalIp   string
@@ -29,5 +29,5 @@ type PeerData struct {
 }
 
 func (peer *PeerData) CreateId() string {
-	return peer.VpnId.Serialize() + "::" + peer.NetworkId + "::" + peer.MachineId
+	return peer.VpnId.Serialize() + "::" + peer.WorkgroupId + "::" + peer.MachineId
 }

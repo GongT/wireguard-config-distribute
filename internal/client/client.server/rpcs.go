@@ -8,10 +8,16 @@ import (
 	"github.com/gongt/wireguard-config-distribute/internal/types"
 )
 
-func (stat *ServerStatus) Greeting(request *protocol.ClientInfoRequest) (*protocol.ClientInfoResponse, error) {
+func (stat *ServerStatus) RegisterClient(request *protocol.RegisterClientRequest) (*protocol.RegisterClientResponse, error) {
 	ctx, cancel := context.WithCancel(stat.context)
 	defer cancel()
-	return stat.rpc.Greeting(ctx, request)
+	return stat.rpc.RegisterClient(ctx, request)
+}
+
+func (stat *ServerStatus) UpdateClientInfo(request *protocol.ClientInfoRequest) (*protocol.ClientInfoResponse, error) {
+	ctx, cancel := context.WithCancel(stat.context)
+	defer cancel()
+	return stat.rpc.UpdateClientInfo(ctx, request)
 }
 
 func (stat *ServerStatus) Start(id uint64) (<-chan *protocol.Peers, error) {

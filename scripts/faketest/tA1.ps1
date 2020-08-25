@@ -27,4 +27,6 @@ if ( $? -eq $false ) { exit 1 }
 	--perfer-ip=111.1 `
 	--hostname=peer-a1 `
 	--title="test A 1" `
-	--netgroup="A" @args
+	--interface="wgt_a1" `
+	--machine-id="machineidA1" `
+	@args
