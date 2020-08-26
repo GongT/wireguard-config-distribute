@@ -14,14 +14,26 @@ type Transport struct {
 	realWireguardPort uint16
 	realWireguardAddr *net.UDPAddr
 
-	publicListen *net.UDPConn
+	publicListen    *net.UDPConn
+	mainLoopRunning bool
 
 	natsMu sync.RWMutex
 	nats   natRecords
+
+	dispose       func()
+	programIsQuit bool
+
+	dumpTimer bool
 }
 
 func NewTransport() *Transport {
 	return &Transport{}
+}
+
+func (t *Transport) Quit() {
+	tools.Debug("Stop software port forwarding")
+	t.programIsQuit = true
+	t.Stop()
 }
 
 func (t *Transport) Stop() {
@@ -29,6 +41,7 @@ func (t *Transport) Stop() {
 		// tools.Debug("transport status error: duplicate stop()")
 		return
 	}
+	t.dispose()
 	t.publicListen.Close()
 	t.publicListen = nil
 	t.closeNatMap()
@@ -41,7 +54,7 @@ func (t *Transport) Enabled() bool {
 func (t *Transport) Start(port uint16) (uint16, error) {
 	if t.Enabled() {
 		if port != t.publicListenPort {
-			panic("transport status error: duplicate start() with different port!")
+			tools.Die("transport status error: duplicate start() with different port!")
 		}
 		return t.realWireguardPort, nil
 	}
@@ -82,7 +95,12 @@ func (t *Transport) Sdump() (ret string) {
 		ret += "Disabled\n"
 		return
 	}
-	ret += fmt.Sprintf("    publicListenPort = %v\n", t.publicListenPort)
+	ret += fmt.Sprintf("    publicListenPort = %v", t.publicListenPort)
+	if !t.mainLoopRunning {
+		ret += " (Not Running!)"
+	}
+	ret += "\n"
+
 	ret += fmt.Sprintf("    realWireguardPort = %v\n", t.realWireguardPort)
 
 	for index, nat := range t.nats {
@@ -97,7 +115,13 @@ func (t *Transport) Sdump() (ret string) {
 	return
 }
 func (t *Transport) Dump() {
-	if tools.IsDevelopmennt() {
-		tools.Debug(t.Sdump())
+	if tools.IsDevelopmennt() && !t.dumpTimer {
+		t.dumpTimer = true
+		go func() {
+			time.Sleep(5 * time.Second)
+			t.dumpTimer = false
+
+			tools.Debug(t.Sdump())
+		}()
 	}
 }

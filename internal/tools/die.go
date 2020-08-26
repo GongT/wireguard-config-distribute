@@ -3,6 +3,7 @@ package tools
 import (
 	"log"
 	"os"
+	"runtime/debug"
 	"strconv"
 )
 
@@ -38,17 +39,18 @@ func Die(format string, a ...interface{}) {
 	if isDying {
 		panic("die in die")
 	}
+
 	isDying = true
-	if suddenDeath {
-		if quitCode == 0 {
-			quitCode = 1
-		}
-		log.Printf("program will terminate with code %d\n", quitCode)
-		os.Exit(1)
-	} else {
+	if !suddenDeath {
 		callCleanup()
-		Exit()
 	}
+
+	debug.PrintStack()
+
+	if quitCode == 0 {
+		quitCode = 1
+	}
+	Exit()
 }
 
 func WaitExit(handler func(int)) func() {
@@ -62,10 +64,10 @@ func WaitExit(handler func(int)) func() {
 	handlers[currIndex] = handler
 
 	return func() {
+		delete(handlers, currIndex)
 		if len(handlers) == 0 {
 			suddenDeath = true
 		}
-		delete(handlers, currIndex)
 	}
 }
 
@@ -75,11 +77,10 @@ func callCleanup() {
 		return
 	}
 	log.Println("program will exit after cleanup -", len(handlers))
-	for _, handler := range handlers {
-		println("---------------")
+	for index, handler := range handlers {
+		println("--------------- quit handler " + strconv.FormatUint(uint64(index), 10) + ":")
 		handler(quitCode)
 	}
-	println("---------------")
 	handlers = make(map[uint]func(int))
-	log.Println("all cleanup has been called")
+	log.Println("--------------- all quit handler has been called")
 }

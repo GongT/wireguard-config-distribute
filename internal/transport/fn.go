@@ -1,9 +1,11 @@
 package transport
 
 import (
-	"fmt"
 	"net"
 	"strconv"
+	"strings"
+
+	"github.com/gongt/wireguard-config-distribute/internal/tools"
 )
 
 func getFree() (uint16, error) {
@@ -18,14 +20,22 @@ func getFree() (uint16, error) {
 }
 
 func format(ip string, port uint16) string {
-	return ip + ":" + strconv.FormatUint(uint64(port), 10)
+	if strings.Contains(ip, ":") {
+		return "[" + ip + "]:" + strconv.FormatUint(uint64(port), 10)
+	} else {
+		return ip + ":" + strconv.FormatUint(uint64(port), 10)
+	}
 }
 
 func parse(ip string, port uint16) *net.UDPAddr {
 	addrStr := format(ip, port)
 	remoteAddr, err := net.ResolveUDPAddr("udp", addrStr)
 	if err != nil {
-		panic(fmt.Errorf("failed parse address: %v", addrStr))
+		tools.Die("failed parse address: %v", addrStr)
 	}
 	return remoteAddr
+}
+
+func isSocketClosed(err error) bool {
+	return strings.Contains(err.Error(), " closed ")
 }

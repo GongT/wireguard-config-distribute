@@ -32,6 +32,7 @@ func NewVpnManager(storage *storage.ServerStorage) *VpnManager {
 				vpn.Allocations = make(map[string]NumberBasedIp)
 			}
 
+			vpn.id = name
 			if err := vpn.calcAllocSpace(); err != nil {
 				tools.Die("invalid config: VPN %s wrong prefix: %s", name, err.Error())
 			}
@@ -95,7 +96,7 @@ func (vpns *VpnManager) Dump() string {
 	ret += "Storage path: " + vpns.storage.Path(VPN_STORE_NAME) + "\n"
 
 	for name, vpn := range vpns.mapper {
-		ret += fmt.Sprintf("> %v: %v(%v) | MTU=%v | OBFS=%v\n", name, vpn.Prefix, vpn.prefixFreeParts, vpn.DefaultMtu, vpn.EnableObfuse)
+		ret += fmt.Sprintf("> [%v]: Name=%v; Prefix=%v(%v); MTU=%v; OBFS=%v\n", vpn.id.Serialize(), name, vpn.Prefix, vpn.prefixFreeParts, vpn.DefaultMtu, vpn.EnableObfuse)
 		for host, ip := range vpn.Allocations {
 			ret += fmt.Sprintf("\t%-15v => %v\n", vpn.Prefix+"."+ip.String(vpn.prefixFreeParts), host)
 		}
