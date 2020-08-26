@@ -1,21 +1,19 @@
 package client
 
 import (
-	"fmt"
-
 	"github.com/gongt/wireguard-config-distribute/internal/protocol"
 	"github.com/gongt/wireguard-config-distribute/internal/tools"
 	"github.com/gongt/wireguard-config-distribute/internal/types"
 )
 
 func (s *ClientStateHolder) handshake() bool {
-	tools.Error("handshake:")
 	s.statusData.lock()
 	defer s.statusData.unlock()
 
 	s.isRunning = false
 	data := &s.configData
 
+	tools.Error("  1: register...")
 	result1, err := s.server.RegisterClient(&protocol.RegisterClientRequest{
 		MachineId:    s.machineId,
 		VpnGroup:     data.VpnGroupName,
@@ -28,6 +26,7 @@ func (s *ClientStateHolder) handshake() bool {
 		tools.Error("  * register: failed: %s", err.Error())
 		return false
 	}
+	tools.Error("  * register: ok. Session Id: %v\n    server offer ip address: %s/%d\n    interface private key: %s", result1.SessionId, result1.OfferIp, result1.Subnet, result1.PrivateKey)
 
 	s.vpn.UpdateInterfaceInfo(result1.SessionId, result1.OfferIp, result1.PrivateKey, uint8(result1.Subnet))
 	s.isRunning = true
@@ -38,12 +37,11 @@ func (s *ClientStateHolder) handshake() bool {
 		s.machineId = result1.MachineId
 	}
 	s.sessionId = types.DeSerializeSidType(result1.SessionId)
-	tools.Error("  * register: ok. Session Id: %v\n    server offer ip address: %s/%d\n    interface private key: %s", result1.SessionId, result1.OfferIp, result1.Subnet, result1.PrivateKey)
 
 	if result1.GetEnableObfuse() {
 		shadow, err := s.nat.Start(uint16(data.InternalPortDefault))
 		if err != nil {
-			panic(fmt.Errorf("failed create nat: %v", err))
+			tools.Die("failed create nat: %v", err)
 		}
 		data.InternalPort = uint32(shadow)
 	} else {
@@ -52,6 +50,7 @@ func (s *ClientStateHolder) handshake() bool {
 	}
 	s.vpn.SetWireguardListenPort(data.InternalPort)
 
+	tools.Error("  2: update info...")
 	_, err = s.server.UpdateClientInfo(&protocol.ClientInfoRequest{
 		SessionId: s.sessionId.Serialize(),
 		Services:  s.statusData.services,

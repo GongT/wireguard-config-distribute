@@ -1,7 +1,6 @@
 package transport
 
 import (
-	"fmt"
 	"net"
 	"time"
 
@@ -17,7 +16,7 @@ func createNatOutgoing(targetIp string, targetPort uint16) *natRecord {
 	lis, err := net.ListenUDP("udp", &net.UDPAddr{})
 
 	if err != nil {
-		panic(fmt.Errorf("failed listen UDP: %v", err))
+		tools.Die("failed listen UDP: %v", err)
 	}
 	if err := lis.SetReadBuffer(2000); err != nil {
 		tools.Error("warn: set read buffer failed: %v", err)
@@ -44,9 +43,10 @@ func (nat *natRecord) eventLoopOutgoing() {
 		n, _, err := nat.wgCommunicateConn.ReadFromUDP(buff[:])
 
 		if err != nil {
-			tools.Error("warn: forward %v:\n    local wireguard not listening: %v", nat.sdump(), err)
-			// nat.stopOutgoingEventLoop(err)
-			return
+			if !isSocketClosed(err) {
+				tools.Error("warn: forward %v:\n    local wireguard not listening: %v", nat.sdump(), err)
+			}
+			break
 		}
 
 		if dataDump {
@@ -68,9 +68,14 @@ func (nat *natRecord) eventLoopOutgoing() {
 		_, err = s.WriteToUDP(buff.encode(n), a)
 
 		if err != nil {
-			tools.Error("warn: write failed: %v", err)
+			if isSocketClosed(err) {
+				break
+			} else {
+				tools.Error("warn: write to wg failed: %v", err)
+			}
 		}
 	}
+	tools.Debug(" ! [%v] loop done", nat.sdump())
 }
 
 func (nat *natRecord) stopOutgoingEventLoop(err error) error {
@@ -82,9 +87,7 @@ func (nat *natRecord) stopOutgoingEventLoop(err error) error {
 	}
 
 	if err != nil {
-		tools.Error("warn: forward %v:\n    %v", nat.sdump(), err)
-	} else {
-		tools.Debug("forward event loop stopped (%v)", nat.sdump())
+		tools.Error("warn: %v:\n    error when stop: %v", nat.sdump(), err)
 	}
 
 	nat.eventLoopRunning = false

@@ -1,7 +1,6 @@
 package transport
 
 import (
-	"fmt"
 	"net"
 	"time"
 
@@ -17,7 +16,7 @@ func createNatIncomming(from *net.UDPAddr) *natRecord {
 	conn, err := net.ListenUDP("udp", &net.UDPAddr{})
 
 	if err != nil {
-		panic(fmt.Errorf("failed listen UDP: %v", err))
+		tools.Die("failed listen UDP: %v", err)
 	}
 	if err := conn.SetReadBuffer(2000); err != nil {
 		tools.Error("warn: set read buffer failed: %v", err)
@@ -31,7 +30,19 @@ func createNatIncomming(from *net.UDPAddr) *natRecord {
 	return &ret
 }
 
+func (t *Transport) handleErrorClosed() {
+	t.natsMu.Lock()
+	defer t.natsMu.Unlock()
+	t.mainLoopRunning = false
+}
 func (t *Transport) goHandle() {
+	t.natsMu.Lock()
+	defer t.natsMu.Unlock()
+
+	if t.mainLoopRunning {
+		panic("go handle twice???")
+	}
+	t.mainLoopRunning = true
 	go t.handlePublicIncomeConnect()
 }
 
@@ -42,7 +53,11 @@ func (t *Transport) handlePublicIncomeConnect() {
 		n, remote, err := t.publicListen.ReadFromUDP(buff[:])
 
 		if err != nil {
-			panic(fmt.Errorf("failed read from public port: %v", err))
+			if isSocketClosed(err) {
+				t.handleErrorClosed()
+				return
+			}
+			tools.Die("failed read from public port: %v", err)
 		}
 
 		nat := t.getNatFromOutside(remote)

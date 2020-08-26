@@ -74,6 +74,8 @@ func (s *ClientStateHolder) Quit() {
 	}
 	s.isQuit = true
 
+	s.nat.Quit()
+
 	if s.vpn != nil {
 		tools.Debug("deleting wg interface")
 		s.vpn.DeleteInterface()

@@ -38,9 +38,9 @@ func saveBuffersTo(filename string, datas ...[]byte) error {
 	if err != nil {
 		return err
 	}
-	tools.Debug("=====================================")
+	tools.Debug("=====================================\nvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv")
 	tools.Debug(" FILE [%v]", filename)
-	defer tools.Debug("=====================================")
+	defer tools.Debug("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n=====================================")
 	for _, data := range datas {
 		tools.Debug(string(data))
 		if _, err = f.Write(data); err != nil {
