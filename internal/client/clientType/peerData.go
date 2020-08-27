@@ -1,6 +1,9 @@
 package clientType
 
-import "github.com/gongt/wireguard-config-distribute/internal/protocol"
+import (
+	"github.com/gongt/wireguard-config-distribute/internal/protocol"
+	"github.com/gongt/wireguard-config-distribute/internal/tools"
+)
 
 type PeerData struct {
 	*protocol.Peers_Peer
@@ -27,8 +30,10 @@ func WrapList(list []*protocol.Peers_Peer, filter IpFilter) PeerDataList {
 	for _, client := range list {
 		peer := client.GetPeer()
 		var selectedIp string
+		tools.Debug("[%s] select ip address: %v", client.GetTitle(), peer.GetAddress())
 		if peer.GetSameNetwork() {
 			selectedIp = peer.GetAddress()[0]
+			tools.Debug("  -> use same network: " + selectedIp)
 		} else {
 			selectedIp = selectIp(peer.GetAddress(), filter)
 		}

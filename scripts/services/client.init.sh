@@ -29,9 +29,9 @@ x() {
 }
 
 create_instance() {
-	echo " * $_SECTION" >&2
-
 	local debug_file="/tmp/start.wireguard.$_SECTION.sh"
+	echo " * $_SECTION ($debug_file)" >&2
+
 	echo "" > "$debug_file"
 
 	procd_open_instance "$_SECTION"
@@ -48,20 +48,20 @@ create_instance() {
 		EnvList+=("WIREGUARD_${name^^}=${_CONFIGS[$name]}")
 	done
 	procd_set_param env "${EnvList[@]}"
-	echo "exec ${RUN[*]}" >> "$debug_file"
 
 	### cmd
 	local RUN=(
 		"$BIN"
-		--external-ip-noupnp
-		--external-ip-nohttp
+		--ip-native
+		--ip4-no-upnp
+		"--ip4-api="
+		"--ip6-api="
 		--no-upnp-forward
 		"--hostname=$HOSTNAME"
-		"--external-ip=$WAN_IP"
-		"--external-ip6=$WAN_IP6"
 		"--internal-ip=$LAN_IP"
 	)
 	procd_set_param command "${RUN[@]}"
+	echo "exec ${RUN[*]}" >> "$debug_file"
 
 	### configs
 	procd_set_param respawn "${respawn_threshold:-3600}" "${respawn_timeout:-5}" "${respawn_retry:-2}"
@@ -106,29 +106,10 @@ start_service() {
 	echo "starting..." >&2
 
 	local LAN_IP
-
 	LAN_IP=$(uci get network.lan.ipaddr)
 	if [[ ! "$LAN_IP" ]]; then
 		echo "Failed find LAN IP" >&2
 		exit 1
-	fi
-
-	local WAN_IP WAN_IP6 NET_IF
-	network_find_wan NET_IF
-	network_get_ipaddr WAN_IP "${NET_IF}"
-	if [[ ! "$WAN_IP" ]]; then
-		echo "Failed find WAN IPv4" >&2
-		exit 1
-	fi
-
-	network_find_wan6 NET_IF
-	if [[ "$NET_IF" ]]; then
-		network_get_ipaddr6 WAN_IP6 "${NET_IF}"
-		if [[ ! "$WAN_IP6" ]]; then
-			echo "Failed find WAN IPv6 address" >&2
-		fi
-	else
-		echo "Failed find WAN IPv6 interface" >&2
 	fi
 
 	config_load wireguard_config

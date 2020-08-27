@@ -57,10 +57,15 @@ func (d *Detect) Execute() {
 				gotIpv4 = true
 				ret = append(ret, ip.String())
 				tools.Debug("  -> ipv4: %v", ip.String())
+			} else {
+				tools.Debug("  x> %v", ip.String())
 			}
 		} else if IsPublicIp(ip) {
 			gotIpv6 = true
 			ret = append(ret, ip.String())
+			tools.Debug("  -> ipv6: %v", ip.String())
+		} else {
+			tools.Debug("  x> %v", ip.String())
 		}
 	}
 
@@ -145,7 +150,6 @@ func init() {
 		"2001:10::/28",
 		"::1/128",
 		"::/128",
-		"::ffff:0:0/96",
 		"64:ff9b:1::/48",
 		"100::/64",
 		"2001:2::/48",
