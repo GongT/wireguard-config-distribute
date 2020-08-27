@@ -11,7 +11,7 @@ import (
 	"github.com/gongt/wireguard-config-distribute/internal/tools"
 )
 
-func ListAllLocalNetworkIp() (ret []string) {
+func ListAllLocalNetworkIp() (ret []net.IP) {
 	ifaces, err := net.Interfaces()
 	if err != nil {
 		tools.Die("Failed get local network interface: %s", err.Error())
@@ -26,11 +26,11 @@ func ListAllLocalNetworkIp() (ret []string) {
 		for _, addr := range addrs {
 			switch v := addr.(type) {
 			case *net.IPNet:
-				if v.IP.IsLinkLocalUnicast() || v.IP.IsLoopback() {
+				if v.IP.IsLoopback() || v.IP.Equal(net.IPv4bcast) {
 					continue
 				}
 
-				ret = append(ret, v.IP.String())
+				ret = append(ret, v.IP)
 			case *net.IPAddr:
 				fmt.Printf("  * %s::%s -> %s\n", iface.Name, addr.String(), spew.Sdump(addr))
 			}

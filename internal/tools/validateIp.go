@@ -2,7 +2,6 @@ package tools
 
 import (
 	"net"
-	"strings"
 )
 
 func IsValidIPv6(s string) bool {
@@ -11,7 +10,7 @@ func IsValidIPv6(s string) bool {
 		return false
 	}
 
-	return strings.Contains(s, ":")
+	return IsIPv6(ip)
 }
 
 func IsValidIPv4(s string) bool {
@@ -20,5 +19,21 @@ func IsValidIPv4(s string) bool {
 		return false
 	}
 
-	return !strings.Contains(s, ":")
+	return IsIPv4(ip)
+}
+
+func IsIPv6(ip net.IP) bool {
+	if ip == nil {
+		return false
+	}
+	p4 := ip.To4()
+	return len(p4) != net.IPv4len
+}
+
+func IsIPv4(ip net.IP) bool {
+	if ip == nil {
+		return false
+	}
+	p4 := ip.To4()
+	return len(p4) == net.IPv4len
 }

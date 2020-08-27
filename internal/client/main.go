@@ -32,6 +32,8 @@ func (stat *ClientStateHolder) StartCommunication() {
 				return
 			}
 
+			stat.ipDetect.Execute()
+
 			stat.run()
 
 			time.Sleep(5 * time.Second)
@@ -86,7 +88,7 @@ func (stat *ClientStateHolder) run() {
 				return
 			}
 			tools.Debug(" ~ receive peers (%d peer, %d host)", len(peers.List), len(peers.Hosts))
-			list := clientType.WrapList(peers.List, stat.ipv4Only)
+			list := clientType.WrapList(peers.List, stat.afFilter)
 
 			stat.nat.ModifyPeers(list)
 			stat.vpn.UpdatePeers(list)

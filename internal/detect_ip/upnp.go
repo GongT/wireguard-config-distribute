@@ -5,6 +5,7 @@ package detect_ip
 import (
 	"errors"
 	"fmt"
+	"net"
 	"time"
 
 	"github.com/gongt/wireguard-config-distribute/internal/tools"
@@ -12,10 +13,10 @@ import (
 	natpmp "github.com/jackpal/go-nat-pmp"
 )
 
-func upnpGetPublicIp() (string, error) {
+func upnpGetPublicIp() (net.IP, error) {
 	gatewayIP, err := gateway.DiscoverGateway()
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	client := natpmp.NewClient(gatewayIP)
@@ -37,13 +38,14 @@ func upnpGetPublicIp() (string, error) {
 	select {
 	case response := <-rch:
 		ret := fmt.Sprintf("%x.%x.%x.%x", response.ExternalIPAddress[0], response.ExternalIPAddress[1], response.ExternalIPAddress[2], response.ExternalIPAddress[3])
-		if !tools.IsValidIPv4(ret) {
-			return "", errors.New("Invalid UPnP response.")
+		ip := net.ParseIP(ret)
+		if !tools.IsIPv4(ip) {
+			return nil, errors.New("Invalid UPnP response.")
 		}
-		return ret, nil
+		return ip, nil
 	case e := <-ech:
-		return "", e
+		return nil, e
 	case <-time.After(2 * time.Second):
-		return "", errors.New("UPnP timed out")
+		return nil, errors.New("UPnP timed out")
 	}
 }

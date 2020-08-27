@@ -28,20 +28,19 @@ type clientProgramOptionsBase struct {
 }
 
 type notMoveArguments struct {
-	/* Public IPv4 */
-	Ipv4Only bool `short:"4" long:"ipv4only" description:"disable connect anything with ipv6" env:"WIREGUARD_IPV4"`
-	Ipv6Only bool `short:"6" long:"ipv6only" description:"disable ipv4 external ip auto detect" env:"WIREGUARD_IPV6"`
+	PublicPort uint16 `long:"external-port" description:"manually set public port, if you are behind NAT device" default-mask:"UPnP or same with --port" env:"WIREGUARD_PUBLIC_PORT"`
 
-	PublicIp      string `long:"external-ip" description:"manually set public ipv4 address of this device, disable auto detect" env:"WIREGUARD_PUBLIC_IP"`
-	PublicIp6     string `long:"external-ip6" description:"manually set public ipv6 address of this device, disable auto detect" env:"WIREGUARD_PUBLIC_IP6"`
-	PublicPort    uint16 `long:"external-port" description:"manually set public port, if you are behind NAT device" default-mask:"UPnP or same with --port" env:"WIREGUARD_PUBLIC_PORT"`
-	IpApi6        string `long:"ip-http-url" description:"get ip api url" env:"WIREGUARD_PUBLIC_IP_API6"`
-	IpApi4        string `long:"ip6-http-url" description:"get ip api url" env:"WIREGUARD_PUBLIC_IP_API4"`
-	IpUpnpDisable bool   `long:"external-ip-noupnp" description:"disable detect public ipv4 by UPnP/NAT-PMP" env:"WIREGUARD_PUBLIC_IP_NO_UPNP"`
-	IpHttpDisable bool   `long:"external-ip-nohttp" description:"disable detect public ip by request a http api" env:"WIREGUARD_PUBLIC_IP_NO_HTTP"`
+	VpnIpv4Only bool `long:"ipv4only" description:"wireguard connect to other peer only use ipv4" env:"WIREGUARD_IPV4_ONLY"`
+	VpnIpv6Only bool `long:"ipv6only" description:"wireguard connect to other peer only use ipv6" env:"WIREGUARD_IPV6_ONLY"`
+
+	PublicIp      []string `long:"ip" description:"manually set public ip address of this device" env:"WIREGUARD_EXTIP"`
+	Gateway       bool     `long:"ip-native" description:"read external ip from system network card (and disable all detect methods below)" env:"WIREGUARD_EXTIP_NATIVE"`
+	IpUpnpDisable bool     `long:"ip4-no-upnp" description:"try UPnP to get ipv4" env:"WIREGUARD_EXTIP4_NO_UPNP"`
+	IpApi4        string   `long:"ip4-api" description:"request this url to get ipv4 (disable when set to empty)" default:"http://show-my-ip.gongt.me" env:"WIREGUARD_EXTIP4_API"`
+	IpApi6        string   `long:"ip6-api" description:"request this url to get ipv6 (disable when set to empty)" default:"http://show-my-ip6.gongt.me" env:"WIREGUARD_EXTIP6_API"`
 
 	NoAutoForwardUpnp bool `long:"no-upnp-forward" description:"don't open port with UPnP/NAT-PMP" env:"WIREGUARD_NO_UPNP"`
 
 	/* Local IPv4 */
-	InternalIp string `long:"internal-ip" description:"manually set internal ipv4 address of this device" default-mask:"auto detect" env:"WIREGUARD_PRIVATE_IP"`
+	InternalIp string `long:"internal-ip" description:"manually set local ipv4 address of this device" default-mask:"auto detect" env:"WIREGUARD_PRIVATE_IP"`
 }

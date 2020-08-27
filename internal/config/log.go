@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 
@@ -32,11 +33,13 @@ func SetLogOutput(path string) {
 
 	os.Stdout = f
 	os.Stderr = f
+	log.SetOutput(f)
 
 	tools.WaitExit(func(code int) {
 		fmt.Fprintf(f, "[child] exit with code %d", code)
 		os.Stdout = originalOut
 		os.Stderr = originalErr
+		log.SetOutput(originalErr)
 		my_close(f)
 	})
 }

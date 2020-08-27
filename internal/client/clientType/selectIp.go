@@ -10,10 +10,18 @@ import (
 
 const MAX_TRY = 3
 
+type IpFilter uint8
+
+const (
+	DontFilter = 0
+	NoIpV4     = 1
+	NoIpV6     = 2
+)
+
 var knownReachableIp map[string]bool = make(map[string]bool)
 var knownUnreachableIp map[string]uint8 = make(map[string]uint8)
 
-func selectIp(ips []string, v4Only bool) string {
+func selectIp(ips []string, filter IpFilter) string {
 	for _, ip := range ips {
 		if knownReachableIp[ip] {
 			return ip
@@ -26,18 +34,13 @@ func selectIp(ips []string, v4Only bool) string {
 	ipsFilter := make([]string, 0, len(ips))
 	for _, ip := range ips {
 		if t, ok := knownUnreachableIp[ip]; !ok || t < MAX_TRY {
+			continue
+		}
+		if filter != NoIpV4 && tools.IsValidIPv4(ip) {
+			ipsFilter = append(ipsFilter, ip)
+		} else if filter != NoIpV6 && tools.IsValidIPv6(ip) {
 			ipsFilter = append(ipsFilter, ip)
 		}
-	}
-
-	if v4Only {
-		ff := make([]string, 0, len(ipsFilter))
-		for _, ip := range ipsFilter {
-			if tools.IsValidIPv4(ip) {
-				ff = append(ff, ip)
-			}
-		}
-		ipsFilter = ff
 	}
 
 	if len(ipsFilter) == 1 {

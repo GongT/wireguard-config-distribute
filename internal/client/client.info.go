@@ -1,12 +1,23 @@
 package client
 
-type oneTimeConfig struct {
+import "fmt"
+
+type infoOptions interface {
+	GetJoinGroup() string
+	GetInternalIp() string
+	GetListenPort() uint16
+	GetPublicPort() uint16
+	GetMTU() uint16
+	GetTitle() string
+	GetHostname() string
+	GetNetworkName() string
+}
+
+type infoConfig struct {
 	VpnGroupName        string
 	Title               string
 	Hostname            string
 	LocalNetworkName    string
-	ExternalEnabled     bool
-	ExternalIp          []string
 	ExternalPort        uint32
 	InternalIp          string
 	InternalPortDefault uint32
@@ -14,22 +25,11 @@ type oneTimeConfig struct {
 	SelfMtu             uint16
 }
 
-func (cd *oneTimeConfig) configure(options configureOptions) {
-	ip4 := options.GetPublicIp()
-	if len(ip4) > 0 {
-		cd.ExternalIp = append(cd.ExternalIp, ip4)
-	}
-	ip6 := options.GetPublicIp6()
-	if len(ip6) > 0 {
-		cd.ExternalIp = append(cd.ExternalIp, ip6)
-	}
+func (cd *infoConfig) createInterfaceComment() string {
+	return fmt.Sprintf("%s (%s) [AT] %s", cd.Hostname, cd.Title, cd.LocalNetworkName)
+}
 
-	if options.GetIpv6Only() && len(cd.ExternalIp) == 0 {
-		cd.ExternalEnabled = false
-	} else {
-		cd.ExternalEnabled = true
-	}
-
+func (cd *infoConfig) configure(options infoOptions) {
 	cd.VpnGroupName = options.GetJoinGroup()
 	cd.Title = options.GetTitle()
 	cd.Hostname = options.GetHostname()

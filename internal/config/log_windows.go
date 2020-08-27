@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"io"
+	"log"
 	"os"
 	"strconv"
 
@@ -14,6 +15,7 @@ import (
 func SetLogPipe(path string) {
 	os.Stdout = pipe(path+".stdout", os.Stdout)
 	os.Stderr = pipe(path+".stderr", os.Stderr)
+	log.SetOutput(os.Stderr)
 
 	controlSocket, err := npipe.Dial(path + ".control")
 	if err != nil {
@@ -23,7 +25,7 @@ func SetLogPipe(path string) {
 	tools.WaitExit(func(code int) {
 		os.Stdout = originalOut
 		os.Stderr = originalErr
-
+		log.SetOutput(originalErr)
 		controlSocket.Write([]byte("exit:" + strconv.FormatInt(int64(code), 10) + "\n"))
 		controlSocket.Close()
 	})
