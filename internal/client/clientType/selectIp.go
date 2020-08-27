@@ -24,34 +24,39 @@ var knownUnreachableIp map[string]uint8 = make(map[string]uint8)
 func selectIp(ips []string, filter IpFilter) string {
 	for _, ip := range ips {
 		if knownReachableIp[ip] {
+			tools.Debug("  -> known reachable: " + ip)
 			return ip
 		}
 		if t, ok := knownUnreachableIp[ip]; ok && t >= MAX_TRY {
+			tools.Debug("  -> known UN reachable: " + ip)
 			return ""
 		}
 	}
 
 	ipsFilter := make([]string, 0, len(ips))
 	for _, ip := range ips {
-		if t, ok := knownUnreachableIp[ip]; !ok || t < MAX_TRY {
-			continue
-		}
 		if filter != NoIpV4 && tools.IsValidIPv4(ip) {
 			ipsFilter = append(ipsFilter, ip)
 		} else if filter != NoIpV6 && tools.IsValidIPv6(ip) {
 			ipsFilter = append(ipsFilter, ip)
 		}
 	}
+	tools.Debug("  : filtered: %v", ipsFilter)
 
 	if len(ipsFilter) == 1 {
+		tools.Debug("  -> only one, force use")
 		return ipsFilter[0]
 	}
 	if len(ipsFilter) == 0 {
+		tools.Debug("  -> no ip usable")
 		return ""
 	}
 	ip := _selectIp(ipsFilter)
 	if len(ip) > 0 {
+		tools.Debug("  -> selected: " + ip)
 		knownReachableIp[ip] = true
+	} else {
+		tools.Debug("  -> select fail")
 	}
 	return ip
 }
@@ -69,6 +74,7 @@ func _selectIp(ips []string) string {
 			if ipnet, ok := addr.(*net.IPNet); ok {
 				for _, ip := range ipps {
 					if ipnet.Contains(ip) {
+						tools.Debug("  : on link address found")
 						return ip.String()
 					}
 				}
@@ -104,9 +110,8 @@ func _selectIp(ips []string) string {
 
 	select {
 	case ret := <-ch:
-		tools.Debug("pong: [%s]", ret)
-
 		if len(ret) == 0 {
+			tools.Debug("  : unreachable")
 			for _, ip := range ips {
 				if _, ok := knownUnreachableIp[ip]; ok {
 					knownUnreachableIp[ip] += 1
@@ -114,6 +119,8 @@ func _selectIp(ips []string) string {
 					knownUnreachableIp[ip] = 1
 				}
 			}
+		} else {
+			tools.Debug("  : pong!")
 		}
 
 		return ret
