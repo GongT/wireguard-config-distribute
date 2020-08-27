@@ -41,7 +41,7 @@ func (storage *ServerStorage) loadOrCreateServerKey(options tlsOptions) error {
 	ips = append(ips, detect_ip.ListAllLocalNetworkIp()...)
 
 	// unique.
-	for j := len(ips); j >= 0; j-- {
+	for j := len(ips) - 1; j >= 0; j-- {
 		for i := j - 1; i >= 0; i-- {
 			if ips[i].Equal(ips[j]) {
 				ips = append(ips[:j], ips[j+1:]...)
