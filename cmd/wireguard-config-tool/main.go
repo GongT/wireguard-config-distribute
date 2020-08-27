@@ -18,19 +18,19 @@ func main() {
 		tools.Die("invalid commandline arguments: %s", err.Error())
 	}
 
-	if config.Exists("download-ca") {
+	if config.CommandActive("download-ca") {
 		opts.ConnectionOptions.GrpcInsecure = true
 		c().GetCA(opts.DownloadCA.GetOutput())
-	} else if config.Exists("netgroup") {
+	} else if config.CommandActive("netgroup") {
 		optsNg := opts.GetNetworkGroup()
-		if config.Exists("create") {
+		if config.CommandActive("create") {
 			c().CreateNetworkGroup(optsNg.GetCreate())
-		} else if config.Exists("create") {
+		} else if config.CommandActive("create") {
 			c().DeleteNetworkGroup(optsNg.GetDelete())
 		} else {
 			config.DieUsage()
 		}
-	} else if config.Exists("dump") {
+	} else if config.CommandActive("dump") {
 		c().Dump()
 	} else {
 		config.DieUsage()

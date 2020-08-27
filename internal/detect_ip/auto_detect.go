@@ -2,6 +2,7 @@ package detect_ip
 
 import (
 	"fmt"
+	"net"
 
 	"github.com/gongt/wireguard-config-distribute/internal/tools"
 )
@@ -14,7 +15,7 @@ type options interface {
 	GetIpApi4() string
 }
 
-func Detect(ipv4 *string, ipv6 *string, options options) {
+func RunDetect(ipv4 *net.IP, ipv6 *net.IP, options options) {
 	var err error
 	if len(*ipv4) == 0 && !options.GetIpUpnpDisable() {
 		tools.Error("  * try to get ip from UPnP")

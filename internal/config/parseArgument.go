@@ -53,7 +53,7 @@ func Err() error {
 	return lastError
 }
 
-func Exists(name string) bool {
+func CommandActive(name string) bool {
 	for curr := parser.Active; curr != nil; curr = curr.Active {
 		if curr.Name == name || (curr.Aliases != nil && tools.ArrayContains(curr.Aliases, name)) {
 			return true

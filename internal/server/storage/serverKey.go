@@ -9,39 +9,57 @@ import (
 	"github.com/gongt/wireguard-config-distribute/internal/tools"
 )
 
+var Ipv4LinkLocal = net.IPv4(224, 0, 0, 1)
+
+func parseAll(ips []string) []net.IP {
+	ret := make([]net.IP, 0, len(ips))
+	for _, ipstr := range ips {
+		if ip := net.ParseIP(ipstr); ip != nil {
+			ret = append(ret, ip)
+		}
+	}
+	return ret
+}
+
 func (storage *ServerStorage) loadOrCreateServerKey(options tlsOptions) error {
 	if storage._cacheCaPri == nil || storage._cacheCa == nil {
 		return errors.New("Invalid program state [CA Cache]")
 	}
 
-	ips := options.GetPublicIp()
+	ips := parseAll(options.GetPublicIp())
 
-	var ipv4, ipv6 string
-	detect_ip.Detect(&ipv4, &ipv6, &wrapGetIpOptions{options})
-	if tools.IsValidIPv4(ipv4) {
+	var ipv4, ipv6 net.IP
+	detect_ip.RunDetect(&ipv4, &ipv6, &wrapGetIpOptions{options})
+	if tools.IsIPv4(ipv4) {
 		ips = append(ips, ipv4)
 	}
-	if tools.IsValidIPv6(ipv6) {
+	if tools.IsIPv4(ipv6) {
 		ips = append(ips, ipv6)
 	}
 
-	ips = append(ips, "127.0.0.1", "::1")
+	ips = append(ips, Ipv4LinkLocal, net.IPv6loopback)
 	ips = append(ips, detect_ip.ListAllLocalNetworkIp()...)
-	ips = tools.ArrayUnique(ips)
+
+	// unique.
+	for j := len(ips); j >= 0; j-- {
+		for i := j - 1; i >= 0; i-- {
+			if ips[i].Equal(ips[j]) {
+				ips = append(ips[:j], ips[j+1:]...)
+				break
+			}
+		}
+	}
+	// unique end
 
 	return storage.createServerKey(ips)
 }
 
-func (storage *ServerStorage) createServerKey(ipList []string) error {
+func (storage *ServerStorage) createServerKey(ipList []net.IP) error {
 	var ipArr []net.IP
 	fmt.Printf("Server addresses:\n")
-	for _, ipstr := range ipList {
-		if ip := net.ParseIP(ipstr); ip != nil {
-			fmt.Printf("  - %s\n", ip.String())
-			ipArr = append(ipArr, ip)
-		} else {
-			fmt.Printf("  x %s\n", ipstr)
-		}
+	for _, ip := range ipList {
+		fmt.Printf("  - %s\n", ip.String())
+		ipArr = append(ipArr, ip)
 	}
 
 	return storage.createKey(ipArr, storage.PubFilePath(), storage.keyFilePath())

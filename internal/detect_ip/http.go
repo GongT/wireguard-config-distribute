@@ -4,10 +4,14 @@ package detect_ip
 
 import (
 	"errors"
+	"fmt"
 	"io/ioutil"
+	"net"
 	"net/http"
+	"net/url"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/gongt/wireguard-config-distribute/internal/tools"
 )
@@ -18,58 +22,100 @@ func init() {
 	os.Setenv("NO_PROXY", newEnv)
 }
 
-func httpGetPublicIp4(url string) (ret string, err error) {
+func httpGetPublicIp4(url string) (ret net.IP, err error) {
 	if len(url) == 0 {
-		url = "https://api.ipify.org/"
+		return
 	}
-	ret, err = get(url)
+	ret, err = get(url, true)
 	if err != nil {
 		return
 	}
 
-	if !tools.IsValidIPv4(ret) {
-		return "", errors.New("Not valid ipv4: " + ret)
+	if !tools.IsIPv4(ret) {
+		return nil, errors.New("not valid ipv4: " + ret.String())
 	}
 
 	return
 }
 
-func httpGetPublicIp6(url string) (ret string, err error) {
+func httpGetPublicIp6(url string) (ret net.IP, err error) {
 	if len(url) == 0 {
-		url = "https://api.ipify.org/"
+		return
 	}
-	for i := 0; i < 3; i++ {
-		ret, err = get(url)
-		if err == nil {
-			break
+	ret, err = get(url, false)
+	if err != nil {
+		return
+	}
+
+	if !tools.IsIPv6(ret) {
+		return nil, errors.New("Not valid ipv6: " + ret.String())
+	}
+
+	return
+}
+
+func resolveAs(host string, ipv4 bool) (string, error) {
+	ips, err := net.LookupIP(host)
+	if err != nil {
+		return "", err
+	}
+	for _, ip := range ips {
+		if tools.IsIPv4(ip) {
+			if ipv4 {
+				return ip.String(), nil
+			}
+		} else {
+			if !ipv4 {
+				return "[" + ip.String() + "]", nil
+			}
 		}
-		tools.Error("failed get ip: %v", err)
-	}
-	if err != nil {
-		return
 	}
 
-	if !tools.IsValidIPv6(ret) {
-		return "", errors.New("Not valid ipv6: " + ret)
+	v := 6
+	if ipv4 {
+		v = 4
 	}
-
-	return
+	return "", fmt.Errorf("failed resolve ipv%v of host %v", v, host)
 }
 
-func get(url string) (ret string, err error) {
-	res, err := http.Get(url)
+func get(api string, ipv4 bool) (net.IP, error) {
+	client := http.Client{
+		Timeout: 10 * time.Second,
+	}
+
+	d, err := url.Parse(api)
 	if err != nil {
-		return
+		return nil, err
+	}
+
+	originalHost := d.Hostname()
+	if ip := net.ParseIP(originalHost); ip == nil {
+		p := d.Port()
+		d.Host, err = resolveAs(originalHost, ipv4)
+		if err != nil {
+			return nil, err
+		}
+		if len(p) > 0 {
+			d.Host += ":" + p
+		}
+	}
+
+	req, _ := http.NewRequest("GET", d.String(), nil)
+	req.Host = originalHost
+
+	res, err := client.Do(req)
+	if err != nil {
+		return nil, err
 	}
 
 	retBytes, err := ioutil.ReadAll(res.Body)
 	res.Body.Close()
 	if err != nil {
-		return
+		return nil, err
 	}
 
-	ret = string(retBytes)
+	ret := string(retBytes)
 	ret = strings.TrimSpace(ret)
 
-	return
+	return net.ParseIP(ret), nil
 }

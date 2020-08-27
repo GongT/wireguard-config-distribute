@@ -7,11 +7,11 @@ import (
 )
 
 func (s *ClientStateHolder) handshake() bool {
-	s.statusData.lock()
-	defer s.statusData.unlock()
+	s.sharedStatus.lock()
+	defer s.sharedStatus.unlock()
 
 	s.isRunning = false
-	data := &s.configData
+	data := &s.privateStatus
 
 	tools.Error("  1: register...")
 	result1, err := s.server.RegisterClient(&protocol.RegisterClientRequest{
@@ -53,14 +53,13 @@ func (s *ClientStateHolder) handshake() bool {
 	tools.Error("  2: update info...")
 	_, err = s.server.UpdateClientInfo(&protocol.ClientInfoRequest{
 		SessionId: s.sessionId.Serialize(),
-		Services:  s.statusData.services,
+		Services:  s.sharedStatus.services,
 		Network: &protocol.PhysicalNetwork{
-			ExternalEnabled: data.ExternalEnabled,
-			ExternalIp:      data.ExternalIp,
-			ExternalPort:    data.ExternalPort,
-			InternalIp:      data.InternalIp,
-			InternalPort:    data.InternalPort,
-			MTU:             uint32(data.SelfMtu),
+			ExternalIp:   s.ipDetect.GetLast(),
+			ExternalPort: data.ExternalPort,
+			InternalIp:   data.InternalIp,
+			InternalPort: data.InternalPort,
+			MTU:          uint32(data.SelfMtu),
 		},
 	})
 	if err != nil {

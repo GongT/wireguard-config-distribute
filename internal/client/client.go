@@ -2,8 +2,10 @@ package client
 
 import (
 	server "github.com/gongt/wireguard-config-distribute/internal/client/client.server"
+	"github.com/gongt/wireguard-config-distribute/internal/client/clientType"
 	"github.com/gongt/wireguard-config-distribute/internal/client/sharedConfig"
 	"github.com/gongt/wireguard-config-distribute/internal/client/wireguardControl"
+	"github.com/gongt/wireguard-config-distribute/internal/detect_ip"
 	"github.com/gongt/wireguard-config-distribute/internal/tools"
 	"github.com/gongt/wireguard-config-distribute/internal/transport"
 	"github.com/gongt/wireguard-config-distribute/internal/types"
@@ -14,7 +16,8 @@ type ClientStateHolder struct {
 	isQuit    bool
 	isRunning bool
 
-	ipv4Only bool
+	afFilter clientType.IpFilter
+	ipDetect *detect_ip.Detect
 
 	sessionId types.SidType
 	machineId string
@@ -22,8 +25,8 @@ type ClientStateHolder struct {
 	vpn       *wireguardControl.WireguardControl
 	nat       *transport.Transport
 
-	configData oneTimeConfig
-	statusData editableConfig
+	privateStatus infoConfig
+	sharedStatus  editableConfig
 
 	password string
 
@@ -45,24 +48,30 @@ func NewClient(options sharedConfig.ReadOnlyConnectionOptions) *ClientStateHolde
 type configureOptions interface {
 	wireguardControl.VpnOptions
 
-	GetMachineID() string
-	GetJoinGroup() string
-	GetPublicIp() string
-	GetPublicIp6() string
-	GetInternalIp() string
-	GetListenPort() uint16
-	GetPublicPort() uint16
-	GetIpv6Only() bool
-	GetMTU() uint16
+	infoOptions
 
-	GetIpv4Only() bool
+	GetMachineID() string
+
+	GetVpnIpv4Only() bool
+	GetVpnIpv6Only() bool
+
+	detect_ip.Options
 }
 
 func (stat *ClientStateHolder) Configure(options configureOptions) {
-	stat.configData.configure(options)
+	stat.privateStatus.configure(options)
 
-	stat.vpn = wireguardControl.NewWireguardControl(options)
-	stat.ipv4Only = options.GetIpv4Only()
+	stat.vpn = wireguardControl.NewWireguardControl(options, stat.privateStatus.createInterfaceComment())
+
+	if options.GetVpnIpv4Only() {
+		stat.afFilter = clientType.NoIpV6
+	} else if options.GetVpnIpv6Only() {
+		stat.afFilter = clientType.NoIpV4
+	} else {
+		stat.afFilter = clientType.DontFilter
+	}
+
+	stat.ipDetect = detect_ip.NewDetect(options)
 
 	stat.machineId = options.GetMachineID()
 }

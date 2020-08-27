@@ -1,7 +1,6 @@
 package wireguardControl
 
 import (
-	"fmt"
 	"path/filepath"
 
 	"github.com/gongt/wireguard-config-distribute/internal/client/wireguardControl/interfaceState"
@@ -35,17 +34,11 @@ type WireguardControl struct {
 
 type VpnOptions interface {
 	GetPerferIp() string
-
 	GetInterfaceName() string
-	GetTitle() string
-	GetHostname() string
-
-	GetNetworkName() string
-
 	GetDryRun() bool
 }
 
-func NewWireguardControl(options VpnOptions) *WireguardControl {
+func NewWireguardControl(options VpnOptions, interfaceTitle string) *WireguardControl {
 	var nativeInterface interfaceState.InterfaceState
 	if options.GetDryRun() {
 		nativeInterface = interfaceState.CreateDummy()
@@ -68,7 +61,7 @@ func NewWireguardControl(options VpnOptions) *WireguardControl {
 		givenAddress:     "",
 		privateKey:       "",
 
-		interfaceTitle: fmt.Sprintf("%s (%s) [AT] %s", options.GetHostname(), options.GetTitle(), options.GetNetworkName()),
+		interfaceTitle: interfaceTitle,
 		listenPort:     0,
 
 		mu: debugLocker.NewMutex(),

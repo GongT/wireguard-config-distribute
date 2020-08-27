@@ -22,7 +22,7 @@ func (pd *PeerData) ChangeTo(ip string, port uint16) {
 	pd.selectedPort = port
 }
 
-func WrapList(list []*protocol.Peers_Peer, ipv4Only bool) PeerDataList {
+func WrapList(list []*protocol.Peers_Peer, filter IpFilter) PeerDataList {
 	ret := make(PeerDataList, 0, len(list))
 	for _, client := range list {
 		peer := client.GetPeer()
@@ -30,7 +30,7 @@ func WrapList(list []*protocol.Peers_Peer, ipv4Only bool) PeerDataList {
 		if peer.GetSameNetwork() {
 			selectedIp = peer.GetAddress()[0]
 		} else {
-			selectedIp = selectIp(peer.GetAddress(), ipv4Only)
+			selectedIp = selectIp(peer.GetAddress(), filter)
 		}
 
 		ret = append(ret, &PeerData{

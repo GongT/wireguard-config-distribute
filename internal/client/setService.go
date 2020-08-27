@@ -1,8 +1,8 @@
 package client
 
 func (stat *ClientStateHolder) SetServices(services []string) {
-	stat.statusData.lock()
-	defer stat.statusData.unlock()
+	stat.sharedStatus.lock()
+	defer stat.sharedStatus.unlock()
 
-	stat.statusData.services = services
+	stat.sharedStatus.services = services
 }

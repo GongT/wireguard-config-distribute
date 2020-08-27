@@ -1,6 +1,8 @@
 package tools
 
-import "unicode"
+import (
+	"unicode"
+)
 
 func Ucfirst(str string) string {
 	for _, v := range str {
