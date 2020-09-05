@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"fmt"
+	"runtime"
 	"time"
 
 	"github.com/gongt/wireguard-config-distribute/internal/client/clientAuth"
@@ -36,6 +37,7 @@ func NewGrpcClient(address string, password string, tls TLSOptions) *ServerStatu
 		grpc.WithBlock(),
 		grpc.WithReturnConnectionError(),
 		grpc.WithTransportCredentials(creds),
+		grpc.WithUserAgent(runtime.GOOS + "/" + runtime.GOARCH + " " + tools.GetAgent()),
 	}
 	if len(password) > 0 {
 		grpcOptions = append(grpcOptions, grpc.WithPerRPCCredentials(clientAuth.CreatePasswordAuth(password)))
