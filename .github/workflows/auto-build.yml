@@ -1,0 +1,58 @@
+name: Go
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  cancel:
+    name: Cancel Previous Runs
+    runs-on: ubuntu-latest
+    steps:
+      - name: cancel running workflows
+        uses: GongT/cancel-previous-workflows@master
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+  build:
+    name: Build
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ windows-latest, ubuntu-latest ]
+        project: 
+          - client
+          - server
+          - tool
+        exclude:
+          - os: windows-latest
+            project: server
+    steps:
+    - name: checkout
+      uses: actions/checkout@v2
+
+    - name: Prepare golang
+      uses: actions/setup-go@v2
+      with:
+        stable: true
+
+    - name: Install Protoc
+      uses: arduino/setup-protoc@v1
+
+    - name: Get dependencies
+      run: go mod download
+
+    - name: Setup my argument generater
+      run: |
+        cd ..
+        go get -v -u github.com/GongT/go-generate-struct-interface/cmd/go-generate-struct-interface github.com/golang/protobuf/protoc-gen-go
+
+    - name: Build
+      shell: pwsh
+      run: ./scripts/build.ps1 ${{ matrix.project }}
+
+    - uses: actions/upload-artifact@v2
+      with:
+        name: result
+        path: dist/${{ matrix.project }}*
