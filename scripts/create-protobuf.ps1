@@ -1,6 +1,8 @@
 #!/usr/bin/env pwsh
 
-cd $PSScriptRoot/..
+Set-Location $PSScriptRoot/..
+$ErrorActionPreference = "Stop"
+. "$PSScriptRoot/inc/x.ps1"
 
 New-Item -Name internal/protocol -ItemType "directory" -Force | Out-Null
-protoc -I protocol protocol/config-service.proto --go_out=plugins=grpc:internal/protocol
+x protoc -I protocol protocol/config-service.proto --go_out=plugins=grpc:internal/protocol
