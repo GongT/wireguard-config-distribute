@@ -2,8 +2,6 @@
 
 param([string]$type) 
 
-$GOPATH = $(go env GOPATH)
-
 $ErrorActionPreference = "Stop"
 . "$PSScriptRoot/inc/env.ps1"
 . "$PSScriptRoot/inc/x.ps1"
