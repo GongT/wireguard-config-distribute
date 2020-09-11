@@ -15,6 +15,7 @@ jobs:
         uses: GongT/cancel-previous-workflows@master
         env:
           GITHUB_TOKEN: ${{ github.token }}
+          DELETE: true
   pre-release:
     name: Create latest release
     runs-on: ubuntu-latest
