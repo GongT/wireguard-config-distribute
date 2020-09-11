@@ -12,6 +12,7 @@ pwsh scripts/build.ps1 client
 
 set -x
 cp scripts/services/client@.service /usr/lib/systemd/system/wireguard-config-client@.service
+cp scripts/services/ensure-kmod.sh '/usr/local/libexec/ensure-kmod.sh'
 systemctl daemon-reload
 systemctl enable wireguard-config-client@normal
 systemctl stop wireguard-config-client@normal
