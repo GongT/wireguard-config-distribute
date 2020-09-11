@@ -24,6 +24,7 @@ function x() {
 x rsync --progress \
 	scripts/services/server.service \
 	scripts/services/client@.service \
+	scripts/services/ensure-kmod.sh \
 	dist/server \
 	dist/client \
 	$RHOST:/data/temp-images/
@@ -37,6 +38,8 @@ cat <<- 'EOF' | ssh $RHOST bash
 
 	cp /data/temp-images/server /usr/local/bin/wireguard-config-server
 	cp /data/temp-images/client /usr/local/bin/wireguard-config-client
+
+	cp /data/temp-images/ensure-kmod.sh /usr/local/libexec/ensure-kmod.sh
 
 	cp /data/temp-images/server.service /usr/lib/systemd/system/wireguard-config-server.service
 	cp /data/temp-images/client@.service /usr/lib/systemd/system/wireguard-config-client@.service

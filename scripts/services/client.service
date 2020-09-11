@@ -15,6 +15,7 @@ ReadWritePaths=/etc/hosts
 ProtectKernelTunables=yes
 ProtectControlGroups=yes
 
+ExecStartPre=!/usr/bin/env bash '/usr/local/libexec/ensure-kmod.sh' wireguard
 ExecStart=/usr/local/bin/wireguard-config-client
 
 Restart=on-abnormal
