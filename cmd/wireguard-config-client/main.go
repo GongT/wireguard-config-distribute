@@ -75,8 +75,6 @@ func (p *program) Start() error {
 
 	p.client.StartCommunication()
 
-	systemd.ChangeToReady()
-
 	return nil
 }
 

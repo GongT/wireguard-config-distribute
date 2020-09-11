@@ -55,11 +55,12 @@ func (s *ClientStateHolder) handshake() bool {
 		SessionId: s.sessionId.Serialize(),
 		Services:  s.sharedStatus.services,
 		Network: &protocol.PhysicalNetwork{
-			ExternalIp:   s.ipDetect.GetLast(),
-			ExternalPort: data.ExternalPort,
-			InternalIp:   data.InternalIp,
-			InternalPort: data.InternalPort,
-			MTU:          uint32(data.SelfMtu),
+			ExternalEnabled: !s.ipDetect.GetDisabled(),
+			ExternalIp:      s.ipDetect.GetLast(),
+			ExternalPort:    data.ExternalPort,
+			InternalIp:      data.InternalIp,
+			InternalPort:    data.InternalPort,
+			MTU:             uint32(data.SelfMtu),
 		},
 	})
 	if err != nil {

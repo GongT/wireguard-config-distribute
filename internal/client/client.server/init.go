@@ -65,7 +65,7 @@ func (stat *ServerStatus) Connect() {
 		tools.Die("Failed to connect server: %s.", err.Error())
 	}
 
-	fmt.Println("  * grpc connect ok.")
+	tools.Error("  * grpc connect ok.")
 	stat.connection = conn
 	stat.rpc = protocol.NewWireguardApiClient(conn)
 

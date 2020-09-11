@@ -12,9 +12,12 @@ type Options interface {
 	GetIpUpnpDisable() bool
 	GetIpApi6() string
 	GetIpApi4() string
+	GetNoPublicNetwork() bool
 }
 
 type Detect struct {
+	disabled bool
+
 	readInterface bool
 	useUPnP       bool
 	api4          string
@@ -26,6 +29,7 @@ type Detect struct {
 
 func NewDetect(options Options) *Detect {
 	ret := Detect{
+		disabled:      options.GetNoPublicNetwork(),
 		readInterface: options.GetGateway(),
 		useUPnP:       !options.GetIpUpnpDisable(),
 		api4:          options.GetIpApi4(),
@@ -40,7 +44,17 @@ func (d *Detect) GetLast() []string {
 	return d.lastGet
 }
 
+func (d *Detect) GetDisabled() bool {
+	return d.disabled
+}
+
 func (d *Detect) Execute() {
+	if d.disabled {
+		tools.Debug("Skip public ip detect: no public access")
+		d.lastGet = make([]string, 0)
+		return
+	}
+
 	ret := make([]string, 0, len(d.lastGet)+10)
 
 	for _, ip := range d.manualSet {
