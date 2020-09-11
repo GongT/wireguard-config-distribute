@@ -2,11 +2,13 @@ package client
 
 import (
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/gongt/wireguard-config-distribute/internal/client/clientType"
 	"github.com/gongt/wireguard-config-distribute/internal/client/remoteControl"
 	"github.com/gongt/wireguard-config-distribute/internal/constants"
+	"github.com/gongt/wireguard-config-distribute/internal/systemd"
 	"github.com/gongt/wireguard-config-distribute/internal/tools"
 )
 
@@ -34,9 +36,12 @@ func (stat *ClientStateHolder) StartCommunication() {
 
 			stat.ipDetect.Execute()
 
+			start := time.Now()
 			stat.run()
+			tools.Error("last grpc connect keep %s", time.Since(start).String())
 
 			time.Sleep(5 * time.Second)
+			systemd.ChangeToReload()
 		}
 	}()
 }
@@ -80,6 +85,11 @@ func (stat *ClientStateHolder) run() {
 				return
 			}
 		case peers := <-chanel:
+			if peers == nil { // connect break
+				return
+			}
+			systemd.ChangeToReady()
+			systemd.UpdateState("get peers: " + strconv.Itoa(len(peers.List)))
 			if stat.isQuit {
 				tools.Debug(" ~ quit")
 				return

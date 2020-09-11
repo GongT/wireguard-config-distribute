@@ -33,11 +33,12 @@ type notMoveArguments struct {
 	VpnIpv4Only bool `long:"ipv4only" description:"wireguard connect to other peer only use ipv4" env:"WIREGUARD_IPV4_ONLY"`
 	VpnIpv6Only bool `long:"ipv6only" description:"wireguard connect to other peer only use ipv6" env:"WIREGUARD_IPV6_ONLY"`
 
-	PublicIp      []string `long:"ip" description:"manually set public ip address of this device" env:"WIREGUARD_EXTIP"`
-	Gateway       bool     `long:"ip-native" description:"read external ip from system network card (and disable all detect methods below)" env:"WIREGUARD_EXTIP_NATIVE"`
-	IpUpnpDisable bool     `long:"ip4-no-upnp" description:"try UPnP to get ipv4" env:"WIREGUARD_EXTIP4_NO_UPNP"`
-	IpApi4        string   `long:"ip4-api" description:"request this url to get ipv4 (disable when set to empty)" default:"http://show-my-ip.gongt.me" env:"WIREGUARD_EXTIP4_API"`
-	IpApi6        string   `long:"ip6-api" description:"request this url to get ipv6 (disable when set to empty)" default:"http://show-my-ip6.gongt.me" env:"WIREGUARD_EXTIP6_API"`
+	NoPublicNetwork bool     `long:"disable-listen" description:"mark there is no way to access this device from internet" env:"WIREGUARD_PRIVATE"`
+	PublicIp        []string `long:"ip" description:"manually set public ip address of this device" env:"WIREGUARD_EXTIP"`
+	Gateway         bool     `long:"ip-native" description:"read external ip from system network card (and disable all detect methods below)" env:"WIREGUARD_EXTIP_NATIVE"`
+	IpUpnpDisable   bool     `long:"ip4-no-upnp" description:"try UPnP to get ipv4" env:"WIREGUARD_EXTIP4_NO_UPNP"`
+	IpApi4          string   `long:"ip4-api" description:"request this url to get ipv4 (disable when set to empty)" default:"http://show-my-ip.gongt.me" env:"WIREGUARD_EXTIP4_API"`
+	IpApi6          string   `long:"ip6-api" description:"request this url to get ipv6 (disable when set to empty)" default:"http://show-my-ip6.gongt.me" env:"WIREGUARD_EXTIP6_API"`
 
 	NoAutoForwardUpnp bool `long:"no-upnp-forward" description:"don't open port with UPnP/NAT-PMP" env:"WIREGUARD_NO_UPNP"`
 

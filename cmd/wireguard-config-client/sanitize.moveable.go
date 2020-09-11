@@ -49,3 +49,7 @@ func (self clientProgramOptions) GetNoAutoForwardUpnp() bool {
 func (self clientProgramOptions) GetInternalIp() string {
 	return ""
 }
+
+func (self clientProgramOptions) NoPublicNetwork() bool {
+	return true
+}

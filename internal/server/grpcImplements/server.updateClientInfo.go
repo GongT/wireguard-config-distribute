@@ -39,6 +39,7 @@ func (s *Implements) UpdateClientInfo(ctx context.Context, request *protocol.Cli
 	externalIps := request.GetNetwork().GetExternalIp()
 	if len(externalIps) == 0 {
 		if request.GetNetwork().GetExternalEnabled() {
+			fmt.Println("   * try find external ips...")
 			externalIps = append(externalIps, remoteIp)
 		}
 	}

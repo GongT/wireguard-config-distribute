@@ -18,6 +18,15 @@ func (opts *clientProgramOptions) Sanitize() error {
 		return err
 	}
 
+	if opts.GetNoPublicNetwork() {
+		opts.PublicIp = []string{}
+		opts.Gateway = false
+		opts.IpUpnpDisable = true
+		opts.IpApi4 = ""
+		opts.IpApi6 = ""
+		opts.NoAutoForwardUpnp = true
+	}
+
 	if opts.HostFile == "/etc/hosts" && runtime.GOOS == "windows" {
 		opts.HostFile = "C:/Windows/System32/drivers/etc/hosts"
 	}
