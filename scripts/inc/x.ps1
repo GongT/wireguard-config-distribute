@@ -4,9 +4,6 @@ function hostx() {
 	$cmd, $exargs = $args
 	Write-Host -Separator " " -ForegroundColor DarkGray " +" $cmd $exargs
 	& $cmd @exargs
-	if ($? -eq $false) {
-		exit 1
-	}
 }
 
 function podmanx() {

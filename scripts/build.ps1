@@ -2,7 +2,7 @@
 
 param([string]$type) 
 
-$ErrorActionPreference = "Stop"
+# $ErrorActionPreference = "Stop"
 . "$PSScriptRoot/inc/env.ps1"
 . "$PSScriptRoot/inc/x.ps1"
 
@@ -23,11 +23,34 @@ function build() {
 	$out = "$type${env:GOEXE}"
 	Write-Host "::set-output name=artifact::$out"
 
-	[string[]]$build = @('go', 'build', '-ldflags', $env:LDFLAGS) + $iargs + $args + @('-o', "dist/$out", "./cmd/wireguard-config-$type")
+	[string[]]$build = @('go', 'build', '-x', '-v', '-ldflags', $env:LDFLAGS) + $iargs + $args + @('-o', "dist/$out", "./cmd/wireguard-config-$type")
 	& x @build
+	if ( $? -eq $false ) {
+		Write-Output "Failed go build..."
+		Start-Sleep -Seconds 5
+		Write-Output "Quit with 1..."
+		exit 1 
+	}
 }
 
-Clear-Host
+if ($env:CI) {
+	if ($env:RUNNER_TEMP) {
+		$env:TMP = $env:RUNNER_TEMP
+		$env:TEMP = $env:RUNNER_TEMP
+	} else {
+		$TMP = New-Item -Name ".temp" -ItemType Directory -Force
+		$env:TMP = $TMP.FullName
+		$env:TEMP = $TMP.FullName
+	}
+
+	Write-Output "=============================================="
+	Get-ChildItem Env:*
+	Write-Output "=============================================="
+	go env
+	Write-Output "=============================================="
+} else {
+	Clear-Host
+}
 
 # Set-PSDebug -Trace 1
 

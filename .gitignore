@@ -6,3 +6,4 @@ cmd/*/generate.*
 __debug_bin
 test.go
 *.out
+.temp

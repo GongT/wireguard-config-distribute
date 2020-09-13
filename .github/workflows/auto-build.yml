@@ -1,4 +1,4 @@
-name: Go
+name: Auto build and create release
 
 on:
   push:
@@ -15,7 +15,7 @@ jobs:
         uses: GongT/cancel-previous-workflows@v1.1
         env:
           GITHUB_TOKEN: ${{ github.token }}
-          DELETE: 'yes'
+          DELETE: "yes"
   prerelease:
     name: Create latest release
     runs-on: ubuntu-latest
@@ -61,6 +61,14 @@ jobs:
       - name: Install Protoc
         uses: arduino/setup-protoc@v1
 
+      - uses: actions/cache@v2
+        with:
+          path: ~/go/pkg/mod
+          key: go-gongt-wireguard-config-distribute-${{ runner.os }}
+          restore-keys: |
+            go-gongt-wireguard-config-distribute-
+            go-
+
       - name: Get dependencies
         run: |
           go mod download
@@ -69,8 +77,10 @@ jobs:
 
       - name: Build
         id: build
-        shell: pwsh
-        run: ./scripts/build.ps1 ${{ matrix.project }}
+        run: |
+          pwsh ./scripts/build.ps1 ${{ matrix.project }}
+          echo "command result: $?"
+          sleep 5
 
       - name: Upload Release Asset
         id: upload-release-asset
