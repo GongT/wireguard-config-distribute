@@ -12,29 +12,27 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: cancel running workflows
-        uses: GongT/cancel-previous-workflows@master
+        uses: GongT/cancel-previous-workflows@v1.1
         env:
           GITHUB_TOKEN: ${{ github.token }}
-          DELETE: true
-  pre-release:
+          DELETE: 'yes'
+  prerelease:
     name: Create latest release
     runs-on: ubuntu-latest
+    outputs:
+      upload_url: ${{ steps.create_release.outputs.upload_url }}
     steps:
-      - name: Delete Old
-        uses: author/action-rollback@master
-        with:
-          tag: latest
-          delete_orphan_tag: true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: Create New
-        uses: actions/create-release@v1
+      - name: checkout
+        uses: actions/checkout@v2
+      - name: Create Release
+        id: create_release
+        uses: GongT/actions-recreate-release@816c561b1602011360c45bb55c3fb9a19ddeaad2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: latest
-          release_name: latest
-          body: Auto build from ${{ github.sha }}
+          release_name: Latest
+          body: Auto build from ${{ github.sha }} (master)
           draft: false
           prerelease: true
   build:
@@ -50,7 +48,7 @@ jobs:
         exclude:
           - os: windows-latest
             project: server
-    needs: pre-release
+    needs: prerelease
     steps:
       - name: checkout
         uses: actions/checkout@v2
@@ -64,10 +62,8 @@ jobs:
         uses: arduino/setup-protoc@v1
 
       - name: Get dependencies
-        run: go mod download
-
-      - name: Setup my argument generater
         run: |
+          go mod download
           cd ..
           go get -v -u github.com/GongT/go-generate-struct-interface/cmd/go-generate-struct-interface github.com/golang/protobuf/protoc-gen-go
 
@@ -75,20 +71,13 @@ jobs:
         shell: pwsh
         run: ./scripts/build.ps1 ${{ matrix.project }}
 
-      # - uses: actions/upload-artifact@v2
-      #   with:
-      #     name: result
-      #     path: dist/${{ matrix.project }}*
-
       - name: Upload Release Asset
         id: upload-release-asset
         uses: actions/upload-release-asset@v1.0.1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          upload_url:
-            ${{ steps.create_release.outputs.upload_url }}
-            # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps
+          upload_url: ${{ needs.prerelease.outputs.upload_url }}
           asset_path: dist/${{ matrix.project }}*
           asset_name: ${{ matrix.project }}
           asset_content_type: application/octet-stream
