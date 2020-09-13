@@ -20,7 +20,10 @@ function build() {
 
 	Write-Output "Build $type${env:GOEXE}..."
 
-	[string[]]$build = @('go', 'build', '-ldflags', $env:LDFLAGS) + $iargs + $args + @('-o', "dist/$type${env:GOEXE}", "./cmd/wireguard-config-$type")
+	$out = "$type${env:GOEXE}"
+	Write-Host "::set-output name=artifact::$out"
+
+	[string[]]$build = @('go', 'build', '-ldflags', $env:LDFLAGS) + $iargs + $args + @('-o', "dist/$out", "./cmd/wireguard-config-$type")
 	& x @build
 }
 

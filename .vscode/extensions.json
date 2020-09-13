@@ -1,0 +1,12 @@
+{
+	"recommendations": [
+		"editorconfig.editorconfig",
+		"ms-vscode.powershell",
+		"golang.go",
+		"coolbear.systemd-unit-file",
+		"foxundermoon.shell-format"
+	],
+	"unwantedRecommendations": [
+		"ms-vscode.powershell-preview"
+	]
+}
