@@ -19,7 +19,7 @@ function do_load() {
 }
 
 if command -v systemd-detect-virt &>/dev/null ; then
-	if systemd-detect-virt --quiet ; then
+	if systemd-detect-virt --container --quiet ; then
 		wait_load
 	else
 		do_load
@@ -28,4 +28,3 @@ else
 	echo "systemd-detect-virt not found..."
 	do_load || true
 fi
-
