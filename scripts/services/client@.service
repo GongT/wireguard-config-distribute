@@ -18,8 +18,8 @@ ProtectControlGroups=yes
 ExecStartPre=!/usr/bin/env bash '/usr/local/libexec/ensure-kmod.sh' wireguard
 ExecStart=/usr/local/bin/wireguard-config-client --group %i
 
-Restart=on-abnormal
-RestartSec=15s
+Restart=always
+RestartSec=5s
 RestartPreventExitStatus=233
 
 EnvironmentFile=-/etc/wireguard/client.conf
