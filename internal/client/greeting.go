@@ -7,9 +7,6 @@ import (
 )
 
 func (s *ClientStateHolder) handshake() bool {
-	s.sharedStatus.lock()
-	defer s.sharedStatus.unlock()
-
 	s.isRunning = false
 	data := &s.privateStatus
 
@@ -50,6 +47,16 @@ func (s *ClientStateHolder) handshake() bool {
 	}
 	s.vpn.SetWireguardListenPort(data.InternalPort)
 
+	s.sharedStatus.lock()
+	defer s.sharedStatus.unlock()
+
+	var port uint32
+	if s.sharedStatus.externalPort > 0 {
+		port = s.sharedStatus.externalPort
+	} else {
+		port = data.ExternalPort
+	}
+
 	tools.Error("  2: update info...")
 	_, err = s.server.UpdateClientInfo(&protocol.ClientInfoRequest{
 		SessionId: s.sessionId.Serialize(),
@@ -57,7 +64,7 @@ func (s *ClientStateHolder) handshake() bool {
 		Network: &protocol.PhysicalNetwork{
 			ExternalEnabled: !s.ipDetect.GetDisabled(),
 			ExternalIp:      s.ipDetect.GetLast(),
-			ExternalPort:    data.ExternalPort,
+			ExternalPort:    port,
 			InternalIp:      data.InternalIp,
 			InternalPort:    data.InternalPort,
 			MTU:             uint32(data.SelfMtu),

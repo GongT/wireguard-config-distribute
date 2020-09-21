@@ -11,12 +11,14 @@ import (
 	"github.com/gongt/wireguard-config-distribute/internal/config"
 	"github.com/gongt/wireguard-config-distribute/internal/systemd"
 	"github.com/gongt/wireguard-config-distribute/internal/tools"
+	"github.com/gongt/wireguard-config-distribute/internal/upnp"
 	"github.com/judwhite/go-svc/svc"
 )
 
 type program struct {
-	client  *client.ClientStateHolder
-	watcher *hostfile.Watcher
+	client      *client.ClientStateHolder
+	watcher     *hostfile.Watcher
+	portForward *upnp.UPnPPortForwarder
 }
 
 var opts = &clientProgramOptions{}
@@ -69,6 +71,30 @@ func (p *program) Start() error {
 	// 		p.client.SetServices(hostfile.ToArray(hostfile.ParseServices(content)))
 	// 	}
 	// }()
+
+	if opts.GetNoAutoForwardUpnp() {
+		tools.Debug("[UPnP] disabled")
+	}else{
+		tools.Debug("[UPnP] enabled")
+		portForward, err := upnp.NewAutoForward(opts)
+		if err != nil {
+			tools.Die("Failed init upnp, you may disable it if you do not use: %v")
+		}
+
+		p.portForward = portForward
+		port, err := p.portForward.Start()
+		if err != nil {
+			tools.Error("[UPNP] Forward first tick error: %v", err)
+		} else {
+			p.client.SetPublicPort(port)
+			go func() {
+				for port := range p.portForward.OnChange {
+					p.client.SetPublicPort(port)
+				}
+			}()
+		}
+	}
+
 	p.client.HandleHosts(func(hosts map[string]string) {
 		p.watcher.WriteBlock(hosts)
 	})
@@ -83,7 +109,13 @@ func (p *program) Stop() error {
 
 	systemd.ChangeToQuit()
 
-	p.watcher.StopWatch()
+	if p.watcher != nil {
+		p.watcher.StopWatch()
+	}
+	if p.portForward != nil {
+		p.portForward.Close()
+	}
+
 	p.client.Quit()
 
 	fmt.Println("Bye, bye!")

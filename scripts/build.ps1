@@ -21,10 +21,17 @@ function build() {
 	Write-Output "Build $type${env:GOEXE}..."
 
 	$out = "$type${env:GOEXE}"
-	Write-Host "::set-output name=artifact::$out"
+	if ($env:CI) {
+		Write-Host "::set-output name=artifact::$out"
+	}
 
-	[string[]]$build = @('go', 'build', '-x', '-v', '-ldflags', $env:LDFLAGS) + $iargs + $args + @('-o', "dist/$out", "./cmd/wireguard-config-$type")
-	& x @build
+	$verb = @()
+	if ($env:CI) {
+		$verb = @('-x', '-v')
+	}
+	
+	[string[]]$build = @( '-ldflags', $env:LDFLAGS) + $iargs + $args + @('-o', "dist/$out", "./cmd/wireguard-config-$type")
+	x 'go' 'build' @verb @build
 	if ( $? -eq $false ) {
 		Write-Output "Failed go build..."
 		Start-Sleep -Seconds 5

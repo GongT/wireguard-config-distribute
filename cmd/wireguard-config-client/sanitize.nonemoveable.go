@@ -10,7 +10,6 @@ import (
 
 	"github.com/gongt/wireguard-config-distribute/internal/detect_ip"
 	"github.com/gongt/wireguard-config-distribute/internal/tools"
-	"github.com/gongt/wireguard-config-distribute/internal/upnp"
 )
 
 func (opts *clientProgramOptions) Sanitize() error {
@@ -59,15 +58,15 @@ func (opts *clientProgramOptions) Sanitize() error {
 		opts.NoAutoForwardUpnp = true
 	}
 
-	if !opts.NoAutoForwardUpnp {
-		tools.Debug("forward port with UPnP...")
-		p, err := upnp.TryAddPortMapping(int(opts.ListenPort), int(opts.PublicPort))
-		if err != nil {
-			return fmt.Errorf("Failed forward port with UPnP: %s", err.Error())
-		}
-		tools.Debug("  -> %d", p)
-		opts.PublicPort = p
-	}
+	// if !opts.NoAutoForwardUpnp {
+	// 	tools.Debug("forward port with UPnP...")
+	// 	p, err := upnp.TryAddPortMapping(int(opts.ListenPort), int(opts.PublicPort))
+	// 	if err != nil {
+	// 		return fmt.Errorf("Failed forward port with UPnP: %s", err.Error())
+	// 	}
+	// 	tools.Debug("  -> %d", p)
+	// 	opts.PublicPort = p
+	// }
 
 	return nil
 }

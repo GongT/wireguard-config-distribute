@@ -3,8 +3,9 @@ package client
 import "sync"
 
 type editableConfig struct {
-	services []string
-	_mutex   sync.Mutex
+	services     []string
+	externalPort uint32
+	_mutex       sync.Mutex
 }
 
 func (c *editableConfig) lock() {
