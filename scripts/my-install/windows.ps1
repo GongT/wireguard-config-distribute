@@ -33,7 +33,7 @@ Write-Output ""
 
 function uninstall() {
 	Write-Output "Uninstall old service.."
-	& $binFile /D /uninstall
+	& $binFile /uninstall
 	if ( $? -eq $false ) { exit 1 }
 	Start-Sleep -Seconds 5
 }
@@ -50,4 +50,4 @@ Write-Output "Copy binary file..."
 Copy-Item -Force ./dist/client.exe $binFile
 
 Write-Output "Install new service..."
-& $binFile /D /install
+& $binFile /install

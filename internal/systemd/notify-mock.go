@@ -5,6 +5,9 @@ package systemd
 func ChangeToReady() {
 }
 
+func ChangeToReload() {
+}
+
 func ChangeToQuit() {
 }
 

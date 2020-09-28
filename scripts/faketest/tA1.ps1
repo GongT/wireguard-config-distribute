@@ -18,12 +18,10 @@ $env:WIREGUARD_PASSWORD = Get-Content ~/.wireguard-config-server/password.txt
 if ( $? -eq $false ) { exit 1 }
 
 ./dist/client `
-	--insecure -D --external-ip-nohttp --external-ip-noupnp --ipv6only --no-upnp-forward --dry `
+	--insecure -D --disable-listen --dry `
 	--hosts-file=$tmp/hosts1 `
 	--netgroup=A `
 	--server=127.0.0.1 `
-	--external-ip=172.0.1.1 `
-	--internal-ip=127.0.1.1 `
 	--perfer-ip=111.1 `
 	--hostname=peer-a1 `
 	--title="test A 1" `
