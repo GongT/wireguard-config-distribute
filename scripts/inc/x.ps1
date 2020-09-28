@@ -8,13 +8,13 @@ function hostx() {
 
 function podmanx() {
 	hostx podman run --rm `
-		"--workdir=/data" `
-		"--volume=$(Get-Location):/data" `
-		"--volume=$($env:GOPATH):/root/go" `
+		--http-proxy `
+		"--workdir=/app" `
+		"--volume=$(Get-Location):/app" `
+		"--volume=$(go env GOCACHE):/GOCACHE" `
 		$global:CID `
 		@args
 }
-
 
 function  SetExecuteMethod() {
 	param (
@@ -40,15 +40,22 @@ function  SetExecuteMethod() {
 			} else {
 				Write-Output "using system GOPATH=${env:GOPATH}"
 			}
-			$cache = @("--volume=${env:GOPATH}:/root/go")
+			$cache = @("--volume=$(go env GOCACHE):/GOCACHE")
 			if ( Test-Path $env:SYSTEM_COMMON_CACHE/apk ) {
 				$cache += "--volume=$env:SYSTEM_COMMON_CACHE/apk:/etc/apk/cache"
 			}
-			Write-Output '
+			Write-Host -ForegroundColor Gray " + podman build $cache --file - --tag gongt/wg-config-build"
+			Write-Output "
 				FROM gongt/alpine-cn:edge
-				ENV GOBIN=/usr/local/bin GOPATH=/root/go
-				RUN cd / && set -x && apk add -U go protoc git protobuf-dev && go get -v -u github.com/GongT/go-generate-struct-interface/cmd/go-generate-struct-interface github.com/golang/protobuf/protoc-gen-go
-			' | podman build @cache --file - --tag "gongt/wg-config-build"
+				ENV PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+				ENV GOBIN=/usr/bin GOPATH=/root/go GOPROXY=$(go env GOPROXY) GOCACHE=/GOCACHE GO111MODULE=auto
+				RUN cd / \
+				 && set -x \
+				 && apk add -U go protoc git protobuf-dev \
+				 && go get -v -u github.com/GongT/go-generate-struct-interface/cmd/go-generate-struct-interface github.com/golang/protobuf/protoc-gen-go \
+				 && command -v protoc-gen-go || ( find / -name protoc-gen-go ; exit 1) \
+				 && command -v go-generate-struct-interface || ( find / -name go-generate-struct-interface ; exit 1)
+			" | podman build @cache --file - --tag "gongt/wg-config-build"
 			if ($? -eq $false) {
 				Write-Error "Failed create image for build"
 				exit 1

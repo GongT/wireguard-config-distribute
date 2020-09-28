@@ -8,6 +8,9 @@ param([string]$type)
 
 $iargs = @()
 
+Set-Location $PSScriptRoot/..
+New-Item -ItemType Directory -Force dist | Out-Null
+
 function build() {
 	param (
 		[parameter(position = 0, Mandatory = $true)][string]$type,
@@ -27,7 +30,7 @@ function build() {
 
 	$verb = @()
 	if ($env:CI) {
-		$verb = @('-x', '-v')
+		# $verb = @('-x', '-v')
 	}
 	
 	[string[]]$build = @( '-ldflags', $env:LDFLAGS) + $iargs + $args + @('-o', "dist/$out", "./cmd/wireguard-config-$type")
@@ -37,6 +40,8 @@ function build() {
 		Start-Sleep -Seconds 5
 		Write-Output "Quit with 1..."
 		exit 1 
+	} else {
+		Write-Output "Go build success..."
 	}
 }
 
@@ -51,7 +56,7 @@ if ($env:CI) {
 	}
 
 	Write-Output "=============================================="
-	Get-ChildItem Env:*
+	Get-ChildItem Env:* | Format-Table
 	Write-Output "=============================================="
 	go env
 	Write-Output "=============================================="
