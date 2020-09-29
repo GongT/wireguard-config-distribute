@@ -34,7 +34,7 @@ jobs:
           release_name: Latest
           body: Auto build from ${{ github.sha }} (master)
           draft: false
-          prerelease: true
+          prerelease: false
 
   build-musl:
     name: Build musl version
