@@ -82,6 +82,11 @@ func parseCommandline() error {
 	} else {
 		_, err := parser.Parse()
 
+		if CommonOption.ShowVersion {
+			tools.ShowVersion()
+			os.Exit(0)
+		}
+
 		if err != nil {
 			parser.WriteHelp(os.Stderr)
 			serr, ok := err.(*flags.Error)
@@ -92,11 +97,6 @@ func parseCommandline() error {
 				}
 			}
 			return errors.New(fmt.Sprintf("Failed parse arguments.\n\t%s", err.Error()))
-		}
-
-		if CommonOption.ShowVersion {
-			tools.ShowVersion()
-			os.Exit(0)
 		}
 
 		commitConfig()

@@ -33,6 +33,8 @@ type notMoveArguments struct {
 	VpnIpv4Only bool `long:"ipv4only" description:"wireguard connect to other peer only use ipv4" env:"WIREGUARD_IPV4_ONLY"`
 	VpnIpv6Only bool `long:"ipv6only" description:"wireguard connect to other peer only use ipv6" env:"WIREGUARD_IPV6_ONLY"`
 
+	Movable bool `long:"moveable" description:"disable connect from local network" env:"WIREGUARD_MOVABLE"`
+
 	NoPublicNetwork bool     `long:"disable-listen" description:"mark there is no way to access this device from internet" env:"WIREGUARD_PRIVATE"`
 	PublicIp        []string `long:"ip" description:"manually set public ip address of this device" env:"WIREGUARD_EXTIP"`
 	Gateway         bool     `long:"ip-native" description:"read external ip from system network card (and disable all detect methods below)" env:"WIREGUARD_EXTIP_NATIVE"`

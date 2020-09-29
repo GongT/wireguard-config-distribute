@@ -16,6 +16,9 @@ func (opts *clientProgramOptions) Sanitize() error {
 	if err := opts.sanitizeBase(); err != nil {
 		return err
 	}
+	if opts.GetMovable() {
+		opts.NoPublicNetwork = true
+	}
 
 	if opts.GetNoPublicNetwork() {
 		opts.PublicIp = []string{}
@@ -29,7 +32,10 @@ func (opts *clientProgramOptions) Sanitize() error {
 	if opts.HostFile == "/etc/hosts" && runtime.GOOS == "windows" {
 		opts.HostFile = "C:/Windows/System32/drivers/etc/hosts"
 	}
-	if len(opts.InternalIp) == 0 {
+
+	if opts.GetMovable() {
+		opts.InternalIp = ""
+	} else if len(opts.InternalIp) == 0 {
 		tools.Debug("detect default network source ip...")
 		ip, err := detect_ip.GetDefaultNetworkIp()
 		if err != nil {
@@ -38,7 +44,9 @@ func (opts *clientProgramOptions) Sanitize() error {
 		opts.InternalIp = ip.String()
 		tools.Debug("  -> %s", opts.InternalIp)
 	}
-	if len(opts.NetworkName) == 0 {
+	if opts.GetMovable() {
+		opts.NetworkName = ""
+	} else if len(opts.NetworkName) == 0 {
 		tools.Debug("detect gateway mac...")
 		mac, err := detect_ip.GetGatewayMac()
 		if err != nil {
@@ -57,16 +65,6 @@ func (opts *clientProgramOptions) Sanitize() error {
 	if opts.VpnIpv6Only {
 		opts.NoAutoForwardUpnp = true
 	}
-
-	// if !opts.NoAutoForwardUpnp {
-	// 	tools.Debug("forward port with UPnP...")
-	// 	p, err := upnp.TryAddPortMapping(int(opts.ListenPort), int(opts.PublicPort))
-	// 	if err != nil {
-	// 		return fmt.Errorf("Failed forward port with UPnP: %s", err.Error())
-	// 	}
-	// 	tools.Debug("  -> %d", p)
-	// 	opts.PublicPort = p
-	// }
 
 	return nil
 }
