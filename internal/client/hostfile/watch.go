@@ -54,7 +54,7 @@ func StartWatch(file string) *Watcher {
 				}
 				// tools.Error("fsnotify event: %s", spew.Sdump(event))
 				if event.Name == file && (event.Op&emod) != 0 {
-					log.Println("modified file:", event.Name)
+					tools.Debug("[FsWatch] modified file: %s", event.Name)
 					if data, err := ioutil.ReadFile(file); err == nil {
 						w.current = string(data)
 						w.OnChange <- w.current

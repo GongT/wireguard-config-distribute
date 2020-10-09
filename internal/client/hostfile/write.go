@@ -8,42 +8,51 @@ import (
 	"github.com/gongt/wireguard-config-distribute/internal/tools"
 )
 
-func (w *Watcher) WriteBlock(hosts map[string]string) {
+func (w *Watcher) WriteBlock(vpnNetworkGroupName string, hosts map[string]string) {
 	tools.Error("rewrite hosts file...")
 
-	generated := COMMENT_START + "\n"
+	fullStart := COMMENT_START + " :: " + vpnNetworkGroupName
+	generated := fullStart + "\n"
 	for ip, hostline := range hosts {
 		generated += hostLine(ip+" "+hostline) + "\n"
 	}
-	generated += COMMENT_END + "\n"
+	generated += COMMENT_END + " :: " + vpnNetworkGroupName + "\n"
 
 	contents := ""
 	skip := false
 	found := false
+	blockSet := false
 	for _, oline := range strings.Split(w.current, "\n") {
 		line := strings.TrimSpace(oline)
 		if skip {
-			if line == COMMENT_END {
-				// tools.Debug("~! %s", line)
+			if strings.HasPrefix(line, COMMENT_END) {
+				tools.Debug("<< %s", line)
 				skip = false
-				contents += generated
+				if !blockSet {
+					blockSet = true
+					contents += generated
+				}
 			} else {
-				// tools.Debug("~~ %s", line)
+				// tools.Debug("!! %s", line)
 			}
-		} else if line == COMMENT_START {
-			// tools.Debug(">> %s", line)
+		} else if line == fullStart {
+			tools.Debug(">>B %s", line)
 			skip = true
 			found = true
+		} else if line == COMMENT_START {
+			tools.Debug(">>A %s", line)
+			skip = true
 		} else {
 			// tools.Debug("== %s", line)
 			contents += oline + "\n"
 		}
 	}
+	contents = strings.TrimSpace(contents) + "\n"
+
 	if !found {
-		contents += generated
+		contents += "\n" + generated + "\n"
 	}
 
-	contents = strings.TrimSpace(contents) + "\n"
 	if contents != w.current {
 		tools.Debug("write hosts file content.")
 		err := ioutil.WriteFile(w.file, []byte(contents), os.FileMode(0644))

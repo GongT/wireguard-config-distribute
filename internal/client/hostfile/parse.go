@@ -12,9 +12,9 @@ func ParseServices(hosts string) map[string]string {
 	for _, line := range strings.Split(hosts, "\n") {
 		line = strings.TrimSpace(line)
 		if len(line) == 0 || line[0] == '#' {
-			if line == COMMENT_START {
+			if strings.HasPrefix(line, COMMENT_START) {
 				skip = true
-			} else if line == COMMENT_END {
+			} else if strings.HasPrefix(line, COMMENT_END) {
 				skip = false
 			}
 			continue

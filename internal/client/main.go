@@ -12,19 +12,25 @@ import (
 	"github.com/gongt/wireguard-config-distribute/internal/tools"
 )
 
-func (stat *ClientStateHolder) startNetwork() {
-	// todo: try 5 times
-	stat.server.Connect()
+func (stat *ClientStateHolder) startNetwork(retryCount int) {
+	for try := 0; try < retryCount; try++ {
+		if err := stat.server.Connect(); err != nil {
+			tools.Error("(%d/%d) %v", try+1, retryCount, err)
+		} else {
+			return
+		}
+	}
+	tools.Die("Still can not connect after %d tries", retryCount)
 }
 
 func (stat *ClientStateHolder) StartTool() *remoteControl.ToolObject {
-	stat.startNetwork()
+	stat.startNetwork(1)
 
 	return remoteControl.Create(stat.server)
 }
 
 func (stat *ClientStateHolder) StartCommunication() {
-	stat.startNetwork()
+	stat.startNetwork(5)
 
 	go func() {
 		fmt.Println("Start communication...")

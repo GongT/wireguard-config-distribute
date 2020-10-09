@@ -74,7 +74,7 @@ func (p *program) Start() error {
 
 	if opts.GetNoAutoForwardUpnp() {
 		tools.Debug("[UPnP] disabled")
-	}else{
+	} else {
 		tools.Debug("[UPnP] enabled")
 		portForward, err := upnp.NewAutoForward(opts)
 		if err != nil {
@@ -96,7 +96,7 @@ func (p *program) Start() error {
 	}
 
 	p.client.HandleHosts(func(hosts map[string]string) {
-		p.watcher.WriteBlock(hosts)
+		p.watcher.WriteBlock(opts.GetJoinGroup(), hosts)
 	})
 
 	p.client.StartCommunication()

@@ -51,7 +51,7 @@ func NewGrpcClient(address string, password string, tls TLSOptions) *ServerStatu
 	}
 }
 
-func (stat *ServerStatus) Connect() {
+func (stat *ServerStatus) Connect() error {
 	if stat.connection != nil {
 		tools.Die("State error: rpc connection already started")
 	}
@@ -62,14 +62,14 @@ func (stat *ServerStatus) Connect() {
 	conn, err := grpc.DialContext(ctx, stat.address, stat.grpcOptions...)
 
 	if err != nil {
-		tools.Die("Failed to connect server: %s.", err.Error())
+		return fmt.Errorf("Failed to connect server: %s.", err.Error())
 	}
 
 	tools.Error("  * grpc connect ok.")
 	stat.connection = conn
 	stat.rpc = protocol.NewWireguardApiClient(conn)
 
-	return
+	return nil
 }
 
 func (stat *ServerStatus) Disconnect(shouldClose bool, machineId types.SidType) {
