@@ -56,7 +56,8 @@ func selectIp(ips []string, filter IpFilter) string {
 		tools.Debug("  -> selected: " + ip)
 		knownReachableIp[ip] = true
 	} else {
-		tools.Debug("  -> select fail")
+		ip = ipsFilter[0]
+		tools.Debug("  -> select fail, use random: " + ip)
 	}
 	return ip
 }

@@ -7,4 +7,4 @@ source /etc/wireguard/client.normal.conf
 source /etc/wireguard/client.conf
 set +a
 
-./scripts/run.ps1 client --group normal
+./scripts/run.ps1 client --group normal "$@"

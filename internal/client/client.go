@@ -14,6 +14,7 @@ import (
 type ClientStateHolder struct {
 	quitChan  chan bool
 	isQuit    bool
+	qDispose  func()
 	isRunning bool
 
 	afFilter clientType.IpFilter
@@ -41,6 +42,9 @@ func NewClient(options sharedConfig.ReadOnlyConnectionOptions) *ClientStateHolde
 
 	self.quitChan = make(chan bool, 1)
 	self.isQuit = false
+	self.qDispose = tools.WaitExit(func(int) {
+		self.Quit()
+	})
 
 	return &self
 }

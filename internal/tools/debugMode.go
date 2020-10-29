@@ -1,3 +1,5 @@
+// +build !nodebug
+
 package tools
 
 import "os"

@@ -10,11 +10,6 @@ import (
 	"github.com/jessevdk/go-flags"
 )
 
-func ResetInternalOption() {
-	InternalOption.IsElevated = false
-	InternalOption.StandardOutputPath = ""
-}
-
 func StringifyOptions(withInternal bool) string {
 	internalConfigGroup.Hidden = !withInternal
 
@@ -39,8 +34,4 @@ func dumpCurrentIni() {
 	ini := flags.NewIniParser(parser)
 	ini.Write(os.Stderr, flags.IniIncludeDefaults)
 	internalConfigGroup.Hidden = true
-}
-
-func IsSuRunning() bool {
-	return InternalOption.IsElevated
 }

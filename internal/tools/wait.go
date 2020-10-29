@@ -12,11 +12,11 @@ func WaitForCtrlC() chan bool {
 
 	closed := false
 
-	done := make(chan bool, 1)
+	done := make(chan bool)
 	go func() {
 		for range signal_channel {
 			fmt.Println("")
-			fmt.Println("Bye, bye.")
+			fmt.Println("receive ^C")
 
 			if closed {
 				Die("Terminate by double SIGINT.")

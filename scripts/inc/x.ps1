@@ -73,4 +73,9 @@ function x() {
 	} else {
 		hostx @args
 	}
+	if ( $LASTEXITCODE -ne 0 ) {
+		$CMDL = $args -Join " "
+		Write-Output "Failed run:`n`t$CMDL`nExit Code: $LASTEXITCODE"
+		exit $LASTEXITCODE
+	}
 }

@@ -1,0 +1,24 @@
+[Unit]
+Description=Wireguard configuration distribution server and client auto update
+After=network.target network-online.target
+Wants=network-online.target
+
+[Service]
+# GENERATE: ExecStart=/usr/local/libexec/wireguard-config-client/auto-update.sh
+
+Type=oneshot
+RemainAfterExit=no
+
+ProtectSystem=strict
+PrivateDevices=yes
+PrivateTmp=no
+ReadWritePaths=/tmp
+ReadWritePaths=/usr/local/libexec/wireguard-config-client
+ReadWritePaths=/usr/local/bin
+ProtectKernelTunables=yes
+ProtectControlGroups=yes
+StateDirectory=wireguard-config-client
+
+Restart=on-failure
+RestartSec=30s
+RestartPreventExitStatus=233

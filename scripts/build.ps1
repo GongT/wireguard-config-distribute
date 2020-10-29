@@ -19,7 +19,6 @@ function build() {
 	
 	Write-Output "Generate $type..."
 	& x go generate ./cmd/wireguard-config-$type
-	if ( $? -eq $false ) { exit 1 }
 
 	Write-Output "Build $type${env:GOEXE}..."
 
@@ -35,14 +34,6 @@ function build() {
 	
 	[string[]]$build = @( '-ldflags', $env:LDFLAGS) + $iargs + $args + @('-o', "dist/$out", "./cmd/wireguard-config-$type")
 	x 'go' 'build' @verb @build
-	if ( $? -eq $false ) {
-		Write-Output "Failed go build..."
-		Start-Sleep -Seconds 5
-		Write-Output "Quit with 1..."
-		exit 1 
-	} else {
-		Write-Output "Go build success..."
-	}
 }
 
 if ($env:CI) {
@@ -93,6 +84,9 @@ if ($type) {
 	} else {
 		build $type
 	}
+} elseif ($IsWindows) {
+	build client
+	build tool
 } else {
 	build server
 	build client

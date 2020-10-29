@@ -36,8 +36,7 @@ func (stat *ClientStateHolder) StartCommunication() {
 		fmt.Println("Start communication...")
 		for {
 			if stat.isQuit {
-				tools.Error("Event loop finished")
-				return
+				break
 			}
 
 			stat.ipDetect.Execute()
@@ -46,9 +45,15 @@ func (stat *ClientStateHolder) StartCommunication() {
 			stat.run()
 			tools.Error("last grpc connect keep %s", time.Since(start).String())
 
+			if stat.isQuit {
+				break
+			}
+
 			time.Sleep(5 * time.Second)
 			systemd.ChangeToReload()
 		}
+		tools.Error("Event loop finish normally")
+		systemd.ChangeToQuit()
 	}()
 }
 

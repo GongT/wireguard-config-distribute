@@ -1,11 +1,16 @@
 package remoteControl
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/gongt/wireguard-config-distribute/internal/tools"
+)
 
 func (tool *ToolObject) Dump() {
 	ret, err := tool.server.DumpStatus()
 	if err != nil {
-		panic(err)
+		tools.Error("Server Error: %s", err)
+		return
 	}
 	fmt.Println(ret.Text)
 }

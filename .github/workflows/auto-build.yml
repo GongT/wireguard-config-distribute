@@ -111,6 +111,8 @@ jobs:
       - name: Build
         id: build
         shell: pwsh
+        env:
+          ASSETS_BASE_URL: ${{ needs.prerelease.outputs.upload_url }}/dist
         run: |
           pwsh ./scripts/build.ps1 ${{ matrix.project }}
           if ($?) {

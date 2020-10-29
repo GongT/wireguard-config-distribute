@@ -13,22 +13,28 @@ func (w *Watcher) WriteBlock(vpnNetworkGroupName string, hosts map[string]string
 
 	fullStart := COMMENT_START + " :: " + vpnNetworkGroupName
 	generated := fullStart + "\n"
-	for ip, hostline := range hosts {
-		generated += hostLine(ip+" "+hostline) + "\n"
+	if hosts == nil {
+		generated = ""
+	} else {
+		for ip, hostline := range hosts {
+			generated += hostLine(ip+" "+hostline) + "\n"
+		}
+		generated += COMMENT_END + " :: " + vpnNetworkGroupName + "\n\n"
 	}
-	generated += COMMENT_END + " :: " + vpnNetworkGroupName + "\n"
 
 	contents := ""
 	skip := false
 	found := false
 	blockSet := false
+	removeNextEmptyLine := false
 	for _, oline := range strings.Split(w.current, "\n") {
 		line := strings.TrimSpace(oline)
 		if skip {
 			if strings.HasPrefix(line, COMMENT_END) {
-				tools.Debug("<< %s", line)
+				// tools.Debug("<< %s", line)
 				skip = false
 				if !blockSet {
+					removeNextEmptyLine = true
 					blockSet = true
 					contents += generated
 				}
@@ -36,20 +42,24 @@ func (w *Watcher) WriteBlock(vpnNetworkGroupName string, hosts map[string]string
 				// tools.Debug("!! %s", line)
 			}
 		} else if line == fullStart {
-			tools.Debug(">>B %s", line)
+			// tools.Debug(">>B %s", line)
 			skip = true
 			found = true
 		} else if line == COMMENT_START {
-			tools.Debug(">>A %s", line)
+			// tools.Debug(">>A %s", line)
 			skip = true
 		} else {
+			if removeNextEmptyLine && oline == "" {
+				removeNextEmptyLine = false
+				continue
+			}
 			// tools.Debug("== %s", line)
 			contents += oline + "\n"
 		}
 	}
 	contents = strings.TrimSpace(contents) + "\n"
 
-	if !found {
+	if !found && generated != "" {
 		contents += "\n" + generated + "\n"
 	}
 

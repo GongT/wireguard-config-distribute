@@ -23,6 +23,8 @@ type UPnPPortForwarder struct {
 
 	listenPort int
 	wantPort   int
+
+	pDispose func()
 }
 
 type IOptions interface {
@@ -49,10 +51,15 @@ func NewAutoForward(opts IOptions) (*UPnPPortForwarder, error) {
 	ret.ch = make(chan uint16)
 	ret.OnChange = ret.ch
 
+	ret.pDispose = tools.WaitExit(func(int) {
+		ret.Stop()
+	})
+
 	return ret, nil
 }
-func (p *UPnPPortForwarder) Close() {
-	tools.Debug("[UPnP] Close()")
+func (p *UPnPPortForwarder) Stop() {
+	tools.Debug("[UPnP] Stop()")
+	p.pDispose()
 	if p.keepAliveTimer != nil {
 		p.keepAliveTimer.Stop()
 		close(p.ch)

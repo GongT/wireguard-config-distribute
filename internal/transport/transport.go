@@ -31,9 +31,11 @@ func NewTransport() *Transport {
 }
 
 func (t *Transport) Quit() {
-	tools.Debug("Stop software port forwarding")
 	t.programIsQuit = true
-	t.Stop()
+	if t.Enabled() {
+		tools.Debug("Stop software port forwarding")
+		t.Stop()
+	}
 }
 
 func (t *Transport) Stop() {

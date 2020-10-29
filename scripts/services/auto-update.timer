@@ -1,0 +1,9 @@
+[Unit]
+Description=Wireguard configuration distribution server and client auto update timer
+Wants=network-online.target
+
+[Timer]
+OnUnitActiveSec=12h
+
+[Install]
+WantedBy=timers.target

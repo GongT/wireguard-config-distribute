@@ -2,19 +2,16 @@
 
 set -Eeuo pipefail
 
-cd "$(dirname "$(realpath "${BASH_SOURCE[0]}")")"
-cd ../..
+declare -r MYDIR="$(dirname "$(realpath "${BASH_SOURCE[0]}")")"
 
-export GOOS="linux"
-export GOARCH="amd64"
+bash "$MYDIR/linux/download-script.sh"
 
-pwsh scripts/build.ps1 client
-
-set -x
-cp scripts/services/client@.service /usr/lib/systemd/system/wireguard-config-client@.service
-cp scripts/services/ensure-kmod.sh '/usr/local/libexec/ensure-kmod.sh'
-systemctl daemon-reload
-systemctl enable wireguard-config-client@normal
-systemctl stop wireguard-config-client@normal
-cp dist/client /usr/local/bin/wireguard-config-client
-systemctl restart wireguard-config-client@normal
+cd "$MYDIR/../services"
+"$MYDIR/linux/script-sender.sh" \
+	"$MYDIR/linux/install-script-systemd.sh" \
+	client@.service \
+	auto-update.service \
+	auto-update.timer \
+	auto-update.sh \
+	ensure-kmod.sh \
+	| bash -c "$(<"$MYDIR/linux/script-receiver.sh")" -- normal

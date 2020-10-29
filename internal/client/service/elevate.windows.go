@@ -21,8 +21,6 @@ import (
 
 type elevateOptions interface {
 	GetInterfaceName() string
-	GetInstallService() bool
-	GetUnInstallService() bool
 }
 
 // https://github.com/golang/go/issues/28804
@@ -57,25 +55,6 @@ func EnsureAdminPrivileges(opts elevateOptions) {
 	}
 
 	if member /*&& token.IsElevated() */ {
-		if install, uninstall := opts.GetInstallService(), opts.GetUnInstallService(); install || uninstall {
-			if install == uninstall {
-				tools.Die("Can not use /install and /uninstall at same time")
-			}
-			var err error
-			if install {
-				tools.Error("Install Windows Service...")
-				err = installService(opts, true)
-			} else if uninstall {
-				tools.Error("Uninstall Windows Service...")
-				err = installService(opts, false)
-			}
-			if err == nil {
-				tools.Error("Install success!")
-			} else {
-				tools.Error(err.Error())
-			}
-			os.Exit(0)
-		}
 		return
 	}
 

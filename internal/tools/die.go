@@ -17,6 +17,10 @@ func HasNoError() {
 	quitCode = 0
 }
 
+func HasFatalError() {
+	quitCode = 233
+}
+
 func HasError(code int) {
 	if quitCode == 0 {
 		quitCode = code
@@ -25,10 +29,14 @@ func HasError(code int) {
 
 func Exit() {
 	log.Println("program terminated with code " + strconv.FormatInt(int64(quitCode), 10) + ".")
+	if quitCode == 0 {
+		quitCode = 1
+	}
 	os.Exit(quitCode)
 }
 
 func ExitMain() {
+	log.Println("exit() called")
 	callCleanup()
 	log.Println("program exited with code " + strconv.FormatInt(int64(quitCode), 10) + ".")
 	os.Exit(quitCode)
@@ -42,6 +50,7 @@ func Die(format string, a ...interface{}) {
 
 	isDying = true
 	if !suddenDeath {
+		log.Println("program died.")
 		callCleanup()
 	}
 
@@ -73,14 +82,14 @@ func WaitExit(handler func(int)) func() {
 
 func callCleanup() {
 	if len(handlers) == 0 {
-		log.Println("no cleanup handler")
+		Debug("no cleanup handler")
 		return
 	}
-	log.Println("program will exit after cleanup -", len(handlers))
+	Debug("program will exit after cleanup - %d handlers registered", len(handlers))
 	for index, handler := range handlers {
-		println("--------------- quit handler " + strconv.FormatUint(uint64(index), 10) + ":")
+		Debug("--------------- quit handler <%d>:", uint64(index))
 		handler(quitCode)
 	}
 	handlers = make(map[uint]func(int))
-	log.Println("--------------- all quit handler has been called")
+	Debug("--------------- all quit handler has been called")
 }
