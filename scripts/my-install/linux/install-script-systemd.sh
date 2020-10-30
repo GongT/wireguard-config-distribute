@@ -11,6 +11,8 @@ if [[ "$(basename "$(readlink -e /proc/1/exe)")" != "systemd" ]]; then
 	die "remote server did not running systemd, please check environment."
 fi
 
+mkdir -p /usr/local/libexec/wireguard-config-client
+
 {
 	sed '/\[Service]/Q' client@.service
 	echo "Wants=wireguard-config-auto-update.service"
@@ -35,7 +37,6 @@ cp auto-update.timer /usr/lib/systemd/system/wireguard-config-auto-update.timer
 
 rm -f /usr/local/libexec/ensure-kmod.sh
 
-mkdir -p /usr/local/libexec/wireguard-config-client
 cp ensure-kmod.sh auto-update.sh /usr/local/libexec/wireguard-config-client
 chmod a+x /usr/local/libexec/wireguard-config-client/auto-update.sh
 
