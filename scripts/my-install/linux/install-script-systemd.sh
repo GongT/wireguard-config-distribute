@@ -13,7 +13,7 @@ fi
 
 {
 	sed '/\[Service]/Q' client@.service
-	echo "Requires=wireguard-config-auto-update.service"
+	echo "Wants=wireguard-config-auto-update.service"
 	echo "After=wireguard-config-auto-update.service"
 	echo '[Service]'
 	sed '1,/\[Service]/d' client@.service
