@@ -29,6 +29,14 @@ func (opts *clientProgramOptions) Sanitize() error {
 		opts.NoAutoForwardUpnp = true
 	}
 
+	if opts.IpApi4 == "no" || opts.IpApi4 == "false" || opts.IpApi4 == "off" {
+		opts.IpApi4 = ""
+	}
+
+	if opts.IpApi6 == "no" || opts.IpApi6 == "false" || opts.IpApi6 == "off" {
+		opts.IpApi6 = ""
+	}
+
 	if opts.HostFile == "/etc/hosts" && runtime.GOOS == "windows" {
 		opts.HostFile = "C:/Windows/System32/drivers/etc/hosts"
 	}

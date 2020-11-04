@@ -20,5 +20,5 @@ ProtectControlGroups=yes
 StateDirectory=wireguard-config-client
 
 Restart=on-failure
-RestartSec=30s
+RestartSec=15min
 RestartPreventExitStatus=233

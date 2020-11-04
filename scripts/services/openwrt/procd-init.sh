@@ -23,7 +23,6 @@ update_now() {
 
 reset_config() {
 	_CONFIGS=(
-		[Gateway]=true
 		[EXTIP_NATIVE]=true
 		[EXTIP4_NO_UPNP]=true
 		[EXTIP4_API]=false

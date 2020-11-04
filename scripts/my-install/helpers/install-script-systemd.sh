@@ -21,24 +21,11 @@ mkdir -p /usr/local/libexec/wireguard-config-client
 	sed '1,/\[Service]/d' systemd/client@.service
 } >/usr/lib/systemd/system/wireguard-config-client@.service
 
-touch "/usr/local/libexec/wireguard-config-client/client-should-update"
-{
-	sed '/\[Service]/Q' systemd/auto-update.service
-	echo '[Service]'
-	if [[ -e "/usr/local/libexec/wireguard-config-client/client-should-update" ]]; then
-		echo 'ExecStart=/usr/local/libexec/wireguard-config-client/auto-update.sh client'
-	fi
-	if [[ -e "/usr/local/libexec/wireguard-config-client/server-should-update" ]]; then
-		echo 'ExecStart=/usr/local/libexec/wireguard-config-client/auto-update.sh server'
-	fi
-	sed '1,/\[Service]/d' systemd/auto-update.service
-} >/usr/lib/systemd/system/wireguard-config-auto-update.service
-cp systemd/auto-update.timer /usr/lib/systemd/system/wireguard-config-auto-update.timer
+bash ./systemd/install-update-service.sh client
 
 rm -f /usr/local/libexec/ensure-kmod.sh
 
-cp systemd/service-control.sh systemd/ensure-kmod.sh auto-update.sh /usr/local/libexec/wireguard-config-client
-chmod a+x /usr/local/libexec/wireguard-config-client/auto-update.sh
+cp systemd/service-control.sh systemd/ensure-kmod.sh /usr/local/libexec/wireguard-config-client
 
 START=$(date +%s)
 
@@ -49,10 +36,6 @@ for I; do
 	SERVICES+=("wireguard-config-client@$I.service")
 done
 
-systemctl enable wireguard-config-auto-update.timer
-systemctl restart wireguard-config-auto-update.timer
-
-systemctl stop wireguard-config-auto-update.service
 systemctl enable --now "${SERVICES[@]}"
 
 function checkStatus() {

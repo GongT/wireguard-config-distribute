@@ -33,7 +33,7 @@ fi
 
 declare -r REPO='GongT/wireguard-config-distribute'
 declare -r GET_FILE="$PROJ_TYPE$BIN_TYPE"
-declare -r DIST_ROOT="/usr/local/libexec/wireguard-config-$PROJ_TYPE"
+declare -r DIST_ROOT="/usr/local/libexec/wireguard-config-client"
 declare -r BINARY_FILE="$DIST_ROOT/$GET_FILE"
 declare -r LATEST_URL="https://api.github.com/repos/$REPO/releases?page=1&per_page=1"
 

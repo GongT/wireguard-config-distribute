@@ -20,12 +20,14 @@ require (
 	github.com/tatsushid/go-fastping v0.0.0-20160109021039-d7bb493dee3e
 	github.com/vishvananda/netlink v1.1.0
 	golang.org/x/crypto v0.0.0-20201016220609-9e8e0b390897
-	golang.org/x/net v0.0.0-20201027133719-8eef5233e2a1
-	golang.org/x/sys v0.0.0-20201027140754-0fcbb8f4928c
+	golang.org/x/lint v0.0.0-20200302205851-738671d3881b // indirect
+	golang.org/x/net v0.0.0-20201031054903-ff519b6c9102
+	golang.org/x/sys v0.0.0-20201101102859-da207088b7d1
 	golang.org/x/text v0.3.4 // indirect
+	golang.org/x/tools v0.0.0-20201103235415-b653051172e4 // indirect
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
 	golang.zx2c4.com/wireguard/wgctrl v0.0.0-20200609130330-bd2cb7843e1b
-	google.golang.org/genproto v0.0.0-20201026171402-d4b8fe4fd877 // indirect
+	google.golang.org/genproto v0.0.0-20201103154000-415bd0cd5df6 // indirect
 	google.golang.org/grpc v1.33.1
 	google.golang.org/protobuf v1.25.0
 	gopkg.in/natefinch/npipe.v2 v2.0.0-20160621034901-c1b8fa8bdcce // indirect
