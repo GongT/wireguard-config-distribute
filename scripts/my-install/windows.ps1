@@ -1,4 +1,5 @@
 #!/usr/bin/env pwsh
+#Requires -RunAsAdministrator
 
 Set-StrictMode -Version latest
 $ErrorActionPreference = "Stop"
@@ -41,10 +42,10 @@ function detectVersionChange() {
 	$downloadUrl = buildGithubReleaseUrl -Repo $Repo -TagName $releaseData.tag_name -GetFile $GetFile
 	if ($versionLocal -eq $releaseData.id) {
 		Write-Host -ForegroundColor Gray "    -> $versionLocal"
-		return Invoke-Command $callback -ArgumentList $false,$downloadUrl 
+		return Invoke-Command $callback -ArgumentList $false,$downloadUrl
 	} else {
-		Write-Host -ForegroundColor Gray "    -> 远程：$($releaseData.id)$versionLocal"
-		$ret = Invoke-Command $callback -ArgumentList $true,$downloadUrl 
+		Write-Host -ForegroundColor Gray "    -> $versionLocal → 远程：$($releaseData.id)"
+		$ret = Invoke-Command $callback -ArgumentList $true,$downloadUrl
 		Set-Content -Encoding utf8 -Path $versionFile -Value $releaseData.id
 		return $ret
 	}
@@ -54,15 +55,16 @@ function downloadGithubRelease() {
 	param (
 		[Parameter(Mandatory)][string]$Repo,
 		[Parameter(Mandatory)][string]$GetFile,
-		[Parameter(Mandatory)][string]$SaveAs,
+		[Parameter()][string]$SaveAs = $GetFile,
 		[Parameter(Mandatory)][string]$DistFolder
 	)
 
 	$versionFile = "$DistFolder/$SaveAs.version.txt"
-	$binaryFile = "$DistFolder/$SaveAs"
 
-	detectVersionChange -Repo $Repo -versionFile $versionFile -callback {
-		param($change, $downloadUrl )
+	$binaryFile = detectVersionChange -Repo $Repo -versionFile $versionFile -callback {
+		param($change, $downloadUrl)
+		$binaryFile = "$DistFolder/$SaveAs"
+		$downloadFile = "$DistFolder/$SaveAs.update"
 
 		if (-Not ($change)) {
 			Write-Host " * 已是最新版本"
@@ -70,16 +72,54 @@ function downloadGithubRelease() {
 			return $binaryFile
 		}
 	
+		Remove-Item $binaryFile -ErrorAction SilentlyContinue | Out-Null
+		Remove-Item $downloadFile -ErrorAction SilentlyContinue | Out-Null
+
 		# $releaseData.assets
 		Write-Host " * 有更新，开始下载："
 		Write-Host -ForegroundColor Gray "    远程: $downloadUrl"
-		Write-Host -ForegroundColor Gray "    本地:   $binaryFile"
-		Invoke-WebRequest-Wrap -Uri $downloadUrl -Out $binaryFile 
+		Write-Host -ForegroundColor Gray "    本地:   $downloadFile"
+		Invoke-WebRequest-Wrap -Uri $downloadUrl -OutFile $downloadFile
+
+		copyFileIf $downloadFile $binaryFile | Out-Null
 
 		return $binaryFile
 	}
+
+	return $binaryFile
 }
 
+function copyFileIf() {
+	param($from, $to)
+	
+	$TempFile = New-TemporaryFile
+	Copy-Item -Path $from -Destination $TempFile | Out-Null
+	$from = $TempFile	
+	
+	$MOVEFILE_REPLACE_EXISTING = 0x1
+	$MOVEFILE_DELAY_UNTIL_REBOOT = 0x4
+	$MOVEFILE_WRITE_THROUGH = 0x8
+		
+	### https://gist.github.com/marnix/7565364
+	### https://stackoverflow.com/questions/24391367/dllimport-in-powershell-for-accessing-c-style-32-bit-api-using-relative-path
+	$signature = @'
+		[DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
+		public static extern bool MoveFileEx(string lpExistingFileName, string lpNewFileName, UInt32 dwFlags);
+'@
+	Add-Type -MemberDefinition $signature -Name "MoveFile" -Namespace Win32Function
+
+	if ([Win32Function.MoveFile]::MoveFileEx($from, $to, $MOVEFILE_REPLACE_EXISTING + $MOVEFILE_WRITE_THROUGH)) {
+		return $true
+	}
+
+	write-host "文件被占用，将于下次重启时更新。"
+	$deleteResult = [Win32Function.MoveFile]::MoveFileEx($from, $to, $MOVEFILE_REPLACE_EXISTING + $MOVEFILE_DELAY_UNTIL_REBOOT)
+
+	if ($deleteResult -eq $false) {
+		throw (New-Object ComponentModel.Win32Exception) # calls GetLastError
+	}
+	return $false
+}
 
 function createConfig() {
 	Write-Output @"
@@ -137,6 +177,22 @@ function stringifyFunction() {
 	return $ret
 }
 
+function stopAllService() {
+	$serviceConfigList = Get-ChildItem -Path $distFolder -Depth 1 -Filter '*.xml'
+	foreach ($item in $serviceConfigList ) {
+		Write-Host "    停止服务：$item"
+		& "$distFolder/winsw.exe" stop $item
+	}
+}
+
+function startAllService() {
+	$serviceConfigList = Get-ChildItem -Path $distFolder -Depth 1 -Filter '*.xml'
+	foreach ($item in $serviceConfigList ) {
+		Write-Host "    启动服务：$item"
+		& "$distFolder/winsw.exe" start $item
+	}
+}
+
 function createUpdateSchedule() {
 	$taskPath = "\GongT\"
 	$taskName = "wireguard-config-client-auto-update"
@@ -181,31 +237,45 @@ function createUpdateSchedule() {
 $proxyServer = 'http://proxy-server.:3271/'
 function Invoke-WebRequest-Wrap() {
 	param (
-		[Parameter(Mandatory)][string]$Uri,
-		[Parameter()][string]$Out
+		[Parameter(Mandatory)][Uri]$Uri,
+		[Parameter()][string]$OutFile
 	)
 
-	#  -Authentication Basic -Credential ""
-	Invoke-WebRequest `
-		-MaximumRetryCount 10 `
-		-RetryIntervalSec 5 `
-		-UserAgent 'GongT/wireguard-config-distribute' `
-		-Proxy $proxyServer `
-		-Uri $Uri `
-		-OutFile $Out `
-		-Resume
-}
+	$param = @{}
+	if ($OutFile) {
+		$param.OutFile = $OutFile
+		$param.Resume = $true
+	}
+	if ($proxyServer) {
+		$param.Proxy = $proxyServer
+	}
 
-sc.exe query wg_normal | Out-Null
-if ($lastexitcode -eq 0) {
-	Write-Host "删除旧服务……"
-	sc.exe stop wg_normal | Out-Null
-	sc.exe delete wg_normal
-	sc.exe query wg_normal | Out-Null
-	if ($lastexitcode -ne 0) {
-		Write-Error "删除失败，返回：$lastexitcode"
+	#  -Authentication Basic -Credential ""
+	try {
+		$response = Invoke-WebRequest @param `
+			-MaximumRetryCount 10 `
+			-RetryIntervalSec 5 `
+			-UserAgent 'GongT/wireguard-config-distribute' `
+			-Uri $Uri
+		return $response
+	} catch {
+		Write-Host $_.Exception
+		exit 1
 	}
 }
+
+# sc.exe query wg_normal | Out-Null
+# if ($lastexitcode -eq 0) {
+# 	Write-Host "删除旧服务……"
+# 	sc.exe stop wg_normal | Out-Null
+# 	sc.exe delete wg_normal
+# 	sc.exe query wg_normal | Out-Null
+# 	if ($lastexitcode -ne 0) {
+# 		$le = $lastexitcode
+# 		sc.exe query wg_normal
+# 		Write-Error "删除失败，返回：$le"
+# 	}
+# }
 
 if ($env:OneDriveConsumer) {
 	$Root = "$env:OneDriveConsumer/Software/WireguardConfig"
@@ -237,12 +307,14 @@ if (-Not (Test-Path "$distFolder/wireguard.exe")) {
 	}
 }
 
-$winswBinary = (downloadGithubRelease -repo 'winsw/winsw' -getfile 'WinSW.NET461.exe' -saveas 'winsw.exe' -distfolder $distFolder)
+stopAllService
+
+$winswBinary = downloadGithubRelease -repo 'winsw/winsw' -getfile 'WinSW.NET461.exe' -saveas 'winsw.exe' -distfolder $distFolder
 Write-Host "winsw版本：" -NoNewline
 & $winswBinary --version
 if ($lastexitcode -ne 0) { Write-Error "程序无法运行！($lastexitcode)" }
 
-$clientBinary = (downloadGithubRelease -repo 'GongT/wireguard-config-distribute' -getfile 'client.exe' -saveas 'wireguard-config-distribute-client.exe' -distfolder $distFolder)
+$clientBinary = downloadGithubRelease -repo 'GongT/wireguard-config-distribute' -getfile 'client.exe' -distfolder $distFolder
 Write-Host "客户端版本：" -NoNewline
 & $clientBinary /version
 if ($lastexitcode -ne 0) {
@@ -253,30 +325,30 @@ $serviceConfigFile = "$distFolder/$($env:WIREGUARD_GROUP).xml"
 createConfig | Out-File -Encoding utf8 -FilePath $serviceConfigFile
 
 Write-Host "安装任务计划……"
-Copy-Item ../services/auto-update.ps1 $distFolder
+Copy-Item "$PSScriptRoot/../services/auto-update.ps1" $distFolder | Out-Null
 Set-Content -Path "$distFolder/lib.ps1" -Value @(
 	(stringifyFunction Invoke-WebRequest-Wrap),
 	(stringifyFunction buildGithubReleaseUrl),
-	(stringifyFunction detectVersionChange)
+	(stringifyFunction detectVersionChange),
+	(stringifyFunction copyFileIf),
+	(stringifyFunction stopAllService),
+	(stringifyFunction startAllService)
 )
 createUpdateSchedule
 
-& $winswBinary test $serviceConfigFile
-if ($lastexitcode -ne 0) {
+sc.exe query wg_normal | Out-Null
+if ($lastexitcode -eq 0) {
+	Write-Host "更新Windows服务定义……"
+	& $winswBinary refresh $serviceConfigFile
+} else {
 	Write-Host "安装Windows服务……"
 	& $winswBinary install $serviceConfigFile
 	if ($lastexitcode -ne 0) { 
 		Write-Error "安装失败，返回：$lastexitcode"
 	}
-} else {
-	& $winswBinary refresh $serviceConfigFile
 }
 
 
-Write-Host "启动……"
-& $winswBinary start $serviceConfigFile
-if ($lastexitcode -ne 0) { 
-	Write-Error "启动失败，返回：$lastexitcode"
-}
+startAllService
 
 Write-Host "完成！"

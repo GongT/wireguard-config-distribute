@@ -16,21 +16,18 @@ function doUpdate() {
 	param($downloadUrl)
 	$downloadFile = "$distFolder/$getFile.update"
 	$binaryFile = "$distFolder/$getFile"
+
+	Remove-Item $binaryFile -ErrorAction SilentlyContinue | Out-Null
+	Remove-Item $downloadFile -ErrorAction SilentlyContinue | Out-Null
+
 	Write-Host -ForegroundColor Gray "    远程: $downloadUrl"
 	Write-Host -ForegroundColor Gray "    本地:   $downloadFile"
-	Invoke-WebRequest-Wrap -Uri $downloadUrl -Out $downloadFile
+	Invoke-WebRequest-Wrap -Uri $downloadUrl -OutFile $downloadFile
 
-	$serviceConfigList = Get-ChildItem -Filter *.xml
-	foreach ($item in $serviceConfigList ) {
-		Write-Host "    停止服务：$item"
-		./winsw.exe stop $item
-	}
+	stopAllService
 	Write-Host "    重命名文件……"
 	Copy-Item -Path $downloadFile -Destination $binaryFile
-	foreach ($item in $serviceConfigList ) {
-		Write-Host "    启动服务：$item"
-		./winsw.exe start $item
-	}
+	startAllService
 }
 
 detectVersionChange -Repo $Repo -versionFile $versionFile -callback {
@@ -41,6 +38,5 @@ detectVersionChange -Repo $Repo -versionFile $versionFile -callback {
 	} else {
 		Write-Host " * 已是最新版本"
 		Write-Host -ForegroundColor Gray "    文件:   $binaryFile"
-		return $binaryFile
 	}
 }
