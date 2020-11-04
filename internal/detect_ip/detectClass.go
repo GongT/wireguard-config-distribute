@@ -96,7 +96,7 @@ func (d *Detect) Execute() {
 		}
 	}
 
-	if !gotIpv4 && len(d.api4) > 0 {
+	if !gotIpv4 && len(d.api4) > 0 && d.api4 != "no" && d.api4 != "off" {
 		tools.Debug("get ipv4 address from http (%v):", d.api4)
 		if ip, err := httpGetPublicIp4(d.api4); ip != nil {
 			gotIpv4 = true
@@ -109,7 +109,7 @@ func (d *Detect) Execute() {
 		}
 	}
 
-	if !gotIpv6 && len(d.api6) > 0 {
+	if !gotIpv6 && len(d.api6) > 0 && d.api6 != "no" && d.api6 != "off" {
 		tools.Debug("get ipv6 address from http (%v):", d.api6)
 		if ip, err := httpGetPublicIp6(d.api6); ip != nil {
 			gotIpv6 = true

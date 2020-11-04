@@ -14,16 +14,16 @@ fi
 mkdir -p /usr/local/libexec/wireguard-config-client
 
 {
-	sed '/\[Service]/Q' client@.service
+	sed '/\[Service]/Q' systemd/client@.service
 	echo "Wants=wireguard-config-auto-update.service"
 	echo "After=wireguard-config-auto-update.service"
 	echo '[Service]'
-	sed '1,/\[Service]/d' client@.service
+	sed '1,/\[Service]/d' systemd/client@.service
 } >/usr/lib/systemd/system/wireguard-config-client@.service
 
 touch "/usr/local/libexec/wireguard-config-client/client-should-update"
 {
-	sed '/\[Service]/Q' auto-update.service
+	sed '/\[Service]/Q' systemd/auto-update.service
 	echo '[Service]'
 	if [[ -e "/usr/local/libexec/wireguard-config-client/client-should-update" ]]; then
 		echo 'ExecStart=/usr/local/libexec/wireguard-config-client/auto-update.sh client'
@@ -31,13 +31,13 @@ touch "/usr/local/libexec/wireguard-config-client/client-should-update"
 	if [[ -e "/usr/local/libexec/wireguard-config-client/server-should-update" ]]; then
 		echo 'ExecStart=/usr/local/libexec/wireguard-config-client/auto-update.sh server'
 	fi
-	sed '1,/\[Service]/d' auto-update.service
+	sed '1,/\[Service]/d' systemd/auto-update.service
 } >/usr/lib/systemd/system/wireguard-config-auto-update.service
-cp auto-update.timer /usr/lib/systemd/system/wireguard-config-auto-update.timer
+cp systemd/auto-update.timer /usr/lib/systemd/system/wireguard-config-auto-update.timer
 
 rm -f /usr/local/libexec/ensure-kmod.sh
 
-cp ensure-kmod.sh auto-update.sh /usr/local/libexec/wireguard-config-client
+cp systemd/service-control.sh systemd/ensure-kmod.sh auto-update.sh /usr/local/libexec/wireguard-config-client
 chmod a+x /usr/local/libexec/wireguard-config-client/auto-update.sh
 
 START=$(date +%s)

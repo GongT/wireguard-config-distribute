@@ -18,22 +18,6 @@ function buildGithubReleaseUrl() {
 	echo "https://github.com/$REPO/releases/download/$1/$GET_FILE"
 }
 
-function allServices() {
-	local ACTION=$1
-
-	set +e
-	mapfile -t SERVICES < <(systemctl list-units --no-pager --no-legend wireguard-config-* | cut -d ' ' -f 1)
-	info "$ACTION services:"
-	for I in "${SERVICES[@]}"; do
-		if [[ $I == "wireguard-config-auto-update"* ]]; then
-			mute "  * $I ... (skip)"
-			continue
-		fi
-		info "  * $I ..."
-		systemctl --no-block "$ACTION" "$I"
-	done
-}
-
 if getent hosts proxy-server. &>/dev/null && curl --proxy proxy-server.:3271 www.google.com &>/dev/null; then
 	export PROXY="http://proxy-server.:3271/"
 	export https_proxy=${PROXY} http_proxy=${PROXY} all_proxy=${PROXY} HTTPS_PROXY=${PROXY} HTTP_PROXY=${PROXY} ALL_PROXY=${PROXY} NO_PROXY="10.*,192.*,127.*,172.*"
@@ -60,7 +44,11 @@ declare -r VERSION_FILE="$DIST_ROOT/$GET_FILE.version.txt"
 info "检查 $REPO 版本……"
 mute "    来源： $LATEST_URL"
 declare RELEASE_DATA
-RELEASE_DATA=$(curl -s "$LATEST_URL" | jq -M -c ".[0] // null")
+RELEASE_DATA=$(curl -s "$LATEST_URL")
+RELEASE_DATA=$(echo "$RELEASE_DATA" | jq -M -c ".[0] // null" || {
+	echo "$RELEASE_DATA"
+	die "无法获取最新版本信息"
+})
 if [[ $RELEASE_DATA == "null" ]]; then
 	die "failed get release data."
 fi
@@ -75,7 +63,7 @@ declare -i REMOTE_VERSION=$(echo "$RELEASE_DATA" | jq -r -M -c ".id")
 if [[ $VERSION_LOCAL -eq $REMOTE_VERSION ]]; then
 	info " * 已是最新版本"
 	mute "    文件:   $BINARY_FILE"
-	allServices start
+	bash "service-control.sh" start
 	exit 0
 fi
 
@@ -84,6 +72,7 @@ info " * 有更新，开始下载："
 mute "    远程: $downloadUrl"
 mute "    本地:   $BINARY_FILE"
 wget --quiet --show-progress --progress=bar -O "$BINARY_FILE.downloading" "$downloadUrl"
+echo >&2
 rm -f "$BINARY_FILE"
 mv "$BINARY_FILE.downloading" "$BINARY_FILE"
 chmod a+x "$BINARY_FILE"
@@ -96,4 +85,4 @@ echo -n "当前版本："
 echo
 echo "Ah, that's ♂ good."
 
-allServices restart
+bash "service-control.sh" restart

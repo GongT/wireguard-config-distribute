@@ -9,7 +9,7 @@ cd "$TMPD"
 
 SIZE=""
 while true; do
-	I=$(dd if=/dev/stdin count=1 bs=1 status=none)
+	I=$(dd if=/proc/$$/fd/0 count=1 bs=1 status=none)
 	if [[ -z $I ]] || [[ $I == $'\n' ]]; then
 		break
 	fi
@@ -21,7 +21,7 @@ if [[ $SIZE -le 0 ]]; then
 	exit 1
 fi
 
-dd if=/dev/stdin count=1 bs=$SIZE status=none \
+dd if=/proc/$$/fd/0 count=1 bs=$SIZE status=none \
 	| tar -xzf- \
 		--transform "s#^/#./#"
 
