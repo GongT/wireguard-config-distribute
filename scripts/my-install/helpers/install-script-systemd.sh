@@ -10,16 +10,13 @@ function die() {
 if [[ "$(basename "$(readlink -e /proc/1/exe)")" != "systemd" ]]; then
 	die "remote server did not running systemd, please check environment."
 fi
+if ! command wg &>/dev/null; then
+	die "wireguard tools (wg binary) is not found"
+fi
 
 mkdir -p /usr/local/libexec/wireguard-config-client
 
-{
-	sed '/\[Service]/Q' systemd/client@.service
-	echo "Wants=wireguard-config-auto-update.service"
-	echo "After=wireguard-config-auto-update.service"
-	echo '[Service]'
-	sed '1,/\[Service]/d' systemd/client@.service
-} >/usr/lib/systemd/system/wireguard-config-client@.service
+cp systemd/client@.service /usr/lib/systemd/system/wireguard-config-client@.service
 
 bash ./systemd/install-update-service.sh client
 

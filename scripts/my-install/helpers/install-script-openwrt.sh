@@ -10,6 +10,9 @@ function die() {
 if [[ "$(basename "$(readlink -e /proc/1/exe)")" != "procd" ]]; then
 	die "remote server did not running procd, please check environment."
 fi
+if ! command wg &>/dev/null; then
+	die "wireguard tools (wg binary) is not found"
+fi
 
 mkdir -p /usr/local/libexec/wireguard-config-client
 cp auto-update.sh openwrt/service-control.sh /usr/local/libexec/wireguard-config-client

@@ -9,4 +9,4 @@ cd "$MYDIR/../services"
 	"$MYDIR/helpers/install-script-systemd.sh" \
 	auto-update.sh \
 	systemd \
-	| bash -c "$(<"$MYDIR/helpers/script-receiver.sh")" normal
+	| bash -c "$(<"$MYDIR/helpers/script-receiver.sh")" -- normal
