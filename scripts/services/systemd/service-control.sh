@@ -15,7 +15,7 @@ function mute() {
 	echo -e "\e[2m$*\e[0m" >&2
 }
 
-mapfile -t SERVICES < <(systemctl list-units --no-pager --no-legend wireguard-config-* | cut -d ' ' -f 1)
+mapfile -t SERVICES < <(systemctl list-units --no-pager --no-legend 'wireguard-config-*' | awk '{print $1}')
 info "$ACTION services: (no block)"
 for I in "${SERVICES[@]}"; do
 	if [[ $I == "wireguard-config-auto-update"* ]]; then
