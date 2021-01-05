@@ -44,7 +44,8 @@ function  SetExecuteMethod() {
 			if ( Test-Path $env:SYSTEM_COMMON_CACHE/apk ) {
 				$cache += "--volume=$env:SYSTEM_COMMON_CACHE/apk:/etc/apk/cache"
 			}
-			Write-Host -ForegroundColor Gray " + podman build $cache --file - --tag gongt/wg-config-build"
+
+			$f = "/tmp/buildscript.dockerfile"
 			Write-Output "
 				FROM gongt/alpine-cn:edge
 				ENV PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
@@ -55,7 +56,9 @@ function  SetExecuteMethod() {
 				 && go get -v -u github.com/GongT/go-generate-struct-interface/cmd/go-generate-struct-interface github.com/golang/protobuf/protoc-gen-go \
 				 && command -v protoc-gen-go || ( find / -name protoc-gen-go ; exit 1) \
 				 && command -v go-generate-struct-interface || ( find / -name go-generate-struct-interface ; exit 1)
-			" | podman build @cache --file - --tag "gongt/wg-config-build"
+			" | Out-File -FilePath $f -Encoding utf8
+			Write-Host -ForegroundColor Gray " + podman build $cache --file $f --tag gongt/wg-config-build"
+			podman build @cache --file $f --tag "gongt/wg-config-build"
 			if ($? -eq $false) {
 				Write-Error "Failed create image for build"
 				exit 1
@@ -75,7 +78,7 @@ function x() {
 	}
 	if ( $LASTEXITCODE -ne 0 ) {
 		$CMDL = $args -Join " "
-		Write-Output "Failed run:`n`t$CMDL`nExit Code: $LASTEXITCODE"
+		Write-Output "Failed run:`n`t$CMDL`$LASTEXITCODE"
 		exit $LASTEXITCODE
 	}
 }
