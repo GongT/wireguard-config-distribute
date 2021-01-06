@@ -16,30 +16,9 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ github.token }}
           DELETE: "yes"
-  prerelease:
-    name: Create latest release
-    runs-on: ubuntu-latest
-    outputs:
-      upload_url: ${{ steps.create_release.outputs.upload_url }}
-    steps:
-      - name: checkout
-        uses: actions/checkout@v2
-      - name: Create Release
-        id: create_release
-        uses: GongT/actions-recreate-release@0eccdfe77165640ce33239b47cae6ea3de465cc5
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: latest
-          release_name: Latest
-          body: Auto build from ${{ github.sha }} (master)
-          draft: false
-          prerelease: false
-
   build-musl:
     name: Build musl version
-    runs-on: [self-hosted, linux, golang]
-    needs: prerelease
+    runs-on: [self-hosted, linux]
     env:
       http_proxy: http://proxy-server.:3271
       https_proxy: http://proxy-server.:3271
@@ -52,25 +31,19 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Build
-        id: build
         run: |
           pwsh ./scripts/build.ps1 musl
 
-      - name: Upload Release Asset
-        id: upload-release-asset
-        uses: actions/upload-release-asset@v1.0.1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: upload
+        uses: actions/upload-artifact@v2
         with:
-          upload_url: ${{ needs.prerelease.outputs.upload_url }}
-          asset_path: dist/${{ steps.build.outputs.artifact }}
-          asset_name: ${{ steps.build.outputs.artifact }}
-          asset_content_type: application/octet-stream
+          name: my-artifact
+          path: dist/client.alpine
+          if-no-files-found: error
 
   build:
     name: Build
     runs-on: ${{ matrix.os }}
-    needs: prerelease
     strategy:
       fail-fast: false
       matrix:
@@ -111,8 +84,6 @@ jobs:
       - name: Build
         id: build
         shell: pwsh
-        env:
-          ASSETS_BASE_URL: ${{ needs.prerelease.outputs.upload_url }}/dist
         run: |
           pwsh ./scripts/build.ps1 ${{ matrix.project }}
           if ($?) {
@@ -123,13 +94,66 @@ jobs:
             exit 1
           }
 
+      - name: upload
+        uses: actions/upload-artifact@v2
+        with:
+          name: my-artifact
+          path: dist/${{ matrix.project }}*
+          if-no-files-found: error
+
+  release:
+    name: Create latest release
+    needs:
+      - build
+      - build-musl
+    runs-on: ubuntu-latest
+    outputs:
+      upload_url: ${{ steps.create_release.outputs.upload_url }}
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+
+      - name: Create Release
+        id: create_release
+        uses: GongT/actions-recreate-release@0eccdfe77165640ce33239b47cae6ea3de465cc5
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: latest
+          release_name: Latest
+          body: Auto build from ${{ github.sha }} (master)
+          draft: false
+          prerelease: false
+
+  upload:
+    name: Upload release files
+    needs:
+      - release
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: true
+      matrix:
+        project:
+          - client
+          - client.alpine
+          - client.exe
+          - server
+          - tool
+          - tool.exe
+    steps:
+      - name: Download Artifact
+        id: download
+        uses: actions/download-artifact@v2
+        with:
+          name: my-artifact
+          path: ./dist/
+
       - name: Upload Release Asset
-        id: upload-release-asset
         uses: actions/upload-release-asset@v1.0.1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          upload_url: ${{ needs.prerelease.outputs.upload_url }}
-          asset_path: dist/${{ steps.build.outputs.artifact }}
-          asset_name: ${{ steps.build.outputs.artifact }}
+          upload_url: ${{ needs.release.outputs.upload_url }}
+          asset_path: ${{ steps.download.outputs.download-path }}/${{ matrix.project }}
+          asset_name: ${{ matrix.project }}
           asset_content_type: application/octet-stream
