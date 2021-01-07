@@ -77,7 +77,7 @@ func parseCommandline() error {
 		extra, err := parser.Parse()
 
 		if CommonOption.ShowVersion {
-			tools.ShowVersion()
+			tools.ShowVersion(os.Stdout)
 			os.Exit(0)
 		}
 

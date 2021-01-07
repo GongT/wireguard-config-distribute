@@ -1,12 +1,15 @@
 package tools
 
-import "fmt"
+import (
+	"fmt"
+	"io"
+)
 
 var build_date string
 var build_git_hash string
 
-func ShowVersion() {
-	Error("Build Date: %v, Git Hash: %v", build_date, build_git_hash)
+func ShowVersion(writer io.Writer) {
+	fmt.Fprint(writer, fmt.Sprintf("Build Date: %v, Git Hash: %v\n", build_date, build_git_hash))
 }
 
 func GetVersion() string {
