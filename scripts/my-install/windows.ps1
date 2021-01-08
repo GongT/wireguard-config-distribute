@@ -1,6 +1,8 @@
 #!/usr/bin/env pwsh
 #Requires -RunAsAdministrator
 
+$proxyServer = 'http://proxy-server.:3271/'
+
 Set-StrictMode -Version latest
 $ErrorActionPreference = "Stop"
 
@@ -234,7 +236,6 @@ function createUpdateSchedule() {
 	Register-ScheduledTask -TaskName $taskName -TaskPath $taskPath -InputObject $TaskInstance | Out-Null
 }
 
-$proxyServer = 'http://proxy-server.:3271/'
 function Invoke-WebRequest-Wrap() {
 	param (
 		[Parameter(Mandatory)][Uri]$Uri,
