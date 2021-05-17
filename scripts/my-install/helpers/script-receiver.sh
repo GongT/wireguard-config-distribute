@@ -28,3 +28,5 @@ dd if=/proc/$$/fd/0 count=1 bs=$SIZE status=none \
 chmod a+x __script.sh
 
 ./__script.sh "$@"
+
+echo "remote script done." >&2

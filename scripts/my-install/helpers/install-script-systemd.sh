@@ -16,12 +16,20 @@ fi
 
 mkdir -p /usr/local/libexec/wireguard-config-client
 
-cp systemd/client@.service /usr/lib/systemd/system/wireguard-config-client@.service
+echo "create wireguard-config-client@.service" >&2
+{
+	sed '/\[Service]/Q' systemd/client@.service
+	echo '[Service]'
+	echo "ExecStartPre=-+/usr/local/libexec/wireguard-config-client/auto-update.sh client"
+	sed '1,/\[Service]/d' systemd/client@.service
+} >/usr/lib/systemd/system/wireguard-config-client@.service
 
+echo "install update service" >&2
 bash ./systemd/install-update-service.sh client
 
 rm -f /usr/local/libexec/ensure-kmod.sh
 
+echo "copy client files" >&2
 cp systemd/service-control.sh systemd/ensure-kmod.sh /usr/local/libexec/wireguard-config-client
 
 START=$(date +%s)
@@ -33,6 +41,7 @@ for I; do
 	SERVICES+=("wireguard-config-client@$I.service")
 done
 
+echo "enable services: ${SERVICES[*]}" >&2
 systemctl enable --now "${SERVICES[@]}"
 
 function checkStatus() {

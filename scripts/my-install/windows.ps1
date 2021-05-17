@@ -2,6 +2,7 @@
 #Requires -RunAsAdministrator
 
 $proxyServer = 'http://proxy-server.:3271/'
+$winswBinaryDownloadName = 'WinSW-net461.exe'
 
 Set-StrictMode -Version latest
 $ErrorActionPreference = "Stop"
@@ -44,10 +45,10 @@ function detectVersionChange() {
 	$downloadUrl = buildGithubReleaseUrl -Repo $Repo -TagName $releaseData.tag_name -GetFile $GetFile
 	if ($versionLocal -eq $releaseData.id) {
 		Write-Host -ForegroundColor Gray "    -> $versionLocal"
-		return Invoke-Command $callback -ArgumentList $false,$downloadUrl
+		return Invoke-Command $callback -ArgumentList $false, $downloadUrl
 	} else {
 		Write-Host -ForegroundColor Gray "    -> $versionLocal → 远程：$($releaseData.id)"
-		$ret = Invoke-Command $callback -ArgumentList $true,$downloadUrl
+		$ret = Invoke-Command $callback -ArgumentList $true, $downloadUrl
 		Set-Content -Encoding utf8 -Path $versionFile -Value $releaseData.id
 		return $ret
 	}
@@ -114,7 +115,7 @@ function copyFileIf() {
 		return $true
 	}
 
-	write-host "文件被占用，将于下次重启时更新。"
+	Write-Host "文件被占用，将于下次重启时更新。"
 	$deleteResult = [Win32Function.MoveFile]::MoveFileEx($from, $to, $MOVEFILE_REPLACE_EXISTING + $MOVEFILE_DELAY_UNTIL_REBOOT)
 
 	if ($deleteResult -eq $false) {
@@ -180,6 +181,9 @@ function stringifyFunction() {
 }
 
 function stopAllService() {
+	if (-Not (Test-Path "$distFolder/winsw.exe")) {
+		return
+	}
 	$serviceConfigList = Get-ChildItem -Path $distFolder -Depth 1 -Filter '*.xml'
 	foreach ($item in $serviceConfigList ) {
 		Write-Host "    停止服务：$item"
@@ -205,7 +209,7 @@ function createUpdateSchedule() {
 
 	$acl = Get-Acl $distFolder
 	$AccessRule = New-Object -TypeName System.Security.AccessControl.FileSystemAccessRule `
-			-ArgumentList "NT AUTHORITY\NetworkService","FullControl","Allow" 
+		-ArgumentList "NT AUTHORITY\NetworkService", "FullControl", "Allow" 
 	$acl.SetAccessRule($AccessRule)
 	Set-Acl $distFolder -AclObject $acl
 
@@ -310,7 +314,7 @@ if (-Not (Test-Path "$distFolder/wireguard.exe")) {
 
 stopAllService
 
-$winswBinary = downloadGithubRelease -repo 'winsw/winsw' -getfile 'WinSW.NET461.exe' -saveas 'winsw.exe' -distfolder $distFolder
+$winswBinary = downloadGithubRelease -repo 'winsw/winsw' -getfile $winswBinaryDownloadName -saveas 'winsw.exe' -distfolder $distFolder
 Write-Host "winsw版本：" -NoNewline
 & $winswBinary --version
 if ($lastexitcode -ne 0) { Write-Error "程序无法运行！($lastexitcode)" }

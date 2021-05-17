@@ -15,9 +15,8 @@ mkdir -p /usr/local/libexec/wireguard-config-client
 
 {
 	sed '/\[Service]/Q' systemd/server.service
-	echo "Wants=wireguard-config-auto-update.service"
-	echo "After=wireguard-config-auto-update.service"
 	echo '[Service]'
+	echo "ExecStartPre=-+/usr/local/libexec/wireguard-config-client/auto-update.sh server"
 	sed '1,/\[Service]/d' systemd/server.service
 } >/usr/lib/systemd/system/wireguard-config-server.service
 
