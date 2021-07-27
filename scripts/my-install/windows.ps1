@@ -22,6 +22,16 @@ function buildGithubReleaseUrl() {
 	return "https://github.com/$Repo/releases/download/$TagName/$GetFile"
 }
 
+function getLocalVersion() {
+	$binaryFile = "$distFolder/$getFile"
+	if (Test-Path -Path $binaryFile  ) {
+		$v = /usr/local/libexec/wireguard-config-client/client --version 2>$null | Select-String -Pattern "Hash:(.+)"
+		return $v.Matches.Groups[1].Value.Trim()
+	} else {
+		return ""
+	}
+}
+
 function detectVersionChange() {	
 	param (
 		[Parameter(Mandatory)][string]$Repo,
@@ -32,22 +42,17 @@ function detectVersionChange() {
 	$releaseDataUrl = "https://api.github.com/repos/$Repo/releases?page=1&per_page=1"
 	
 	Write-Host "检查 $Repo 版本……"
+	$versionLocal = getLocalVersion
+
 	Write-Host -ForegroundColor Gray "    来源： $releaseDataUrl"
 	$releaseData = (Invoke-WebRequest-Wrap -Uri $releaseDataUrl | ConvertFrom-Json)[0]
 
-	if (Test-Path -Path $versionFile) {
-		Write-Host -ForegroundColor Gray "    记录文件： $versionFile"
-		[int]$versionLocal = Get-Content -Encoding utf8 $versionFile
-	} else {
-		Write-Host -ForegroundColor Gray "    记录文件： 不存在"
-		[int]$versionLocal = 0
-	}
 	$downloadUrl = buildGithubReleaseUrl -Repo $Repo -TagName $releaseData.tag_name -GetFile $GetFile
-	if ($versionLocal -eq $releaseData.id) {
-		Write-Host -ForegroundColor Gray "    -> $versionLocal"
+	if ($versionLocal -eq $releaseData.target_commitish) {
+		Write-Host -ForegroundColor Gray "    ~ 没有更新"
 		return Invoke-Command $callback -ArgumentList $false, $downloadUrl
 	} else {
-		Write-Host -ForegroundColor Gray "    -> $versionLocal → 远程：$($releaseData.id)"
+		Write-Host -ForegroundColor Gray "    -> 有更新: $versionLocal → 远程：$($releaseData.id)"
 		$ret = Invoke-Command $callback -ArgumentList $true, $downloadUrl
 		Set-Content -Encoding utf8 -Path $versionFile -Value $releaseData.id
 		return $ret

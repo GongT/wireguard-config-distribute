@@ -33,10 +33,9 @@ function doUpdate() {
 detectVersionChange -Repo $Repo -versionFile $versionFile -callback {
 	param($change, $downloadUrl)
 	if ($change) {
-		Write-Host " * 有更新，开始下载："
+		Write-Host " * 开始下载："
 		doUpdate $downloadUrl
-	} else {
-		Write-Host " * 已是最新版本"
-		Write-Host -ForegroundColor Gray "    文件:   $binaryFile"
 	}
+	
+	Write-Host "当前版本: $(getLocalVersion)"
 }

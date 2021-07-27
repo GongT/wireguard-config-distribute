@@ -18,6 +18,16 @@ function buildGithubReleaseUrl() {
 	echo "https://github.com/$REPO/releases/download/$1/$GET_FILE"
 }
 
+function getCurrentInstalledVersion() {
+	local OUTPUT
+	OUTPUT=$("$BINARY_FILE" --version 2>/dev/null || true)
+	if [[ ! $OUTPUT ]]; then
+		return
+	fi
+
+	echo "$OUTPUT" | grep -o 'Hash:.*' | awk '{print $2}'
+}
+
 if getent hosts proxy-server. &>/dev/null && curl --proxy proxy-server.:3271 www.google.com &>/dev/null; then
 	export PROXY="http://proxy-server.:3271/"
 	export https_proxy=${PROXY} http_proxy=${PROXY} all_proxy=${PROXY} HTTPS_PROXY=${PROXY} HTTP_PROXY=${PROXY} ALL_PROXY=${PROXY} NO_PROXY="10.*,192.*,127.*,172.*"
@@ -40,6 +50,14 @@ declare -r LATEST_URL="https://api.github.com/repos/$REPO/releases?page=1&per_pa
 mkdir -p "$DIST_ROOT"
 
 info "检查 $REPO 版本……"
+
+if [[ -e $BINARY_FILE ]]; then
+	declare -r VERSION_LOCAL=$(getCurrentInstalledVersion)
+else
+	declare -r VERSION_LOCAL=
+fi
+mute "    本地版本： $VERSION_LOCAL"
+
 mute "    来源： $LATEST_URL"
 declare RELEASE_DATA
 RELEASE_DATA=$(curl -s "$LATEST_URL")
@@ -51,14 +69,10 @@ if [[ $RELEASE_DATA == "null" ]]; then
 	die "failed get release data."
 fi
 
-if [[ -e "$BINARY_FILE" ]]; then
-	declare -r VERSION_LOCAL=$("$BINARY_FILE")
-else
-	declare -r VERSION_LOCAL=0
-fi
+declare REMOTE_VERSION=$(echo "$RELEASE_DATA" | jq -r -M -c ".target_commitish")
+mute "    远程版本： $REMOTE_VERSION"
 
-declare -i REMOTE_VERSION=$(echo "$RELEASE_DATA" | jq -r -M -c ".id")
-if [[ $VERSION_LOCAL -eq $REMOTE_VERSION ]]; then
+if [[ $VERSION_LOCAL == $REMOTE_VERSION ]]; then
 	info " * 已是最新版本"
 	mute "    文件:   $BINARY_FILE"
 	[[ ${DISABLE_RESTART:-} ]] || bash "service-control.sh" start
@@ -76,7 +90,7 @@ mv "$BINARY_FILE.downloading" "$BINARY_FILE"
 chmod a+x "$BINARY_FILE"
 
 echo -n "当前版本："
-"$BINARY_FILE" --version 2>/dev/null || die "binary file not executable"
+getCurrentInstalledVersion
 
 echo
 echo "Ah, that's ♂ good."

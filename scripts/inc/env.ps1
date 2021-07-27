@@ -23,7 +23,7 @@ $global:CONFIG_VARIABLE_PACKAGE = "github.com/gongt/wireguard-config-distribute/
 if ($env:GITHUB_SHA) {
 	$GH = $env:GITHUB_SHA
 } else {
-	$GH = git log -1 --pretty=format:%h
+	$GH = git log -1 --pretty=format:%H
 	git diff-index --quiet HEAD
 	if ( $? -eq $false ) { $GH += "[M]" }
 }
