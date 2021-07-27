@@ -11,4 +11,5 @@ cd "$MYDIR/../services"
 	"$MYDIR/helpers/install-script-openwrt.sh" \
 	auto-update.sh \
 	openwrt \
-	| ssh -T -o "SendEnv" "$RHOST" bash -l "<(echo $(base64 -w0 "$MYDIR/helpers/script-receiver.sh") | base64 -d)" normal
+	| ssh "$RHOST" bash
+	

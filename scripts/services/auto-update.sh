@@ -39,8 +39,6 @@ declare -r LATEST_URL="https://api.github.com/repos/$REPO/releases?page=1&per_pa
 
 mkdir -p "$DIST_ROOT"
 
-declare -r VERSION_FILE="$DIST_ROOT/$GET_FILE.version.txt"
-
 info "检查 $REPO 版本……"
 mute "    来源： $LATEST_URL"
 declare RELEASE_DATA
@@ -53,17 +51,17 @@ if [[ $RELEASE_DATA == "null" ]]; then
 	die "failed get release data."
 fi
 
-if [[ -e $VERSION_FILE ]]; then
-	declare -ir VERSION_LOCAL=$(<"$VERSION_FILE")
+if [[ -e "$BINARY_FILE" ]]; then
+	declare -r VERSION_LOCAL=$("$BINARY_FILE")
 else
-	declare -ir VERSION_LOCAL=0
+	declare -r VERSION_LOCAL=0
 fi
 
 declare -i REMOTE_VERSION=$(echo "$RELEASE_DATA" | jq -r -M -c ".id")
 if [[ $VERSION_LOCAL -eq $REMOTE_VERSION ]]; then
 	info " * 已是最新版本"
 	mute "    文件:   $BINARY_FILE"
-	bash "service-control.sh" start
+	[[ ${DISABLE_RESTART:-} ]] || bash "service-control.sh" start
 	exit 0
 fi
 
@@ -77,12 +75,10 @@ rm -f "$BINARY_FILE"
 mv "$BINARY_FILE.downloading" "$BINARY_FILE"
 chmod a+x "$BINARY_FILE"
 
-echo "$REMOTE_VERSION" >"$VERSION_FILE"
-
 echo -n "当前版本："
 "$BINARY_FILE" --version 2>/dev/null || die "binary file not executable"
 
 echo
 echo "Ah, that's ♂ good."
 
-bash "service-control.sh" restart
+[[ ${DISABLE_RESTART:-} ]] || bash "service-control.sh" restart

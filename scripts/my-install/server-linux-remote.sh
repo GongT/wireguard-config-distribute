@@ -3,6 +3,7 @@
 set -Eeuo pipefail
 
 export RHOST="$1"
+shift
 
 declare -r MYDIR="$(dirname "$(realpath "${BASH_SOURCE[0]}")")"
 
@@ -11,4 +12,4 @@ cd "$MYDIR/../services"
 	"$MYDIR/helpers/install-script-server.sh" \
 	auto-update.sh \
 	systemd \
-	| ssh "$RHOST" bash -c "$(<"$MYDIR/helpers/script-receiver.sh")"
+	| ssh "$RHOST" bash /dev/stdin "$@"

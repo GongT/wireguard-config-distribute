@@ -11,4 +11,4 @@ cd "$MYDIR/../services"
 	"$MYDIR/helpers/install-script-systemd.sh" \
 	auto-update.sh \
 	systemd \
-	| ssh -T -o "SendEnv" "$RHOST" bash "<(echo $(base64 -w0 "$MYDIR/helpers/script-receiver.sh") | base64 -d)" normal
+	| ssh "$RHOST" bash

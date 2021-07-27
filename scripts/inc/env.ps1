@@ -20,9 +20,13 @@ function IsWindows() {
 }
 
 $global:CONFIG_VARIABLE_PACKAGE = "github.com/gongt/wireguard-config-distribute/internal/tools"
-$GH = git log -1 --pretty=format:%h
-git diff-index --quiet HEAD
-if ( $? -eq $false ) { $GH += "[M]" }
+if ($env:GITHUB_SHA) {
+	$GH = $env:GITHUB_SHA
+} else {
+	$GH = git log -1 --pretty=format:%h
+	git diff-index --quiet HEAD
+	if ( $? -eq $false ) { $GH += "[M]" }
+}
 $env:LDFLAGS += " -X '$global:CONFIG_VARIABLE_PACKAGE.build_date=$(Get-Date -Format "yyyy-MM-dd+HH:mm:ss")' -X '$global:CONFIG_VARIABLE_PACKAGE.build_git_hash=$GH'"
 
 if ( ( Test-CommandExists go ) -And ( $(go env GOOS) -Eq "windows" ) ) {
