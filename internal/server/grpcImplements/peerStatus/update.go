@@ -15,7 +15,7 @@ type LockedPeerData struct {
 }
 
 func (peers *PeersManager) GetLocked(sid types.SidType) *LockedPeerData {
-	unlock := peers.m.Lock(fmt.Sprintf("AttachSender[%v]", sid))
+	unlock := peers.m.Lock(fmt.Sprintf("GetLocked[%v]", sid))
 
 	if _, exists := peers.list[sid]; !exists {
 		tools.Error("grpc:UpdateClientInfo() fail: %v not exists in:", sid)

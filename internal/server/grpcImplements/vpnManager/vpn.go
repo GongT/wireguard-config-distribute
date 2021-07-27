@@ -11,10 +11,11 @@ import (
 type vpnConfig struct {
 	id types.VpnIdType
 
-	Prefix       string                   `json:"prefix"`
-	Allocations  map[string]NumberBasedIp `json:"allocations"`
-	DefaultMtu   uint32                   `json:"mtu"`
-	EnableObfuse bool                     `json:"obfuse"`
+	Prefix               string                   `json:"prefix"`
+	Allocations          map[string]NumberBasedIp `json:"allocations"`
+	WireguardPrivateKeys map[string]string        `json:"wireguard-keys"`
+	DefaultMtu           uint32                   `json:"mtu"`
+	EnableObfuse         bool                     `json:"obfuse"`
 
 	reAllocations   map[NumberBasedIp]bool
 	prefixFreeParts uint

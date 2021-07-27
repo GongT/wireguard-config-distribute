@@ -14,7 +14,7 @@ type WireguardControl struct {
 
 	nativeInterface interfaceState.InterfaceState
 
-	peers      []peerData
+	peers      map[string]peerData
 	configFile string
 
 	extendedConfigCreated bool
@@ -52,7 +52,7 @@ func NewWireguardControl(options VpnOptions, interfaceTitle string) *WireguardCo
 		nativeInterface: nativeInterface,
 		dryRun:          options.GetDryRun(),
 
-		peers:      make([]peerData, 20),
+		peers:      make(map[string]peerData, 20),
 		configFile: filepath.Join(TempDir, options.GetInterfaceName()+".native.conf"),
 
 		extendedConfigCreated: false,

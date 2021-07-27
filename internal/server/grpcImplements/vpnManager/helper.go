@@ -6,6 +6,7 @@ import (
 
 	"github.com/gongt/wireguard-config-distribute/internal/tools"
 	"github.com/gongt/wireguard-config-distribute/internal/types"
+	"github.com/gongt/wireguard-config-distribute/internal/wireguard"
 )
 
 type VpnHelper struct {
@@ -46,6 +47,29 @@ func (helper *VpnHelper) GetObfuse() bool {
 
 func (helper *VpnHelper) GetHostDomain() string {
 	return helper.config.getHostDomain()
+}
+
+func (helper *VpnHelper) AllocateKeyPair(hostname string) (*wireguard.KeyPair, error) {
+	config := helper.config
+
+	if config.WireguardPrivateKeys == nil {
+		tools.Die("VPN staus %s.WireguardPrivateKeys must not nil.", helper.name)
+	}
+
+	if priKey, exists := config.WireguardPrivateKeys[hostname]; exists {
+		return wireguard.ParseKey(priKey)
+	}
+
+	keypair, err := wireguard.AllocateKeyPair()
+	if err != nil {
+		return nil, err
+	}
+
+	config.WireguardPrivateKeys[hostname] = keypair.Private
+
+	err = helper.manager.saveFile()
+
+	return keypair, err
 }
 
 func (helper *VpnHelper) AllocateIp(hostname string, requestIp string) string {

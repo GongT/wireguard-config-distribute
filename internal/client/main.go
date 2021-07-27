@@ -61,9 +61,12 @@ func (stat *ClientStateHolder) run() {
 	stat.isRunning = false
 
 	tools.Error("Send handshake:")
-	for {
+	for i := 0; ; i++ {
 		if stat.handshake() {
 			break
+		}
+		if i >= 25 {
+			tools.Die("Can not handshake 25 times, network broken or server down")
 		}
 		time.Sleep(1 * time.Second)
 	}

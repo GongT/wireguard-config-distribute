@@ -25,7 +25,6 @@ func (wc *WireguardControl) UpdatePeers(list clientType.PeerDataList) {
 	defer wc.mu.Lock("update peers")()
 
 	tools.Error("Updating peers:")
-	wc.peers = wc.peers[0:0]
 	for _, client := range list {
 		peer := client.GetPeer()
 		selectedIp := client.GetSelectedAddress()
@@ -39,7 +38,7 @@ func (wc *WireguardControl) UpdatePeers(list clientType.PeerDataList) {
 
 		kl := uint(peer.GetKeepAlive())
 
-		wc.peers = append(wc.peers, peerData{
+		newData := peerData{
 			id:           client.GetSessionId(),
 			comment:      client.GetTitle(),
 			publicKey:    peer.GetPublicKey(),
@@ -49,7 +48,9 @@ func (wc *WireguardControl) UpdatePeers(list clientType.PeerDataList) {
 			keepAlive:    kl,
 			privateIp:    peer.GetVpnIp(),
 			mtu:          uint16(peer.GetMTU()),
-		})
+		}
+
+		wc.peers[peer.GetPublicKey()] = newData
 	}
 
 	wc.lowestMtu = uint16(1420)

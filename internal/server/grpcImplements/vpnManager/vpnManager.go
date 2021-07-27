@@ -31,6 +31,9 @@ func NewVpnManager(storage *storage.ServerStorage) *VpnManager {
 			if vpn.Allocations == nil {
 				vpn.Allocations = make(map[string]NumberBasedIp)
 			}
+			if vpn.WireguardPrivateKeys == nil {
+				vpn.WireguardPrivateKeys = make(map[string]string)
+			}
 
 			vpn.id = name
 			if err := vpn.calcAllocSpace(); err != nil {
@@ -40,8 +43,9 @@ func NewVpnManager(storage *storage.ServerStorage) *VpnManager {
 		}
 	} else {
 		add(mapper, storage, types.DeSerializeVpnIdType("default"), &vpnConfig{
-			Prefix:      "10.166",
-			Allocations: make(map[string]NumberBasedIp),
+			Prefix:               "10.166",
+			Allocations:          make(map[string]NumberBasedIp),
+			WireguardPrivateKeys: make(map[string]string),
 		})
 	}
 

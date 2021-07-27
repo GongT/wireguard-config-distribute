@@ -9,7 +9,6 @@ import (
 	"github.com/gongt/wireguard-config-distribute/internal/server/grpcImplements/peerStatus"
 	"github.com/gongt/wireguard-config-distribute/internal/tools"
 	"github.com/gongt/wireguard-config-distribute/internal/types"
-	"github.com/gongt/wireguard-config-distribute/internal/wireguard"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/peer"
 )
@@ -54,11 +53,11 @@ func (s *Implements) RegisterClient(ctx context.Context, request *protocol.Regis
 	}
 	fmt.Printf("   * allocated ip address: %v\n", allocIp)
 
-	pubKey, priKey, err := wireguard.GenerateKeyPair()
+	keys, err := vpn.AllocateKeyPair(request.GetHostname())
 	if err != nil {
 		return nil, errors.New("Failed generate wireguard keys: " + err.Error())
 	}
-	fmt.Printf("   * wireguard public: %v\n", pubKey)
+	fmt.Printf("   * wireguard public: %v\n", keys.Public)
 
 	clientId := request.GetMachineId()
 	if len(clientId) == 0 {
@@ -71,7 +70,7 @@ func (s *Implements) RegisterClient(ctx context.Context, request *protocol.Regis
 		VpnId:       vpnName,
 		Title:       request.GetTitle() + " [AT] " + request.GetLocalGroup(),
 		Hostname:    request.GetHostname(),
-		PublicKey:   pubKey,
+		PublicKey:   keys.Private,
 		VpnIp:       allocIp,
 		WorkgroupId: networkGroup,
 	})
@@ -83,7 +82,7 @@ func (s *Implements) RegisterClient(ctx context.Context, request *protocol.Regis
 		MachineId:    clientId,
 		PublicIp:     remoteIp,
 		OfferIp:      allocIp,
-		PrivateKey:   priKey,
+		PrivateKey:   keys.Private,
 		Subnet:       uint32(subnet),
 		EnableObfuse: vpn.GetObfuse(),
 	}, nil
