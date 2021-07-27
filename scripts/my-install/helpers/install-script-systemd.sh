@@ -44,8 +44,16 @@ for I; do
 	SERVICES+=("wireguard-config-client@$I.service")
 done
 
-echo "enable services: ${SERVICES[*]}" >&2
-systemctl enable --now "${SERVICES[@]}"
+if [[ ${#SERVICES[@]} -gt 0 ]]; then
+	if [[ $* == *--restart* ]]; then
+		echo "enable and restart client"
+		systemctl enable "${SERVICES[@]}"
+		systemctl restart "${SERVICES[@]}"
+	else
+		echo "enable and start client (restart with --restart)"
+		systemctl enable --now "${SERVICES[@]}"
+	fi
+fi
 
 function checkStatus() {
 	echo "==========="

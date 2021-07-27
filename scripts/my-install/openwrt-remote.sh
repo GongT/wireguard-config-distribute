@@ -11,5 +11,5 @@ cd "$MYDIR/../services"
 	"$MYDIR/helpers/install-script-openwrt.sh" \
 	auto-update.sh \
 	openwrt \
-	| ssh "$RHOST" bash
+	| ssh "$RHOST" bash /dev/stdin normal
 	

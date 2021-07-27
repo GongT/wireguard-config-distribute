@@ -11,4 +11,4 @@ cd "$MYDIR/../services"
 	"$MYDIR/helpers/install-script-systemd.sh" \
 	auto-update.sh \
 	systemd \
-	| ssh "$RHOST" bash
+	| ssh "$RHOST" bash /dev/stdin normal
