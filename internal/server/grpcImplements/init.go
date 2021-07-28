@@ -3,6 +3,7 @@ package grpcImplements
 import (
 	"time"
 
+	"github.com/gongt/wireguard-config-distribute/internal/protocol"
 	"github.com/gongt/wireguard-config-distribute/internal/server/grpcImplements/peerStatus"
 	"github.com/gongt/wireguard-config-distribute/internal/server/grpcImplements/vpnManager"
 	"github.com/gongt/wireguard-config-distribute/internal/server/storage"
@@ -19,6 +20,8 @@ type PeerObject struct {
 }
 
 type Implements struct {
+	protocol.UnimplementedWireguardApiServer
+
 	storage  *storage.ServerStorage
 	insecure bool
 	isQuit   bool

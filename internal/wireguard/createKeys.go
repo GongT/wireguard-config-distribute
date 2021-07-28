@@ -17,7 +17,7 @@ func ParseKey(private string) (*KeyPair, error) {
 		return nil, fmt.Errorf("Failed parse Wireguard private key: %s: %v", private, err)
 	}
 	return &KeyPair{
-		Private: key.PublicKey().String(),
+		Private: key.String(),
 		Public:  key.PublicKey().String(),
 	}, nil
 }
@@ -29,7 +29,7 @@ func AllocateKeyPair() (*KeyPair, error) {
 	}
 
 	return &KeyPair{
-		Private: key.PublicKey().String(),
+		Private: key.String(),
 		Public:  key.PublicKey().String(),
 	}, nil
 }

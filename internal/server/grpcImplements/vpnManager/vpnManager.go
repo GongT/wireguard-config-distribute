@@ -8,6 +8,7 @@ import (
 	"github.com/gongt/wireguard-config-distribute/internal/server/storage"
 	"github.com/gongt/wireguard-config-distribute/internal/tools"
 	"github.com/gongt/wireguard-config-distribute/internal/types"
+	"github.com/gongt/wireguard-config-distribute/internal/wireguard"
 )
 
 const VPN_STORE_NAME = "vpns.json"
@@ -104,6 +105,15 @@ func (vpns *VpnManager) Dump() string {
 		ret += fmt.Sprintf("> [%v]: Name=%v; Prefix=%v(%v); MTU=%v; OBFS=%v\n", vpn.id.Serialize(), name, vpn.Prefix, vpn.prefixFreeParts, vpn.DefaultMtu, vpn.EnableObfuse)
 		for host, ip := range vpn.Allocations {
 			ret += fmt.Sprintf("\t%-15v => %v\n", vpn.Prefix+"."+ip.String(vpn.prefixFreeParts), host)
+		}
+		for host, key := range vpn.WireguardPrivateKeys {
+			kp, err := wireguard.ParseKey(key)
+			ret += fmt.Sprintf("\t%10v\t: ", host)
+			if err == nil {
+				ret += fmt.Sprintf("%v\n", kp.Public)
+			} else {
+				ret += fmt.Sprintf("%v\n", err)
+			}
 		}
 	}
 
