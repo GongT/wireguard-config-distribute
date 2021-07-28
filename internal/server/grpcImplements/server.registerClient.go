@@ -70,7 +70,7 @@ func (s *Implements) RegisterClient(ctx context.Context, request *protocol.Regis
 		VpnId:       vpnName,
 		Title:       request.GetTitle() + " [AT] " + request.GetLocalGroup(),
 		Hostname:    request.GetHostname(),
-		PublicKey:   keys.Private,
+		PublicKey:   keys.Public,
 		VpnIp:       allocIp,
 		WorkgroupId: networkGroup,
 	})
