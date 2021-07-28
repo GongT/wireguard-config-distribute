@@ -53,8 +53,9 @@ function  SetExecuteMethod() {
 				RUN cd / \
 				 && set -x \
 				 && apk add -U go protoc git protobuf-dev \
-				 && go get -v -u github.com/GongT/go-generate-struct-interface/cmd/go-generate-struct-interface github.com/golang/protobuf/protoc-gen-go \
+				 && go get -u github.com/GongT/go-generate-struct-interface/cmd/go-generate-struct-interface google.golang.org/grpc/cmd/protoc-gen-go-grpc github.com/golang/protobuf/protoc-gen-go \
 				 && command -v protoc-gen-go || ( find / -name protoc-gen-go ; exit 1) \
+				 && command -v protoc-gen-go-grpc || ( find / -name protoc-gen-go-grpc ; exit 1) \
 				 && command -v go-generate-struct-interface || ( find / -name go-generate-struct-interface ; exit 1)
 			" | Out-File -FilePath $f -Encoding utf8
 			Write-Host -ForegroundColor Gray " + podman build $cache --file $f --tag gongt/wg-config-build"

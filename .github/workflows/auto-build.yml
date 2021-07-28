@@ -18,21 +18,33 @@ jobs:
           DELETE: "yes"
   build-musl:
     name: Build musl version
-    runs-on: [self-hosted, linux]
+    runs-on: ubuntu-latest
     env:
-      http_proxy: http://proxy-server.:3271
-      https_proxy: http://proxy-server.:3271
       GOPROXY: https://proxy.golang.org
-      GOCACHE: /data/Cache/golang
       GO111MODULE: auto
-      GOPATH: /data/DevelopmentRoot/GoLang
+      GOPATH: /tmp/.go
+      GOCACHE: /tmp/.cache/GOCACHE
+      SYSTEM_COMMON_CACHE: /tmp/.cache
     steps:
       - name: checkout
         uses: actions/checkout@v2
 
+      - name: Prepare golang
+        uses: actions/setup-go@v2
+        with:
+          stable: true
+
+      - uses: actions/cache@v2
+        with:
+          path: /tmp/.cache
+          key: go-gongt-wireguard-config-distribute-${{ runner.os }}
+          restore-keys: |
+            go-gongt-wireguard-config-distribute-
+            go-
+
       - name: Build
         run: |
-          pwsh ./scripts/build.ps1 musl
+          sudo pwsh ./scripts/build.ps1 musl
 
       - name: upload
         uses: actions/upload-artifact@v2
@@ -79,7 +91,7 @@ jobs:
         run: |
           go mod download
           cd ..
-          go get -u github.com/GongT/go-generate-struct-interface/cmd/go-generate-struct-interface github.com/golang/protobuf/protoc-gen-go
+          go get -u github.com/GongT/go-generate-struct-interface/cmd/go-generate-struct-interface google.golang.org/grpc/cmd/protoc-gen-go-grpc github.com/golang/protobuf/protoc-gen-go
 
       - name: Build
         id: build
