@@ -1,5 +1,4 @@
 #!/usr/bin/env pwsh
-#Requires -RunAsAdministrator
 
 $proxyServer = 'http://proxy-server.:3271/'
 $winswBinaryDownloadName = 'WinSW-net461.exe'
@@ -8,7 +7,17 @@ Set-StrictMode -Version latest
 $ErrorActionPreference = "Stop"
 
 if (-not ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
-	Write-Error "必须使用管理员权限运行脚本"
+	$root = "$env:tmp/__wgc_install/"
+	if (-Not (Test-Path "$root/scripts/my-install")) {
+		New-Item -Path "$root/scripts/my-install" -ItemType Directory | Out-Null
+	}
+	if (-Not (Test-Path "$root/scripts/services")) {
+		New-Item -Path "$root/scripts/services" -ItemType Directory | Out-Null
+	}
+	cp $PSScriptRoot/windows.ps1 "$root/scripts/my-install"
+	cp $PSScriptRoot/../services/auto-update.ps1 "$root/scripts/services"
+	Start-Process -Verb RunAs pwsh -ArgumentList '-NoExit', "$root/scripts/my-install/windows.ps1"
+	exit
 }
 
 Set-Location $PSScriptRoot/../..
@@ -25,7 +34,7 @@ function buildGithubReleaseUrl() {
 function getLocalVersion() {
 	$binaryFile = "$distFolder/$getFile"
 	if (Test-Path -Path $binaryFile  ) {
-		$v = /usr/local/libexec/wireguard-config-client/client --version 2>$null | Select-String -Pattern "Hash:(.+)"
+		$v = & $binaryFile --version 2>$null | Select-String -Pattern "Hash:(.+)"
 		return $v.Matches.Groups[1].Value.Trim()
 	} else {
 		return ""
@@ -42,7 +51,14 @@ function detectVersionChange() {
 	$releaseDataUrl = "https://api.github.com/repos/$Repo/releases?page=1&per_page=1"
 	
 	Write-Host "检查 $Repo 版本……"
-	$versionLocal = getLocalVersion
+
+	if (Test-Path -Path $versionFile) {
+		Write-Host -ForegroundColor Gray "    记录文件： $versionFile"
+		$versionLocal = Get-Content -Encoding utf8 $versionFile
+	} else {
+		Write-Host -ForegroundColor Gray "    记录文件： 不存在"
+		$versionLocal = ''
+	}
 
 	Write-Host -ForegroundColor Gray "    来源： $releaseDataUrl"
 	$releaseData = (Invoke-WebRequest-Wrap -Uri $releaseDataUrl | ConvertFrom-Json)[0]
@@ -52,9 +68,9 @@ function detectVersionChange() {
 		Write-Host -ForegroundColor Gray "    ~ 没有更新"
 		return Invoke-Command $callback -ArgumentList $false, $downloadUrl
 	} else {
-		Write-Host -ForegroundColor Gray "    -> 有更新: $versionLocal → 远程：$($releaseData.id)"
+		Write-Host -ForegroundColor Gray "    -> 有更新: $versionLocal → 远程：$($releaseData.target_commitish)"
 		$ret = Invoke-Command $callback -ArgumentList $true, $downloadUrl
-		Set-Content -Encoding utf8 -Path $versionFile -Value $releaseData.id
+		Set-Content -Encoding utf8 -Path $versionFile -Value $releaseData.target_commitish
 		return $ret
 	}
 }
@@ -320,13 +336,11 @@ if (-Not (Test-Path "$distFolder/wireguard.exe")) {
 stopAllService
 
 $winswBinary = downloadGithubRelease -repo 'winsw/winsw' -getfile $winswBinaryDownloadName -saveas 'winsw.exe' -distfolder $distFolder
-Write-Host "winsw版本：" -NoNewline
-& $winswBinary --version
+Write-Host "winsw版本：$(& $winswBinary --version)"
 if ($lastexitcode -ne 0) { Write-Error "程序无法运行！($lastexitcode)" }
 
 $clientBinary = downloadGithubRelease -repo 'GongT/wireguard-config-distribute' -getfile 'client.exe' -distfolder $distFolder
-Write-Host "客户端版本：" -NoNewline
-& $clientBinary /version
+Write-Host "客户端版本：$(& $clientBinary --version)"
 if ($lastexitcode -ne 0) {
 	Write-Error "程序无法运行！"
 }

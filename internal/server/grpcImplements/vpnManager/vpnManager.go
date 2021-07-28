@@ -72,6 +72,7 @@ func add(mapper map[types.VpnIdType]*vpnConfig, storage *storage.ServerStorage, 
 }
 
 func (vpns *VpnManager) saveFile() error {
+	tools.Debug("save config file to %s", VPN_STORE_NAME)
 	return vpns.storage.WriteJson(VPN_STORE_NAME, vpns.mapper)
 }
 

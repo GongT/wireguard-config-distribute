@@ -66,6 +66,7 @@ func (helper *VpnHelper) AllocateKeyPair(hostname string) (*wireguard.KeyPair, e
 	}
 
 	config.WireguardPrivateKeys[hostname] = keypair.Private
+	tools.Error("generate key pair [%s] for client %s", keypair.Public, hostname)
 
 	err = helper.manager.saveFile()
 
