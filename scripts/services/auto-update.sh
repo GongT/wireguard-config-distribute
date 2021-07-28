@@ -28,7 +28,7 @@ function getCurrentInstalledVersion() {
 	echo "$OUTPUT" | grep -o 'Hash:.*' | awk '{print $2}'
 }
 
-if getent hosts proxy-server. &>/dev/null && curl --proxy proxy-server.:3271 www.google.com &>/dev/null; then
+if ncat -z --wait 1 proxy-server. 3271 &>/dev/null; then
 	export PROXY="http://proxy-server.:3271/"
 	export https_proxy=${PROXY} http_proxy=${PROXY} all_proxy=${PROXY} HTTPS_PROXY=${PROXY} HTTP_PROXY=${PROXY} ALL_PROXY=${PROXY} NO_PROXY="10.*,192.*,127.*,172.*"
 	info "using proxy server $PROXY"

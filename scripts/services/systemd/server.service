@@ -32,7 +32,7 @@ Environment=WIREGUARD_UNIX=/dev/shm/container-shared-socksets/grpc.wireguard.soc
 Environment=WIREGUARD_CONFIG_DEVELOPMENT=true
 
 # ExecStartPre=/usr/bin/env
-ExecStart=/usr/local/bin/wireguard-config-server
+ExecStart=/usr/local/libexec/wireguard-config-client/server
 # ExecStart=/data/DevelopmentRoot/github.com/gongt/wireguard-config-distribute/dist/server
 
 Restart=always
