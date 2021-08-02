@@ -31,18 +31,18 @@ func (stat *ClientStateHolder) StartTool() *remoteControl.ToolObject {
 
 func (stat *ClientStateHolder) StartCommunication() {
 	stat.startNetwork(5)
+	stat.ipDetect.Execute()
 
 	go func() {
+		loop_count := 0
 		fmt.Println("Start communication...")
 		for {
 			if stat.isQuit {
 				break
 			}
 
-			stat.ipDetect.Execute()
-
 			start := time.Now()
-			stat.run()
+			stat.run(loop_count)
 			tools.Error("last grpc connect keep %s", time.Since(start).String())
 
 			if stat.isQuit {
@@ -51,13 +51,15 @@ func (stat *ClientStateHolder) StartCommunication() {
 
 			time.Sleep(5 * time.Second)
 			systemd.ChangeToReload()
+
+			loop_count++
 		}
 		tools.Error("Event loop finish normally")
 		systemd.ChangeToQuit()
 	}()
 }
 
-func (stat *ClientStateHolder) run() {
+func (stat *ClientStateHolder) run(loop_count int) {
 	stat.isRunning = false
 
 	tools.Error("Send handshake:")

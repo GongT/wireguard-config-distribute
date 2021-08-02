@@ -21,6 +21,8 @@ ExecStart=/usr/local/libexec/wireguard-config-client/client --group %i
 Restart=always
 RestartSec=10s
 RestartPreventExitStatus=233
+StartLimitIntervalSec=1s
+StartLimitBurst=999
 
 EnvironmentFile=-/etc/wireguard/client.conf
 EnvironmentFile=/etc/wireguard/client.%i.conf
