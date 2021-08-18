@@ -9,7 +9,7 @@ echo -ne "\ec"
 
 export GOOS="linux"
 export GOARCH="amd64"
-export RHOST="services.gongt.me"
+export RHOST="gateway.gongt.me"
 
 pwsh scripts/build.ps1 server
 

@@ -2,7 +2,7 @@
 
 set -Eeuo pipefail
 
-RHOST=services.gongt.me
+RHOST=gateway.gongt.me
 
 declare -r MYDIR="$(dirname "$(realpath "${BASH_SOURCE[0]}")")"
 cd "$MYDIR/.."

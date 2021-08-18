@@ -15,6 +15,8 @@ if ! command wg &>/dev/null; then
 fi
 
 mkdir -p /usr/local/libexec/wireguard-config-client
+echo "copy client files" >&2
+cp systemd/service-control.sh systemd/ensure-kmod.sh /usr/local/libexec/wireguard-config-client
 
 echo "create wireguard-config-client@.service" >&2
 {
@@ -31,9 +33,6 @@ echo "install client application"
 DISABLE_RESTART=yes bash auto-update.sh server
 
 rm -f /usr/local/libexec/ensure-kmod.sh
-
-echo "copy client files" >&2
-cp systemd/service-control.sh systemd/ensure-kmod.sh /usr/local/libexec/wireguard-config-client
 
 START=$(date +%s)
 

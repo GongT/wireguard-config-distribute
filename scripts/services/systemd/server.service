@@ -16,14 +16,14 @@ DynamicUser=yes
 StateDirectory=wireguard-config-server
 ReadWritePaths=/dev/shm/container-shared-socksets
 ExecStartPre=+/usr/bin/chmod 0777 /dev/shm/container-shared-socksets
+
 Environment=WIREGUARD_UNIX=/dev/shm/container-shared-socksets/grpc.wireguard.sock
+Environment=WIREGUARD_TLS_INSECURE=true
 
-# Environment=WIREGUARD_TLS_INSECURE=true
+# Environment=WIREGUARD_TLS_KEYFILE=/data/AppData/share/ssl/gateway.gongt.me/privkey.pem
+# Environment=WIREGUARD_TLS_PUBFILE=/data/AppData/share/ssl/gateway.gongt.me/cert.pem
 
-# Environment=WIREGUARD_TLS_KEYFILE=/data/AppData/share/letsencrypt/live/*.services.gongt.me/privkey.pem
-# Environment=WIREGUARD_TLS_PUBFILE=/data/AppData/share/letsencrypt/live/*.services.gongt.me/cert.pem
-
-# Environment=WIREGUARD_PORT=37070
+# Environment=WIREGUARD_PORT=55655
 
 # Environment=WIREGUARD_STORAGE=/data/AppData/data/wireguard-config-server
 # ReadWritePaths=/data/AppData/data/wireguard-config-server
@@ -36,6 +36,8 @@ ExecStart=/usr/local/libexec/wireguard-config-client/server
 # ExecStart=/data/DevelopmentRoot/github.com/gongt/wireguard-config-distribute/dist/server
 
 Restart=always
+
+EnvironmentFile=-/etc/wireguard/server.conf
 
 [Install]
 WantedBy=multi-user.target

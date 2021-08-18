@@ -4,7 +4,7 @@ set -Eeuo pipefail
 cd "$(dirname "$(realpath "${BASH_SOURCE[0]}")")"
 
 function die() {
-	echo -e "\e[38;5;9m$*\3[0m"
+	echo -e "\e[38;5;9m$*\e[0m"
 	exit 1
 }
 function info() {
@@ -61,10 +61,10 @@ mute "    本地版本： $VERSION_LOCAL"
 mute "    来源： $LATEST_URL"
 declare RELEASE_DATA
 RELEASE_DATA=$(curl -s "$LATEST_URL")
-RELEASE_DATA=$(echo "$RELEASE_DATA" | jq -M -c ".[0] // null" || {
-	echo "$RELEASE_DATA"
+RELEASE_DATA=$(echo "$RELEASE_DATA" | jq -M -c ".[0] // null") || {
+	curl -v "$LATEST_URL" || true
 	die "无法获取最新版本信息"
-})
+}
 if [[ $RELEASE_DATA == "null" ]]; then
 	die "failed get release data."
 fi

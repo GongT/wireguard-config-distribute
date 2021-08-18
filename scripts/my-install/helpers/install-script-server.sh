@@ -12,6 +12,8 @@ if [[ "$(basename "$(readlink -e /proc/1/exe)")" != "systemd" ]]; then
 fi
 
 mkdir -p /usr/local/libexec/wireguard-config-client
+echo "copy server files" >&2
+cp systemd/service-control.sh systemd/ensure-kmod.sh /usr/local/libexec/wireguard-config-client
 
 echo "installing systemd service"
 {

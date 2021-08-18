@@ -18,7 +18,7 @@ rsync --progress --verbose --exclude dist . $RHOST:/data/temp/wireguard-config-c
 cat <<- 'EOF' | tee | ssh $RHOST bash
 	mkdir -p /etc/wireguard
 	cat <<- 'EEOF' > /etc/wireguard/client.conf
-		WIREGUARD_SERVER="grpc.services.gongt.me:443"
+		WIREGUARD_SERVER="grpc.gateway.gongt.me:443"
 		WIREGUARD_NETWORK="home"
 		WIREGUARD_TITLE="路由器"
 		WIREGUARD_PUBLIC_IP_NO_UPNP="true"
