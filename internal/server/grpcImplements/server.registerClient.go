@@ -13,10 +13,16 @@ import (
 	"google.golang.org/grpc/peer"
 )
 
+func returnError(err error) (*protocol.RegisterClientResponse, error) {
+	werr := fmt.Errorf("greeting failed: %w", err)
+	fmt.Printf("%v\n", werr)
+	return nil, werr
+}
+
 func (s *Implements) RegisterClient(ctx context.Context, request *protocol.RegisterClientRequest) (*protocol.RegisterClientResponse, error) {
 	remoteIp := tools.GetRemoteFromContext(ctx)
 	if len(remoteIp) == 0 {
-		return nil, errors.New("Failed find your ip")
+		return returnError(errors.New("failed find your ip"))
 	}
 
 	authtype := "not auth"
@@ -33,7 +39,7 @@ func (s *Implements) RegisterClient(ctx context.Context, request *protocol.Regis
 	vpnName := types.DeSerializeVpnIdType(request.GetVpnGroup())
 	vpn, ok := s.vpnManager.GetLocked(vpnName)
 	if !ok {
-		return nil, errors.New("VPN group not exists: " + vpnName.Serialize())
+		return returnError(errors.New("VPN group not exists: " + vpnName.Serialize()))
 	}
 	defer vpn.Release()
 	fmt.Printf("   * VPN: %v\n", vpnName)
@@ -43,19 +49,19 @@ func (s *Implements) RegisterClient(ctx context.Context, request *protocol.Regis
 
 	subnet := vpn.Subnet()
 	if subnet == 0 {
-		return nil, errors.New("VPN group config error: subnet is 0")
+		return returnError(errors.New("VPN group config error: subnet is 0"))
 	}
 	fmt.Printf("   * subnet: %v\n", subnet)
 
 	allocIp := vpn.AllocateIp(request.GetHostname(), request.GetRequestVpnIp())
 	if len(allocIp) == 0 {
-		return nil, errors.New("Can not alloc ip address")
+		return returnError(errors.New("can not alloc ip address"))
 	}
 	fmt.Printf("   * allocated ip address: %v\n", allocIp)
 
 	keys, err := vpn.AllocateKeyPair(request.GetHostname())
 	if err != nil {
-		return nil, errors.New("Failed generate wireguard keys: " + err.Error())
+		return returnError(fmt.Errorf("failed generate wireguard keys: %w", err))
 	}
 	fmt.Printf("   * wireguard public: %v\n", keys.Public)
 

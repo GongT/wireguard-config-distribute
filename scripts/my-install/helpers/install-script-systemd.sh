@@ -29,9 +29,6 @@ echo "create wireguard-config-client@.service" >&2
 echo "install update service" >&2
 bash ./systemd/install-update-service.sh client
 
-echo "install client application"
-DISABLE_RESTART=yes bash auto-update.sh server
-
 rm -f /usr/local/libexec/ensure-kmod.sh
 
 START=$(date +%s)
