@@ -57,16 +57,6 @@ if ($env:CI) {
 
 # Set-PSDebug -Trace 1
 
-if ($type -Eq "musl") {
-	# & $env:CC -v
-	$env:GOOS = "linux"
-	$env:GOARCH = "arm64"
-	$env:GOEXE = ".alpine"
-	$type = "client"
-
-	SetExecuteMethod -container
-}
-
 Write-Output "Creating protocol..."
 . ./scripts/create-protobuf.ps1
 if ( $? -eq $false ) { exit 1 }
@@ -81,6 +71,17 @@ if ($type) {
 		$env:CGO_ENABLED = 0
 		$iargs += "-tags", "moveable"
 		build client
+	} elseif ($type -Eq "musl") {
+		# & $env:CC -v
+		$env:GOOS = "linux"
+		$env:GOARCH = "arm64"
+		$env:GOEXE = ".alpine"
+		
+		SetExecuteMethod -container
+
+		build server
+		build client
+		build tool
 	} else {
 		build $type
 	}

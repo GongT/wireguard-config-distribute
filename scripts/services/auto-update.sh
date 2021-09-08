@@ -34,7 +34,7 @@ if ncat -z --wait 1 proxy-server. 3271 &>/dev/null; then
 	info "using proxy server $PROXY"
 fi
 
-PROJ_TYPE="${1}"
+export PROJ_TYPE="${1}"
 
 BIN_TYPE=''
 if ldd /proc/$$/exe | grep -q -- 'musl'; then
