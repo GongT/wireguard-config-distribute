@@ -36,16 +36,19 @@ function build() {
 	x 'go' 'build' @verb @build
 }
 
-if ($env:CI) {
-	if ($env:RUNNER_TEMP) {
-		$env:TMP = $env:RUNNER_TEMP
-		$env:TEMP = $env:RUNNER_TEMP
-	} else {
-		$TMP = New-Item -Name ".temp" -ItemType Directory -Force
-		$env:TMP = $TMP.FullName
-		$env:TEMP = $TMP.FullName
-	}
+if ($env:RUNNER_TEMP) {
+	$env:TMP = $env:RUNNER_TEMP
+	$env:TEMP = $env:RUNNER_TEMP
+} else {
+	$TMP = New-Item -Name ".temp" -ItemType Directory -Force
+	$env:TMP = $TMP.FullName
+	$env:TEMP = $TMP.FullName
+}
 
+if ($type -Eq "musl") {
+	SetExecuteMethod -container
+	x go env
+} elseif ($env:CI) {
 	Write-Output "=============================================="
 	Get-ChildItem Env:* | Format-Table
 	Write-Output "=============================================="
@@ -76,8 +79,6 @@ if ($type) {
 		$env:GOOS = "linux"
 		$env:GOARCH = "arm64"
 		$env:GOEXE = ".alpine"
-		
-		SetExecuteMethod -container
 
 		build server
 		build client
