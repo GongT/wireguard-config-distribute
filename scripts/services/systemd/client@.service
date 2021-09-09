@@ -15,8 +15,8 @@ ReadWritePaths=/etc/hosts
 ProtectKernelTunables=yes
 ProtectControlGroups=yes
 
-ExecStartPre=!/usr/bin/env bash '/usr/local/libexec/wireguard-config-client/ensure-kmod.sh' wireguard
-ExecStart=/usr/local/libexec/wireguard-config-client/client --group %i
+ExecStartPre=!/usr/bin/env bash '/usr/local/libexec/wireguard-config/ensure-kmod.sh' wireguard
+ExecStart=/usr/local/libexec/wireguard-config/client --group %i
 
 Restart=always
 RestartSec=10s

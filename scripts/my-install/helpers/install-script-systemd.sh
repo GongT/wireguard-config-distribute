@@ -14,17 +14,15 @@ if ! command wg &>/dev/null; then
 	die "wireguard tools (wg binary) is not found"
 fi
 
-mkdir -p /usr/local/libexec/wireguard-config-client
+rm -rf /usr/local/libexec/wireguard-config-client
+
+mkdir -p /usr/local/libexec/wireguard-config
 echo "copy client files" >&2
-cp systemd/service-control.sh systemd/ensure-kmod.sh /usr/local/libexec/wireguard-config-client
+cp systemd/service-control.sh systemd/ensure-kmod.sh /usr/local/libexec/wireguard-config
 
 echo "create wireguard-config-client@.service" >&2
-{
-	sed '/\[Service]/Q' systemd/client@.service
-	echo '[Service]'
-	echo "ExecStartPre=-+/usr/local/libexec/wireguard-config-client/auto-update.sh client"
-	sed '1,/\[Service]/d' systemd/client@.service
-} >/usr/lib/systemd/system/wireguard-config-client@.service
+cp systemd/client@.service /usr/lib/systemd/system/wireguard-config-client@.service
+systemctl daemon-reload
 
 echo "install update service" >&2
 bash ./systemd/install-update-service.sh client
@@ -32,8 +30,6 @@ bash ./systemd/install-update-service.sh client
 rm -f /usr/local/libexec/ensure-kmod.sh
 
 START=$(date +%s)
-
-systemctl daemon-reload
 
 SERVICES=()
 for I; do

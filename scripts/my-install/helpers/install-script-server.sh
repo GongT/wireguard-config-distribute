@@ -11,17 +11,14 @@ if [[ "$(basename "$(readlink -e /proc/1/exe)")" != "systemd" ]]; then
 	die "remote server did not running systemd, please check environment."
 fi
 
-mkdir -p /usr/local/libexec/wireguard-config-client
+rm -rf /usr/local/libexec/wireguard-config-client
+
+mkdir -p /usr/local/libexec/wireguard-config
 echo "copy server files" >&2
-cp systemd/service-control.sh systemd/ensure-kmod.sh /usr/local/libexec/wireguard-config-client
+cp systemd/service-control.sh systemd/ensure-kmod.sh /usr/local/libexec/wireguard-config
 
 echo "installing systemd service"
-{
-	sed '/\[Service]/Q' systemd/server.service
-	echo '[Service]'
-	echo "ExecStartPre=-+/usr/local/libexec/wireguard-config-client/auto-update.sh server"
-	sed '1,/\[Service]/d' systemd/server.service
-} >/usr/lib/systemd/system/wireguard-config-server.service
+cp systemd/server.service /usr/lib/systemd/system/wireguard-config-server.service
 
 echo "reload"
 systemctl daemon-reload

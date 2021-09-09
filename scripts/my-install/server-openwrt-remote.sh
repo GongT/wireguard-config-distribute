@@ -11,5 +11,5 @@ cd "$MYDIR/../services"
 "$MYDIR/helpers/script-sender.sh" \
 	"$MYDIR/helpers/install-script-server-openwrt.sh" \
 	auto-update.sh \
-	systemd \
-	| ssh "$RHOST" bash /dev/stdin "$@"
+	openwrt \
+	| ssh "$RHOST" bash "$@"

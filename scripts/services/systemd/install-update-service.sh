@@ -3,7 +3,7 @@
 set -Eeuo pipefail
 
 declare -r TYPE=$1
-declare -r distRoot="/usr/local/libexec/wireguard-config-client"
+declare -r distRoot="/usr/local/libexec/wireguard-config"
 
 mkdir -p "$distRoot"
 touch "$distRoot/$TYPE-should-update"

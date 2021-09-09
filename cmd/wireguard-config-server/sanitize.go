@@ -23,6 +23,10 @@ func (opts *serverProgramOptions) Sanitize() error {
 			if err != nil {
 				return fmt.Errorf("Failed get user HOME: %s", err.Error())
 			}
+			fmt.Println("   -> " + home)
+			if len(home) == 0 {
+				return fmt.Errorf("Can not detect user HOME, please set --storage")
+			}
 			opts.StorageLocation = filepath.Join(home, ".wireguard-config-server")
 		}
 	}

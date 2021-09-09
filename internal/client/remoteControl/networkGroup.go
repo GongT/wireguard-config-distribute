@@ -20,7 +20,7 @@ func (tool *ToolObject) CreateNetworkGroup(opts createOptions) {
 	if err == nil {
 		tools.Error("successfully created VPN network.")
 	} else {
-		tools.Error("failed created VPN network: %v", err)
+		tools.Error("failed create VPN network: %v", err)
 	}
 }
 

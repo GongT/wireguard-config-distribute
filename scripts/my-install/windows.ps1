@@ -276,7 +276,11 @@ function Invoke-WebRequest-Wrap() {
 		$param.Proxy = $proxyServer
 	}
 
-	#  -Authentication Basic -Credential ""
+	$tokenFile = "$Root/.github-token"
+	if (Test-Path -Path $tokenFile -PathType Leaf) {
+		$token = Get-Content -Encoding utf8 $tokenFile
+		$param.Headers = @{Authorization = "token $token"}
+	}
 	try {
 		$response = Invoke-WebRequest @param `
 			-MaximumRetryCount 10 `
@@ -304,9 +308,9 @@ function Invoke-WebRequest-Wrap() {
 # }
 
 if ($env:OneDriveConsumer) {
-	$Root = "$env:OneDriveConsumer/Software/WireguardConfig"
+	$Root = "$env:OneDriveConsumer/AppData/WireguardConfig"
 } elseif ($env:OneDrive) {
-	$Root = "$env:OneDrive/Software/WireguardConfig"
+	$Root = "$env:OneDrive/AppData/WireguardConfig"
 } else {
 	Write-Error "木有找到 OneDrive 路径"
 }

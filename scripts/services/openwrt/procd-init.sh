@@ -11,10 +11,10 @@ die() {
 }
 
 create_pid() {
-	echo "/tmp/run/wireguard-config-client-$_SECTION.pid"
+	echo "/tmp/run/wireguard-config-$_SECTION.pid"
 }
 create_bin() {
-	echo "/usr/local/libexec/wireguard-config-client/${1:-"${_SECTION_KIND}.alpine"}"
+	echo "/usr/local/libexec/wireguard-config/${1:-"${_SECTION_KIND}.alpine"}"
 }
 
 update_now() {
@@ -22,14 +22,18 @@ update_now() {
 }
 
 reset_config() {
-	_CONFIGS=(
-		[EXTIP_NATIVE]=true
-		[EXTIP4_NO_UPNP]=true
-		[EXTIP4_API]=false
-		[EXTIP6_API]=false
-		[NO_UPNP]=true
-		[PRIVATE_IP]="$LAN_IP"
-	)
+	if [[ $1 == client ]]; then
+		_CONFIGS=(
+			[EXTIP_NATIVE]=true
+			[EXTIP4_NO_UPNP]=true
+			[EXTIP4_API]=false
+			[EXTIP6_API]=false
+			[NO_UPNP]=true
+			[PRIVATE_IP]="$LAN_IP"
+		)
+	else
+		_CONFIGS=()
+	fi
 }
 declare -a KNOWN_CONFIGS=()
 check_binary() {
@@ -58,18 +62,18 @@ x() {
 
 finalize_instance() {
 	{
-	echo " * $_SECTION_KIND - $_SECTION ($debug_file)" 
-	for name in "${!_CONFIGS[@]}"; do
-		echo "   - WIREGUARD_${name^^}=${_CONFIGS[$name]}"
-	done
-	}>&2
+		echo " * $_SECTION_KIND - $_SECTION ($debug_file)"
+		for name in "${!_CONFIGS[@]}"; do
+			echo "   - WIREGUARD_${name^^}=${_CONFIGS[$name]}"
+		done
+	} >&2
 
 	procd_open_instance "$_SECTION"
 
-	if [[ ! ${_CONFIGS[PORT]} ]]; then
-		echo "Config section $_SECTION must have a port option."
-		exit 1
-	fi
+	# if [[ ! ${_CONFIGS[PORT]} ]]; then
+	# 	echo "Config section $_SECTION must have a port option."
+	# 	exit 1
+	# fi
 
 	### environment
 	local name EnvList=("HOSTNAME=$(uci get system.@system[0].hostname)" "WIREGUARD_GROUP=$_SECTION")
@@ -97,7 +101,7 @@ config_cb() {
 		finalize_instance "$_SECTION"
 		_SECTION=
 		_SECTION_KIND=
-		reset_config
+		reset_config "$1"
 	fi
 	if [[ $1 == "client" ]] || [[ $1 == "server" ]]; then
 		_SECTION_KIND="$1"

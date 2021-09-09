@@ -14,11 +14,13 @@ if ! command wg &>/dev/null; then
 	die "wireguard tools (wg binary) is not found"
 fi
 
-mkdir -p /usr/local/libexec/wireguard-config-client
-cp auto-update.sh openwrt/service-control.sh /usr/local/libexec/wireguard-config-client
-cp openwrt/procd-init.sh /etc/init.d/wireguard-config-client
+rm -rf /usr/local/libexec/wireguard-config-client /etc/init.d/wireguard-config-*
 
-UPDATE_SCRIPT="/usr/local/libexec/wireguard-config-client/auto-update.sh"
+mkdir -p /usr/local/libexec/wireguard-config
+cp auto-update.sh openwrt/service-control.sh /usr/local/libexec/wireguard-config
+cp openwrt/procd-init.sh /etc/init.d/wireguard-config
+
+UPDATE_SCRIPT="/usr/local/libexec/wireguard-config/auto-update.sh"
 chmod a+x "$UPDATE_SCRIPT"
 
 {
@@ -26,8 +28,8 @@ chmod a+x "$UPDATE_SCRIPT"
 	echo "0 0 * * * bash '$UPDATE_SCRIPT' client #! wireguard-config-client-auto-update !#"
 } | crontab -
 
-if ! [[ -e /usr/local/libexec/wireguard-config-client/client.alpine ]]; then
+if ! [[ -e /usr/local/libexec/wireguard-config/client.alpine ]]; then
 	bash "$UPDATE_SCRIPT" client
 else
-	/etc/init.d/wireguard-config-client restart
+	/etc/init.d/wireguard-config restart
 fi

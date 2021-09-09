@@ -3,4 +3,5 @@
 set -Eeuo pipefail
 
 declare -r ACTION=$1
-"/etc/init.d/wireguard-config-$PROJ_TYPE" "$ACTION"
+echo "[service-control] $ACTION ..." >&2
+"/etc/init.d/wireguard-config" "$ACTION"

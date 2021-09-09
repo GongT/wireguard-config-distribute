@@ -43,7 +43,7 @@ fi
 
 declare -r REPO='GongT/wireguard-config-distribute'
 declare -r GET_FILE="$PROJ_TYPE$BIN_TYPE"
-declare -r DIST_ROOT="/usr/local/libexec/wireguard-config-client"
+declare -r DIST_ROOT="/usr/local/libexec/wireguard-config"
 declare -r BINARY_FILE="$DIST_ROOT/$GET_FILE"
 declare -r LATEST_URL="https://api.github.com/repos/$REPO/releases?page=1&per_page=1"
 
@@ -58,9 +58,15 @@ else
 fi
 mute "    本地版本： $VERSION_LOCAL"
 
+GITHUB_AUTH=()
+if [[ -e ~/.github-token ]]; then
+	GITHUB_AUTH=(--header "authorization: Bearer $(<~/.github-token)")
+fi
+
+
 mute "    来源： $LATEST_URL"
 declare RELEASE_DATA
-RELEASE_DATA=$(curl -s "$LATEST_URL")
+RELEASE_DATA=$(curl -s "${GITHUB_AUTH[@]}" "$LATEST_URL")
 RELEASE_DATA=$(echo "$RELEASE_DATA" | jq -M -c ".[0] // null") || {
 	curl -v "$LATEST_URL" || true
 	die "无法获取最新版本信息"

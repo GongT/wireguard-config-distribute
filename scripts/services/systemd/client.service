@@ -16,7 +16,7 @@ ProtectKernelTunables=yes
 ProtectControlGroups=yes
 
 ExecStartPre=!/usr/bin/env bash '/usr/local/libexec/ensure-kmod.sh' wireguard
-ExecStart=/usr/local/libexec/wireguard-config-client/client
+ExecStart=/usr/local/libexec/wireguard-config/client
 
 Restart=on-abnormal
 RestartSec=15s
