@@ -63,6 +63,7 @@ x() {
 finalize_instance() {
 	{
 		echo " * $_SECTION_KIND - $_SECTION ($debug_file)"
+		echo "   $(create_bin)"
 		for name in "${!_CONFIGS[@]}"; do
 			echo "   - WIREGUARD_${name^^}=${_CONFIGS[$name]}"
 		done
