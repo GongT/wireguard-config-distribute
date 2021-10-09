@@ -132,7 +132,7 @@ function copyFileIf() {
 '@
 	Add-Type -MemberDefinition $signature -Name "MoveFile" -Namespace Win32Function
 
-	if ([Win32Function.MoveFile]::MoveFileEx($from, $to, $MOVEFILE_REPLACE_EXISTING + $MOVEFILE_WRITE_THROUGH)) {
+	if (Move-Item -Path $from -Destination $to -Force) {
 		return $true
 	}
 
@@ -279,7 +279,7 @@ function Invoke-WebRequest-Wrap() {
 	$tokenFile = "$Root/.github-token"
 	if (Test-Path -Path $tokenFile -PathType Leaf) {
 		$token = Get-Content -Encoding utf8 $tokenFile
-		$param.Headers = @{Authorization = "token $token"}
+		$param.Headers = @{Authorization = "token $token" }
 	}
 	try {
 		$response = Invoke-WebRequest @param `
