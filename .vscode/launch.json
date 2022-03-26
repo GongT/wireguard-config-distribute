@@ -22,14 +22,12 @@
 			"request": "launch",
 			"mode": "debug",
 			"program": "${workspaceFolder}/cmd/wireguard-config-client",
-			"args": [
-				"--server=127.0.0.1",
-				"--server-ca=/root/.wireguard-config-server/ca.cert.pem",
-				"--external-ip-nohttp",
-				"--debug",
-				"--help",
-				"--hosts-file=/tmp/qqq/hosts0"
-			]
+			"envFile": "/etc/wireguard/client.conf",
+			"env": {
+				"WIREGUARD_CONFIG_DEVELOPMENT": "true",
+				"WIREGUARD_GROUP": "normal"
+			},
+			"args": []
 		},
 		{
 			"name": "Launch Test Generate",

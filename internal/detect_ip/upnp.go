@@ -37,10 +37,10 @@ func upnpGetPublicIp() (net.IP, error) {
 
 	select {
 	case response := <-rch:
-		ret := fmt.Sprintf("%x.%x.%x.%x", response.ExternalIPAddress[0], response.ExternalIPAddress[1], response.ExternalIPAddress[2], response.ExternalIPAddress[3])
+		ret := fmt.Sprintf("%d.%d.%d.%d", response.ExternalIPAddress[0], response.ExternalIPAddress[1], response.ExternalIPAddress[2], response.ExternalIPAddress[3])
 		ip := net.ParseIP(ret)
 		if !tools.IsIPv4(ip) {
-			return nil, errors.New("Invalid UPnP response.")
+			return nil, fmt.Errorf("Invalid UPnP response: %s", ret)
 		}
 		return ip, nil
 	case e := <-ech:

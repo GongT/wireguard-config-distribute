@@ -103,6 +103,7 @@ func get(api string, ipv4 bool) (net.IP, error) {
 	req, _ := http.NewRequest("GET", d.String(), nil)
 	req.Host = originalHost
 
+	tools.Debug("%s %s %s\n", req.Proto, req.Method, req.URL.String())
 	res, err := client.Do(req)
 	if err != nil {
 		return nil, err
