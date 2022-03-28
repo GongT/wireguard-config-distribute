@@ -276,7 +276,7 @@ function Invoke-WebRequest-Wrap() {
 		$param.Proxy = $proxyServer
 	}
 
-	$tokenFile = "$Root/.github-token"
+	$tokenFile = "$ProfileRoot/.github-token"
 	if (Test-Path -Path $tokenFile -PathType Leaf) {
 		$token = Get-Content -Encoding utf8 $tokenFile
 		$param.Headers = @{Authorization = "token $token" }
@@ -308,13 +308,13 @@ function Invoke-WebRequest-Wrap() {
 # }
 
 if ($env:OneDriveConsumer) {
-	$Root = "$env:OneDriveConsumer/AppData/WireguardConfig"
+	$ProfileRoot = "$env:OneDriveConsumer/AppData/WireguardConfig"
 } elseif ($env:OneDrive) {
-	$Root = "$env:OneDrive/AppData/WireguardConfig"
+	$ProfileRoot = "$env:OneDrive/AppData/WireguardConfig"
 } else {
 	Write-Error "木有找到 OneDrive 路径"
 }
-$configFile = "$Root/$env:COMPUTERNAME.conf"
+$configFile = "$ProfileRoot/$env:COMPUTERNAME.conf"
 if (-Not (Test-Path $configFile)) {
 	Write-Error "配置文件不存在：$configFile"
 }
@@ -355,6 +355,7 @@ createConfig | Out-File -Encoding utf8 -FilePath $serviceConfigFile
 Write-Host "安装任务计划……"
 Copy-Item "$PSScriptRoot/../services/auto-update.ps1" $distFolder | Out-Null
 Set-Content -Path "$distFolder/lib.ps1" -Value @(
+	"`$ProfileRoot='$ProfileRoot'"
 	(stringifyFunction Invoke-WebRequest-Wrap),
 	(stringifyFunction buildGithubReleaseUrl),
 	(stringifyFunction detectVersionChange),
