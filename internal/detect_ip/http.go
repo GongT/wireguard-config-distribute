@@ -3,12 +3,12 @@
 package detect_ip
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"io/ioutil"
 	"net"
 	"net/http"
-	"net/url"
 	"os"
 	"strings"
 	"time"
@@ -78,30 +78,26 @@ func resolveAs(host string, ipv4 bool) (string, error) {
 	return "", fmt.Errorf("failed resolve ipv%v of host %v", v, host)
 }
 
+var zeroDialer net.Dialer
+
 func get(api string, ipv4 bool) (net.IP, error) {
 	client := http.Client{
 		Timeout: 10 * time.Second,
 	}
 
-	d, err := url.Parse(api)
-	if err != nil {
-		return nil, err
-	}
-
-	originalHost := d.Hostname()
-	if ip := net.ParseIP(originalHost); ip == nil {
-		p := d.Port()
-		d.Host, err = resolveAs(originalHost, ipv4)
-		if err != nil {
-			return nil, err
+	transport := http.DefaultTransport.(*http.Transport).Clone()
+	transport.DialContext = func(ctx context.Context, network, addr string) (net.Conn, error) {
+		var dial_type string
+		if ipv4 {
+			dial_type = "tcp4"
+		} else {
+			dial_type = "tcp6"
 		}
-		if len(p) > 0 {
-			d.Host += ":" + p
-		}
+		return zeroDialer.DialContext(ctx, dial_type, addr)
 	}
+	client.Transport = transport
 
-	req, _ := http.NewRequest("GET", d.String(), nil)
-	req.Host = originalHost
+	req, _ := http.NewRequest("GET", api, nil)
 
 	tools.Debug("%s %s %s\n", req.Proto, req.Method, req.URL.String())
 	res, err := client.Do(req)
