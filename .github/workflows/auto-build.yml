@@ -108,12 +108,9 @@ jobs:
       matrix:
         project:
           - client
-          - client.alpine
           - client.exe
           - server
-          - server.alpine
           - tool
-          - tool.alpine
           - tool.exe
     steps:
       - name: Download Artifact
