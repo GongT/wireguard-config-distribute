@@ -114,7 +114,7 @@ func (stat *ClientStateHolder) run(loop_count int) {
 				return
 			}
 			tools.Debug(" ~ receive peers (%d peer, %d host)", len(peers.List), len(peers.Hosts))
-			list := clientType.WrapList(peers.List, stat.afFilter)
+			list := clientType.WrapList(peers.List)
 
 			stat.nat.ModifyPeers(list)
 			stat.vpn.UpdatePeers(list)

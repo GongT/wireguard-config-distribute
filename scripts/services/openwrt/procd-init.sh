@@ -25,9 +25,8 @@ reset_config() {
 	if [[ $1 == client ]]; then
 		_CONFIGS=(
 			[EXTIP_NATIVE]=true
-			[EXTIP4_NO_UPNP]=true
-			[EXTIP4_API]=false
-			[EXTIP6_API]=false
+			[EXTIP_NO_UPNP]=true
+			[EXTIP_API]=false
 			[NO_UPNP]=true
 			[PRIVATE_IP]="$LAN_IP"
 		)

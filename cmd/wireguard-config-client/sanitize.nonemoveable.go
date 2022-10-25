@@ -1,3 +1,4 @@
+//go:build !moveable
 // +build !moveable
 
 package main
@@ -24,17 +25,12 @@ func (opts *clientProgramOptions) Sanitize() error {
 		opts.PublicIp = []string{}
 		opts.Gateway = false
 		opts.IpUpnpDisable = true
-		opts.IpApi4 = ""
-		opts.IpApi6 = ""
+		opts.IpApi = ""
 		opts.NoAutoForwardUpnp = true
 	}
 
-	if opts.IpApi4 == "no" || opts.IpApi4 == "false" || opts.IpApi4 == "off" {
-		opts.IpApi4 = ""
-	}
-
-	if opts.IpApi6 == "no" || opts.IpApi6 == "false" || opts.IpApi6 == "off" {
-		opts.IpApi6 = ""
+	if opts.IpApi == "no" || opts.IpApi == "false" || opts.IpApi == "off" {
+		opts.IpApi = ""
 	}
 
 	if opts.HostFile == "/etc/hosts" && runtime.GOOS == "windows" {
@@ -69,9 +65,6 @@ func (opts *clientProgramOptions) Sanitize() error {
 
 	if opts.PublicPort == 0 {
 		opts.PublicPort = opts.ListenPort
-	}
-	if opts.VpnIpv6Only {
-		opts.NoAutoForwardUpnp = true
 	}
 
 	return nil

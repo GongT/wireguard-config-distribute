@@ -2,6 +2,8 @@
 Description=Wireguard configuration distribution (client)
 After=network.target network-online.target
 Wants=network-online.target
+StartLimitIntervalSec=1s
+StartLimitBurst=999
 
 [Service]
 Type=notify
@@ -21,8 +23,6 @@ ExecStart=/usr/local/libexec/wireguard-config/client --group %i
 Restart=always
 RestartSec=10s
 RestartPreventExitStatus=233
-StartLimitIntervalSec=1s
-StartLimitBurst=999
 
 EnvironmentFile=-/etc/wireguard/client.conf
 EnvironmentFile=/etc/wireguard/client.%i.conf

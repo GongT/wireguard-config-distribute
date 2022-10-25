@@ -12,16 +12,10 @@ const MAX_TRY = 3
 
 type IpFilter uint8
 
-const (
-	DontFilter = 0
-	NoIpV4     = 1
-	NoIpV6     = 2
-)
-
 var knownReachableIp map[string]bool = make(map[string]bool)
 var knownUnreachableIp map[string]uint8 = make(map[string]uint8)
 
-func selectIp(ips []string, filter IpFilter) string {
+func selectIp(ips []string) string {
 	for _, ip := range ips {
 		if knownReachableIp[ip] {
 			tools.Debug("  -> known reachable: " + ip)
@@ -33,30 +27,28 @@ func selectIp(ips []string, filter IpFilter) string {
 		}
 	}
 
-	ipsFilter := make([]string, 0, len(ips))
+	filterd_ips := make([]string, 0, len(ips))
 	for _, ip := range ips {
-		if filter != NoIpV4 && tools.IsValidIPv4(ip) {
-			ipsFilter = append(ipsFilter, ip)
-		} else if filter != NoIpV6 && tools.IsValidIPv6(ip) {
-			ipsFilter = append(ipsFilter, ip)
+		if tools.IsValidIPv4(ip) {
+			filterd_ips = append(filterd_ips, ip)
 		}
 	}
-	tools.Debug("  : filtered: %v", ipsFilter)
+	tools.Debug("  : filtered: %v", filterd_ips)
 
-	if len(ipsFilter) == 1 {
+	if len(filterd_ips) == 1 {
 		tools.Debug("  -> only one, force use")
-		return ipsFilter[0]
+		return filterd_ips[0]
 	}
-	if len(ipsFilter) == 0 {
+	if len(filterd_ips) == 0 {
 		tools.Debug("  -> no ip usable")
 		return ""
 	}
-	ip := _selectIp(ipsFilter)
+	ip := _selectIp(filterd_ips)
 	if len(ip) > 0 {
 		tools.Debug("  -> selected: " + ip)
 		knownReachableIp[ip] = true
 	} else {
-		ip = ipsFilter[0]
+		ip = filterd_ips[0]
 		tools.Debug("  -> select fail, use random: " + ip)
 	}
 	return ip

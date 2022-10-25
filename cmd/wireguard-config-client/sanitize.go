@@ -37,10 +37,6 @@ func (opts *clientProgramOptions) sanitizeBase() error {
 		opts.ListenPort = uint16(port)
 	}
 
-	if opts.VpnIpv4Only && opts.VpnIpv6Only {
-		tools.Die("No way to connect (--ipv4only can not use with --ipv6only)")
-	}
-
 	tools.NormalizeServerString(&opts.ConnectionOptions.Server)
 
 	return nil

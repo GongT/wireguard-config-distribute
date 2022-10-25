@@ -24,7 +24,7 @@ func main() {
 	})
 
 	err := config.InitProgramArguments(opts)
-	if err != nil {
+if err != nil {
 		tools.HasFatalError()
 		tools.Die("failed parse arguments: %s", err)
 	}

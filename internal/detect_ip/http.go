@@ -1,3 +1,4 @@
+//go:build !android
 // +build !android
 
 package detect_ip
@@ -17,16 +18,16 @@ import (
 )
 
 func init() {
-	newEnv := os.Getenv("no_proxy") + ",api.ipify.org,api6.ipify.org"
+	newEnv := os.Getenv("no_proxy") + ",api.ipify.org"
 	os.Setenv("no_proxy", newEnv)
 	os.Setenv("NO_PROXY", newEnv)
 }
 
-func httpGetPublicIp4(url string) (ret net.IP, err error) {
+func httpGetPublicIp(url string) (ret net.IP, err error) {
 	if len(url) == 0 {
 		return
 	}
-	ret, err = get(url, true)
+	ret, err = get(url)
 	if err != nil {
 		return
 	}
@@ -38,62 +39,30 @@ func httpGetPublicIp4(url string) (ret net.IP, err error) {
 	return
 }
 
-func httpGetPublicIp6(url string) (ret net.IP, err error) {
-	if len(url) == 0 {
-		return
-	}
-	ret, err = get(url, false)
-	if err != nil {
-		return
-	}
-
-	if !tools.IsIPv6(ret) {
-		return nil, errors.New("Not valid ipv6: " + ret.String())
-	}
-
-	return
-}
-
-func resolveAs(host string, ipv4 bool) (string, error) {
+func resolveAs(host string) (string, error) {
 	ips, err := net.LookupIP(host)
 	if err != nil {
 		return "", err
 	}
 	for _, ip := range ips {
 		if tools.IsIPv4(ip) {
-			if ipv4 {
-				return ip.String(), nil
-			}
-		} else {
-			if !ipv4 {
-				return "[" + ip.String() + "]", nil
-			}
+			return ip.String(), nil
 		}
 	}
 
-	v := 6
-	if ipv4 {
-		v = 4
-	}
-	return "", fmt.Errorf("failed resolve ipv%v of host %v", v, host)
+	return "", fmt.Errorf("failed resolve ipv4 of host %v", host)
 }
 
 var zeroDialer net.Dialer
 
-func get(api string, ipv4 bool) (net.IP, error) {
+func get(api string) (net.IP, error) {
 	client := http.Client{
 		Timeout: 10 * time.Second,
 	}
 
 	transport := http.DefaultTransport.(*http.Transport).Clone()
 	transport.DialContext = func(ctx context.Context, network, addr string) (net.Conn, error) {
-		var dial_type string
-		if ipv4 {
-			dial_type = "tcp4"
-		} else {
-			dial_type = "tcp6"
-		}
-		return zeroDialer.DialContext(ctx, dial_type, addr)
+		return zeroDialer.DialContext(ctx, "tcp4", addr)
 	}
 	client.Transport = transport
 

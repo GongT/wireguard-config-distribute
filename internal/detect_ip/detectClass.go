@@ -10,8 +10,7 @@ type Options interface {
 	GetPublicIp() []string
 	GetGateway() bool
 	GetIpUpnpDisable() bool
-	GetIpApi6() string
-	GetIpApi4() string
+	GetIpApi() string
 	GetNoPublicNetwork() bool
 }
 
@@ -20,8 +19,7 @@ type Detect struct {
 
 	readInterface bool
 	useUPnP       bool
-	api4          string
-	api6          string
+	api           string
 
 	manualSet []string
 	lastGet   []string
@@ -32,8 +30,7 @@ func NewDetect(options Options) *Detect {
 		disabled:      options.GetNoPublicNetwork(),
 		readInterface: options.GetGateway(),
 		useUPnP:       !options.GetIpUpnpDisable(),
-		api4:          options.GetIpApi4(),
-		api6:          options.GetIpApi6(),
+		api:           options.GetIpApi(),
 		manualSet:     options.GetPublicIp(),
 	}
 
@@ -62,7 +59,6 @@ func (d *Detect) Execute() {
 	}
 
 	gotIpv4 := false
-	gotIpv6 := false
 
 	tools.Debug("get ip address from local interfaces:")
 	for _, ip := range ListAllLocalNetworkIp() {
@@ -74,10 +70,6 @@ func (d *Detect) Execute() {
 			} else {
 				tools.Debug("  x> %v", ip.String())
 			}
-		} else if IsPublicIp(ip) {
-			gotIpv6 = true
-			ret = append(ret, ip.String())
-			tools.Debug("  -> ipv6: %v", ip.String())
 		} else {
 			tools.Debug("  x> %v", ip.String())
 		}
@@ -96,25 +88,12 @@ func (d *Detect) Execute() {
 		}
 	}
 
-	if !gotIpv4 && len(d.api4) > 0 {
-		tools.Debug("get ipv4 address from http (%v):", d.api4)
-		if ip, err := httpGetPublicIp4(d.api4); ip != nil {
+	if !gotIpv4 && len(d.api) > 0 {
+		tools.Debug("get ipv4 address from http (%v):", d.api)
+		if ip, err := httpGetPublicIp(d.api); ip != nil {
 			gotIpv4 = true
 			ret = append(ret, ip.String())
 			tools.Debug("  -> ipv4: %v", ip.String())
-		} else if err == nil {
-			tools.Debug("  -> no ip")
-		} else {
-			tools.Debug("  -> error: %v", err)
-		}
-	}
-
-	if !gotIpv6 && len(d.api6) > 0 {
-		tools.Debug("get ipv6 address from http (%v):", d.api6)
-		if ip, err := httpGetPublicIp6(d.api6); ip != nil {
-			gotIpv6 = true
-			ret = append(ret, ip.String())
-			tools.Debug("  -> ipv6: %v", ip.String())
 		} else if err == nil {
 			tools.Debug("  -> no ip")
 		} else {

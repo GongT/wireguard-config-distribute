@@ -4,9 +4,8 @@
 		"ms-vscode.powershell",
 		"golang.go",
 		"coolbear.systemd-unit-file",
-		"foxundermoon.shell-format"
-	],
-	"unwantedRecommendations": [
+		"foxundermoon.shell-format",
 		"ms-vscode.powershell-preview"
-	]
+	],
+	"unwantedRecommendations": []
 }

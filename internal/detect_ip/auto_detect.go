@@ -15,7 +15,7 @@ type options interface {
 	GetIpApi4() string
 }
 
-func RunDetect(ipv4 *net.IP, ipv6 *net.IP, options options) {
+func RunDetect(ipv4 *net.IP, options options) {
 	var err error
 	if len(*ipv4) == 0 && !options.GetIpUpnpDisable() {
 		tools.Error("  * try to get ip from UPnP")
@@ -28,19 +28,9 @@ func RunDetect(ipv4 *net.IP, ipv6 *net.IP, options options) {
 	}
 	if len(*ipv4) == 0 && !options.GetIpHttpDisable() {
 		fmt.Println("  * try to get ipv4 from http")
-		*ipv4, err = httpGetPublicIp4(options.GetIpApi4())
+		*ipv4, err = httpGetPublicIp(options.GetIpApi4())
 		if err == nil {
 			tools.Error("      -> %s", *ipv4)
-		} else {
-			tools.Error("      x> %s", err.Error())
-		}
-	}
-
-	if len(*ipv6) == 0 && !options.GetIpHttpDisable() {
-		fmt.Println("  * try to get ipv6 from http")
-		*ipv6, err = httpGetPublicIp6(options.GetIpApi6())
-		if err == nil {
-			tools.Error("      -> %s", *ipv6)
 		} else {
 			tools.Error("      x> %s", err.Error())
 		}

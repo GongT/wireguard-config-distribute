@@ -2,7 +2,6 @@ package client
 
 import (
 	server "github.com/gongt/wireguard-config-distribute/internal/client/client.server"
-	"github.com/gongt/wireguard-config-distribute/internal/client/clientType"
 	"github.com/gongt/wireguard-config-distribute/internal/client/sharedConfig"
 	"github.com/gongt/wireguard-config-distribute/internal/client/wireguardControl"
 	"github.com/gongt/wireguard-config-distribute/internal/detect_ip"
@@ -17,7 +16,6 @@ type ClientStateHolder struct {
 	qDispose  func()
 	isRunning bool
 
-	afFilter clientType.IpFilter
 	ipDetect *detect_ip.Detect
 
 	sessionId types.SidType
@@ -56,9 +54,6 @@ type configureOptions interface {
 
 	GetMachineID() string
 
-	GetVpnIpv4Only() bool
-	GetVpnIpv6Only() bool
-
 	detect_ip.Options
 }
 
@@ -66,14 +61,6 @@ func (stat *ClientStateHolder) Configure(options configureOptions) {
 	stat.privateStatus.configure(options)
 
 	stat.vpn = wireguardControl.NewWireguardControl(options, stat.privateStatus.createInterfaceComment())
-
-	if options.GetVpnIpv4Only() {
-		stat.afFilter = clientType.NoIpV6
-	} else if options.GetVpnIpv6Only() {
-		stat.afFilter = clientType.NoIpV4
-	} else {
-		stat.afFilter = clientType.DontFilter
-	}
 
 	stat.ipDetect = detect_ip.NewDetect(options)
 
