@@ -12,8 +12,7 @@ type tlsOptions interface {
 	GetGrpcServerPub() string
 	GetPublicIp() []string
 	GetIpHttpDisable() bool
-	GetIpApi6() string
-	GetIpApi4() string
+	GetIpApi() string
 }
 
 func (storage *ServerStorage) LoadOrCreateTLS(options tlsOptions) (credentials.TransportCredentials, error) {

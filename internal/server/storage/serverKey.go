@@ -28,13 +28,10 @@ func (storage *ServerStorage) loadOrCreateServerKey(options tlsOptions) error {
 
 	ips := parseAll(options.GetPublicIp())
 
-	var ipv4, ipv6 net.IP
-	detect_ip.RunDetect(&ipv4, &ipv6, &wrapGetIpOptions{options})
+	var ipv4 net.IP
+	detect_ip.RunDetect(&ipv4, &wrapGetIpOptions{options})
 	if tools.IsIPv4(ipv4) {
 		ips = append(ips, ipv4)
-	}
-	if tools.IsIPv4(ipv6) {
-		ips = append(ips, ipv6)
 	}
 
 	ips = append(ips, Ipv4LinkLocal, net.IPv6loopback)

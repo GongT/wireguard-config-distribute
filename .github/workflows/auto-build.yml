@@ -14,45 +14,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ github.token }}
           DELETE: "yes"
-  build-musl:
-    name: Build musl version
-    runs-on: ubuntu-latest
-    env:
-      GOPROXY: https://proxy.golang.org
-      GO111MODULE: auto
-      GOPATH: /tmp/.go
-      GOCACHE: /tmp/.cache/GOCACHE
-      SYSTEM_COMMON_CACHE: /tmp/.cache
-    steps:
-      - name: checkout
-        uses: actions/checkout@v2
-
-      - name: Prepare golang
-        uses: actions/setup-go@v2
-        with:
-          stable: true
-
-      - uses: actions/cache@v2
-        with:
-          path: /tmp/.cache
-          key: go-gongt-wireguard-config-distribute-${{ runner.os }}
-          restore-keys: |
-            go-gongt-wireguard-config-distribute-
-            go-
-
-      - name: Build
-        run: |
-          sudo pwsh ./scripts/build.ps1 musl
-
-      - name: upload
-        uses: actions/upload-artifact@v2
-        with:
-          name: my-artifact
-          path: |
-            dist/client.alpine
-            dist/server.alpine
-            dist/tool.alpine
-          if-no-files-found: error
 
   build:
     name: Build
@@ -118,7 +79,6 @@ jobs:
     name: Create latest release
     needs:
       - build
-      - build-musl
     runs-on: ubuntu-latest
     outputs:
       upload_url: ${{ steps.create_release.outputs.upload_url }}

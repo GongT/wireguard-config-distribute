@@ -11,8 +11,7 @@ type options interface {
 	GetIpHttpDisable() bool
 	GetIpUpnpDisable() bool
 
-	GetIpApi6() string
-	GetIpApi4() string
+	GetIpApi() string
 }
 
 func RunDetect(ipv4 *net.IP, options options) {
@@ -28,7 +27,7 @@ func RunDetect(ipv4 *net.IP, options options) {
 	}
 	if len(*ipv4) == 0 && !options.GetIpHttpDisable() {
 		fmt.Println("  * try to get ipv4 from http")
-		*ipv4, err = httpGetPublicIp(options.GetIpApi4())
+		*ipv4, err = httpGetPublicIp(options.GetIpApi())
 		if err == nil {
 			tools.Error("      -> %s", *ipv4)
 		} else {

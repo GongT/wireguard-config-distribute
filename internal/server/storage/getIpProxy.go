@@ -2,8 +2,7 @@ package storage
 
 type iwrapGetIpOptions interface {
 	GetIpHttpDisable() bool
-	GetIpApi6() string
-	GetIpApi4() string
+	GetIpApi() string
 }
 type wrapGetIpOptions struct {
 	iwrapGetIpOptions
