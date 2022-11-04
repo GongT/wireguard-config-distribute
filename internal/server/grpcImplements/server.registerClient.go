@@ -33,7 +33,7 @@ func (s *Implements) RegisterClient(ctx context.Context, request *protocol.Regis
 	md, _ := metadata.FromIncomingContext(ctx)
 	fmt.Printf("New Client Greeting: %s (%s)\n", remoteIp, authtype)
 	for key, value := range md {
-		fmt.Printf("   * %v: %v\n", key, value)
+		tools.Debug("   * %v: %v\n", key, value)
 	}
 
 	vpnName := types.DeSerializeVpnIdType(request.GetVpnGroup())

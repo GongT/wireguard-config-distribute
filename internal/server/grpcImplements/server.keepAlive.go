@@ -9,7 +9,9 @@ import (
 )
 
 func (srv *Implements) KeepAlive(_ context.Context, request *protocol.IdReportingRequest) (*protocol.KeepAliveStatus, error) {
-	defer tools.TimeMeasure("Grpc:KeepAlive")()
+	if tools.IsDevelopmennt() {
+		defer tools.TimeMeasure("Grpc:KeepAlive")()
+	}
 
 	sid := types.DeSerializeSidType(request.GetSessionId())
 	succ := srv.peersManager.UpdateKeepAlive(sid)
