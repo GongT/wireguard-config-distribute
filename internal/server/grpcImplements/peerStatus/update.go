@@ -80,7 +80,7 @@ func (peers *PeersManager) Delete(cid types.SidType) {
 }
 
 func (peers *PeersManager) Add(peer *PeerData) (sid types.SidType) {
-	defer peers.m.Lock(fmt.Sprintf("Add[%v]", peer.MachineId))()
+	// defer peers.m.Lock(fmt.Sprintf("Add[%v]", peer.MachineId))()
 
 	sid = peers.createSessionId(peer)
 	old, exists := peers.list[sid]
