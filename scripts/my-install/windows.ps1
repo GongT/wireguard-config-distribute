@@ -361,7 +361,8 @@ Set-Content -Path "$distFolder/lib.ps1" -Value @(
 	(stringifyFunction detectVersionChange),
 	(stringifyFunction copyFileIf),
 	(stringifyFunction stopAllService),
-	(stringifyFunction startAllService)
+	(stringifyFunction startAllService),
+	(stringifyFunction getLocalVersion)
 )
 createUpdateSchedule
 
